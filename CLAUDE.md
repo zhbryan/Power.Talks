@@ -7,10 +7,12 @@
 
 | Purpose | Folder |
 |---------|--------|
-| Generated programming code files | `Database Codes/` |
+| Front-end code (HTML, CSS, JavaScript, scripts, etc.) | `html/` |
+| Database code (SQL, stored procedures, queries, etc.) | `Database Codes/` |
 | Downloaded documents from the internet | `Documents Database/` |
 
 ### Rules
-- When you generate, write, or save any programming code (scripts, HTML, CSS, JS, Python, etc.), place the file inside the `Database Codes/` folder.
+- When you generate, write, or save any front-end code (HTML, CSS, JavaScript, scripts, etc.), place the file inside the `html/` folder.
+- When you generate, write, or save any database code (SQL, stored procedures, queries, etc.), place the file inside the `Database Codes/` folder.
 - When you download or save any document from the internet (PDFs, articles, reports, etc.), place the file inside the `Documents Database/` folder.
-- Both folders already exist at the project root — do not create new top-level folders for these purposes.
+- These folders exist at the project root — do not create new top-level folders for these purposes.
