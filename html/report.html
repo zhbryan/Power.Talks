@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Power.Talks — Report Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← Dashboard</a>
+      <span class="logo">Power.Talks</span>
+      <span class="header-sub" id="report-title">Report Viewer</span>
+    </div>
+  </header>
+
+  <div class="viewer-layout">
+    <!-- Left: Report Content -->
+    <section class="report-panel">
+      <div id="report-content" class="report-body">
+        <p class="empty-msg">Loading report...</p>
+      </div>
+    </section>
+
+    <!-- Right: Claude Chat -->
+    <aside class="chat-panel">
+      <div class="chat-header">
+        <span>Ask Claude</span>
+        <span class="chat-hint">Questions answered in the context of this report</span>
+      </div>
+      <div id="chat-history" class="chat-history"></div>
+      <div class="chat-input-row">
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Ask a question about this report..."
+          autocomplete="off"
+        />
+        <button id="chat-send">Send</button>
+      </div>
+    </aside>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const reportFile = params.get("report");
+
+      if (!reportFile) {
+        document.getElementById("report-content").innerHTML =
+          '<p class="empty-msg">No report specified. <a href="index.html">Back to dashboard</a></p>';
+        return;
+      }
+
+      document.getElementById("report-title").textContent = reportFile;
+      loadReportContent(reportFile);
+
+      document.getElementById("chat-send").addEventListener("click", sendChat);
+      document.getElementById("chat-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendChat();
+      });
+    });
+
+    async function sendChat() {
+      const input = document.getElementById("chat-input");
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+      input.value = "";
+
+      appendChatMessage("user", userMessage);
+
+      const reportText = document.getElementById("report-content").innerText;
+      await claudeChat(reportText, userMessage);
+    }
+  </script>
+</body>
+</html>

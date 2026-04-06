@@ -1,0 +1,14 @@
+# API keys — never commit
+html/config.js
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Logs
+Database Codes/*.log
+
+# Processed files index (local state)
+Database Codes/processed_files.json

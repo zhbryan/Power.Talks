@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Power.Talks — ERCOT Reports</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <span class="logo">Power.Talks</span>
+      <span class="header-sub">ERCOT Reports Dashboard</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="filters">
+      <select id="filter-group">
+        <option value="">All Groups</option>
+        <option value="MKT.RULES">Market Rules</option>
+        <option value="STKHDR.MEETS">Stakeholder Meetings</option>
+      </select>
+      <input type="date" id="filter-date-from" title="From date" />
+      <span class="filter-sep">to</span>
+      <input type="date" id="filter-date-to" title="To date" />
+      <input type="text" id="filter-search" placeholder="Search reports..." />
+      <button id="btn-clear">Clear</button>
+    </section>
+
+    <section class="table-wrap">
+      <table id="reports-table">
+        <thead>
+          <tr>
+            <th>Group</th>
+            <th>Category</th>
+            <th>Report</th>
+            <th>Source Document</th>
+            <th>Date</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody id="reports-body">
+          <tr><td colspan="6" class="empty-msg">Loading reports...</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      loadManifest();
+
+      document.getElementById("filter-group").addEventListener("change", applyFilters);
+      document.getElementById("filter-date-from").addEventListener("change", applyFilters);
+      document.getElementById("filter-date-to").addEventListener("change", applyFilters);
+      document.getElementById("filter-search").addEventListener("input", applyFilters);
+      document.getElementById("btn-clear").addEventListener("click", () => {
+        document.getElementById("filter-group").value = "";
+        document.getElementById("filter-date-from").value = "";
+        document.getElementById("filter-date-to").value = "";
+        document.getElementById("filter-search").value = "";
+        applyFilters();
+      });
+    });
+  </script>
+</body>
+</html>
