@@ -12,3 +12,12 @@ Database Codes/*.log
 
 # Processed files index (local state)
 Database Codes/processed_files.json
+
+# Downloaded documents — too large for git
+Documents Database/
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# VS Code workspace settings
+.vscode/
