@@ -7,7 +7,7 @@ and downloads only the new ones (PDF, DOC, DOCX, XLS, XLSX).
 
 Usage
 -----
-    pip install requests beautifulsoup4
+    pip install requests beautifulsoup4 openpyxl
     python download_ercot_nprr.py
 
 Configuration
@@ -20,15 +20,21 @@ import os
 import re
 import time
 import requests
+import openpyxl
 from bs4 import BeautifulSoup
+from datetime import datetime
 from urllib.parse import urljoin, unquote
 
 # ── SETTINGS ─────────────────────────────────────────────────────────────────
 
 # Override: set to a list of NPRR numbers to process instead of auto-fetching.
-# Applies to both pending and withdrawn runs.  Leave as None for auto-fetch.
+# Applies to pending, withdrawn, and approved runs.  Leave as None for auto-fetch.
 # Example: NPRR_NUMBERS = [956, 1214, 1255]
 NPRR_NUMBERS = None
+
+# Only process approved NPRRs with a number greater than this value.
+# Early approved NPRRs have no downloadable documents on ERCOT's site.
+APPROVED_MIN_NPRR = 950
 
 # Local folder where files will be saved (one sub-folder per NPRR).
 PENDING_DIR   = r"C:\Users\chunl\OneDrive\Documents\Business Ventures\Power.Talks\Documents Database\ERCOT.MKT.RULES\NPRR"
@@ -40,6 +46,10 @@ REQUEST_DELAY = 1.5
 
 # File extensions to download.
 DOWNLOAD_EXTS = {".pdf", ".doc", ".docx", ".xls", ".xlsx"}
+
+# Excel workbook used to track which NPRR numbers have been seen before.
+# The withdrawn list is stored in the "List_Withdrawn" sheet.
+EXCEL_TRACKER = r"C:\Users\chunl\OneDrive\Documents\Business Ventures\Power.Talks\Documents Database\ERCOT.MKT.RULES\NPRR\Current List of NPRRs.xlsx"
 
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -182,19 +192,28 @@ def get_document_links(nprr: int) -> list[dict]:
 
 
 def download_file(url: str, dest_path: str) -> bool:
-    """Download *url* to *dest_path*. Returns True on success."""
+    """Download *url* to *dest_path*. Returns True on success.
+
+    Writes to a temporary file first and renames on success so that a failed
+    or interrupted download never leaves a corrupt file that would be mistaken
+    for a completed download on the next run.
+    """
+    tmp_path = dest_path + ".tmp"
     try:
         resp = requests.get(url, headers=HEADERS, timeout=60, stream=True)
         resp.raise_for_status()
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        with open(dest_path, "wb") as fh:
+        with open(tmp_path, "wb") as fh:
             for chunk in resp.iter_content(chunk_size=65536):
                 fh.write(chunk)
+        os.replace(tmp_path, dest_path)
         size_kb = os.path.getsize(dest_path) / 1024
         print(f"    [OK]   {os.path.basename(dest_path)}  ({size_kb:.1f} KB)")
         return True
-    except requests.RequestException as exc:
+    except (requests.RequestException, OSError) as exc:
         print(f"    [ERR]  Failed to download {url}: {exc}")
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
         return False
 
 
@@ -247,6 +266,62 @@ def process_nprr_list(nprr_list: list[int], output_dir: str) -> tuple[int, int]:
     return total_files, total_nprrs
 
 
+def load_excel_nprrs(sheet_name: str) -> set[int]:
+    """
+    Read NPRR numbers from *sheet_name* in EXCEL_TRACKER.
+    Returns an empty set if the file or sheet does not exist.
+    """
+    if not os.path.exists(EXCEL_TRACKER):
+        return set()
+    try:
+        wb = openpyxl.load_workbook(EXCEL_TRACKER, read_only=True, data_only=True)
+        if sheet_name not in wb.sheetnames:
+            wb.close()
+            return set()
+        ws = wb[sheet_name]
+        numbers = set()
+        for row in ws.iter_rows(min_row=2, values_only=True):  # skip header row
+            if row[0] is not None:
+                try:
+                    numbers.add(int(row[0]))
+                except (ValueError, TypeError):
+                    pass
+        wb.close()
+        return numbers
+    except Exception as exc:
+        print(f"  [WARN] Could not read {EXCEL_TRACKER}: {exc}")
+        return set()
+
+
+def update_excel_nprrs(sheet_name: str, nprr_list: list[int]) -> None:
+    """
+    Overwrite *sheet_name* in EXCEL_TRACKER with the full *nprr_list*,
+    sorted ascending.  Creates the workbook/sheet if they do not exist.
+    """
+    os.makedirs(os.path.dirname(EXCEL_TRACKER), exist_ok=True)
+    if os.path.exists(EXCEL_TRACKER):
+        wb = openpyxl.load_workbook(EXCEL_TRACKER)
+    else:
+        wb = openpyxl.Workbook()
+        # Remove the default blank sheet created by openpyxl
+        if "Sheet" in wb.sheetnames:
+            del wb["Sheet"]
+
+    if sheet_name in wb.sheetnames:
+        ws = wb[sheet_name]
+        ws.delete_rows(1, ws.max_row)
+    else:
+        ws = wb.create_sheet(sheet_name)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ws.append(["NPRR_Number", f"Last Updated: {timestamp}"])
+    for n in sorted(nprr_list):
+        ws.append([n])
+
+    wb.save(EXCEL_TRACKER)
+    print(f"  [Excel] '{sheet_name}' updated — {len(nprr_list)} NPRR(s) saved to {EXCEL_TRACKER} (as of {timestamp})")
+
+
 def main():
     # ── Pending ───────────────────────────────────────────────────────────────
     if NPRR_NUMBERS:
@@ -265,12 +340,29 @@ def main():
     if withdrawn_list:
         print(f"Found {len(withdrawn_list)} withdrawn NPRR(s): "
               f"{withdrawn_list[0]} - {withdrawn_list[-1]}")
+        tracked_withdrawn = load_excel_nprrs("List_Withdrawn")
+        if tracked_withdrawn:
+            withdrawn_new = [n for n in withdrawn_list if n not in tracked_withdrawn]
+            print(f"  {len(tracked_withdrawn)} already tracked in Excel, "
+                  f"{len(withdrawn_new)} new NPRR(s) to process.")
+        else:
+            withdrawn_new = withdrawn_list
+            print("  No prior tracking found — will process all withdrawn NPRRs.")
 
     # ── Approved ──────────────────────────────────────────────────────────────
     approved_list = NPRR_NUMBERS if NPRR_NUMBERS else get_approved_nprrs()
+    approved_list = [n for n in approved_list if n > APPROVED_MIN_NPRR]
     if approved_list:
-        print(f"Found {len(approved_list)} approved NPRR(s): "
+        print(f"Found {len(approved_list)} approved NPRR(s) > {APPROVED_MIN_NPRR}: "
               f"{approved_list[0]} - {approved_list[-1]}")
+        tracked_approved = load_excel_nprrs("List_Approved")
+        if tracked_approved:
+            approved_new = [n for n in approved_list if n not in tracked_approved]
+            print(f"  {len(tracked_approved)} already tracked in Excel, "
+                  f"{len(approved_new)} new NPRR(s) to process.")
+        else:
+            approved_new = approved_list
+            print("  No prior tracking found — will process all approved NPRRs.")
 
     print("=" * 60)
 
@@ -281,6 +373,7 @@ def main():
         print(f"PENDING NPRRs  ->  {os.path.abspath(PENDING_DIR)}")
         print(f"{'='*60}")
         p_files, p_nprrs = process_nprr_list(pending_list, PENDING_DIR)
+        update_excel_nprrs("List_Pending", pending_list)
 
     # ── Process withdrawn ─────────────────────────────────────────────────────
     w_files = w_nprrs = 0
@@ -288,16 +381,17 @@ def main():
         print(f"\n{'='*60}")
         print(f"WITHDRAWN NPRRs  ->  {os.path.abspath(WITHDRAWN_DIR)}")
         print(f"{'='*60}")
-        w_files, w_nprrs = process_nprr_list(withdrawn_list, WITHDRAWN_DIR)
+        w_files, w_nprrs = process_nprr_list(withdrawn_new, WITHDRAWN_DIR)
+        update_excel_nprrs("List_Withdrawn", withdrawn_list)
 
     # ── Process approved ──────────────────────────────────────────────────────
     a_files = a_nprrs = 0
     if approved_list:
-        approved_list = [n for n in approved_list if n > 955]
         print(f"\n{'='*60}")
         print(f"APPROVED NPRRs  ->  {os.path.abspath(APPROVED_DIR)}")
         print(f"{'='*60}")
-        a_files, a_nprrs = process_nprr_list(approved_list, APPROVED_DIR)
+        a_files, a_nprrs = process_nprr_list(approved_new, APPROVED_DIR)
+        update_excel_nprrs("List_Approved", approved_list)
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)
