@@ -1,19 +1,19 @@
 """
-ERCOT NPRR Document Downloader
+ERCOT SCR Document Downloader
 ================================
-Automatically fetches all *pending*, *withdrawn*, and *approved* NPRRs
+Automatically fetches all *pending*, *withdrawn*, *approved*, and *rejected* SCRs
 from the ERCOT website, checks which documents are already saved locally,
 and downloads only the new ones (PDF, DOC, DOCX, XLS, XLSX).
 
 Usage
 -----
     pip install requests beautifulsoup4 openpyxl
-    python download_ercot_nprr.py
+    python download_ercot_scr.py
 
 Configuration
 -------------
 Edit the SETTINGS block below to change where files are saved, or to
-override the auto-fetched lists with specific NPRR numbers.
+override the auto-fetched lists with specific SCR numbers.
 """
 
 import os
@@ -27,20 +27,13 @@ from urllib.parse import urljoin, unquote
 
 # ── SETTINGS ─────────────────────────────────────────────────────────────────
 
-# Override: set to a list of NPRR numbers to process instead of auto-fetching.
-# Applies to pending, withdrawn, and approved runs.  Leave as None for auto-fetch.
-# Example: NPRR_NUMBERS = [956, 1214, 1255]
-NPRR_NUMBERS = None
+# Override: set to a list of SCR numbers to process instead of auto-fetching.
+# Applies to all runs.  Leave as None for auto-fetch.
+# Example: SCR_NUMBERS = [800, 820, 830]
+SCR_NUMBERS = None
 
-# Only process approved NPRRs with a number greater than this value.
-# Early approved NPRRs have no downloadable documents on ERCOT's site.
-APPROVED_MIN_NPRR = 100
-
-
-# Local folder where files will be saved (one sub-folder per NPRR).
-PENDING_DIR   = r"C:\Users\chunl\OneDrive\Documents\Business Ventures\Power.Talks\Documents Database\ERCOT.MKT.RULES\NPRR"
-WITHDRAWN_DIR = PENDING_DIR
-APPROVED_DIR  = PENDING_DIR
+# Local folder where files will be saved (one sub-folder per SCR).
+BASE_DIR = r"C:\Users\chunl\OneDrive\Documents\Business Ventures\Power.Talks\Documents Database\ERCOT.MKT.RULES\SCR"
 
 # Seconds to pause between HTTP requests (be polite to the server).
 REQUEST_DELAY = 1.5
@@ -48,21 +41,22 @@ REQUEST_DELAY = 1.5
 # File extensions to download.
 DOWNLOAD_EXTS = {".pdf", ".doc", ".docx", ".xls", ".xlsx"}
 
-# Excel workbook used to track which NPRR numbers have been seen before.
-# The withdrawn list is stored in the "List_Withdrawn" sheet.
-EXCEL_TRACKER = r"C:\Users\chunl\OneDrive\Documents\Business Ventures\Power.Talks\Documents Database\ERCOT.MKT.RULES\NPRR\Current List of NPRRs.xlsx"
+# Excel workbook used to track which SCR numbers have been seen before.
+EXCEL_TRACKER = os.path.join(BASE_DIR, "Current List of SCRs.xlsx")
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-BASE_URL           = "https://www.ercot.com"
-NPRR_LIST_URL      = "https://www.ercot.com/mktrules/issues/nprr"
-NPRR_WITHDRAWN_URL = "https://www.ercot.com/mktrules/issues/reports/nprr/withdrawn"
-NPRR_APPROVED_URL  = "https://www.ercot.com/mktrules/issues/reports/nprr/approved"
-ISSUE_URL          = "https://www.ercot.com/mktrules/issues/NPRR{n}"
+BASE_URL          = "https://www.ercot.com"
+SCR_LIST_URL      = "https://www.ercot.com/mktrules/issues/scr"
+SCR_PENDING_URL   = "https://www.ercot.com/mktrules/issues/reports/scr/pending"
+SCR_WITHDRAWN_URL = "https://www.ercot.com/mktrules/issues/reports/scr/withdrawn"
+SCR_APPROVED_URL  = "https://www.ercot.com/mktrules/issues/reports/scr/approved"
+SCR_REJECTED_URL  = "https://www.ercot.com/mktrules/issues/reports/scr/rejected"
+ISSUE_URL         = "https://www.ercot.com/mktrules/issues/SCR{n}"
 
 HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 (compatible; NPRR-Downloader/1.0; "
+        "Mozilla/5.0 (compatible; SCR-Downloader/1.0; "
         "non-commercial research)"
     )
 }
@@ -84,18 +78,32 @@ def safe_fname(fname: str, dest_dir: str) -> str:
     return stem[:max_stem] + ext
 
 
-def get_pending_nprrs() -> list[int]:
-    """
-    Scrape the ERCOT NPRR listing page and return NPRR numbers listed
-    under the 'Pending' section.
-    """
-    print(f"Fetching pending NPRR list from {NPRR_LIST_URL} ...")
+def fetch_scr_numbers_from_report(url: str, label: str) -> list[int]:
+    """Scrape an SCR report page and return sorted SCR numbers."""
+    print(f"Fetching {label} SCR list from {url} ...")
     try:
-        resp = requests.get(NPRR_LIST_URL, headers=HEADERS, timeout=20)
+        resp = requests.get(url, headers=HEADERS, timeout=20)
         resp.raise_for_status()
     except requests.RequestException as exc:
-        print(f"  [ERR] Could not fetch NPRR list: {exc}")
+        print(f"  [ERR] Could not fetch {label} SCR list: {exc}")
         return []
+
+    numbers = re.findall(r"/mktrules/issues/SCR(\d+)", resp.text, re.IGNORECASE)
+    return sorted(set(int(n) for n in numbers))
+
+
+def get_pending_scrs() -> list[int]:
+    """
+    Scrape the ERCOT SCR listing page for the Pending section,
+    falling back to the pending report page.
+    """
+    print(f"Fetching pending SCR list from {SCR_LIST_URL} ...")
+    try:
+        resp = requests.get(SCR_LIST_URL, headers=HEADERS, timeout=20)
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        print(f"  [ERR] Could not fetch SCR list: {exc}")
+        return fetch_scr_numbers_from_report(SCR_PENDING_URL, "pending")
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -103,68 +111,40 @@ def get_pending_nprrs() -> list[int]:
         lambda tag: tag.name in ("h3", "h4", "h5")
         and "pending" in tag.get_text(strip=True).lower()
     )
-    if not pending_heading:
-        print("  [WARN] Could not find 'Pending' section on listing page.")
-        return []
 
-    nprr_numbers = []
-    for sibling in pending_heading.find_next_siblings():
-        if sibling.name in ("h3", "h4", "h5"):
-            break
-        for a in sibling.find_all("a", href=True):
-            m = re.search(r"/mktrules/issues/NPRR(\d+)", a["href"])
-            if m:
-                nprr_numbers.append(int(m.group(1)))
+    scr_numbers = []
+    if pending_heading:
+        for sibling in pending_heading.find_next_siblings():
+            if sibling.name in ("h3", "h4", "h5"):
+                break
+            for a in sibling.find_all("a", href=True):
+                m = re.search(r"/mktrules/issues/SCR(\d+)", a["href"], re.IGNORECASE)
+                if m:
+                    scr_numbers.append(int(m.group(1)))
+    else:
+        # Fall back to scanning the whole page
+        matches = re.findall(r"/mktrules/issues/SCR(\d+)", resp.text, re.IGNORECASE)
+        scr_numbers = [int(n) for n in matches]
+
+    if not scr_numbers:
+        print("  [INFO] No pending SCRs found on main page; trying report page.")
+        return fetch_scr_numbers_from_report(SCR_PENDING_URL, "pending")
 
     seen, unique = set(), []
-    for n in nprr_numbers:
+    for n in scr_numbers:
         if n not in seen:
             seen.add(n)
             unique.append(n)
     return unique
 
 
-def get_withdrawn_nprrs() -> list[int]:
+def get_document_links(scr: int) -> list[dict]:
     """
-    Scrape the ERCOT withdrawn-NPRR report page and return a sorted list
-    of withdrawn NPRR numbers.
-    """
-    print(f"Fetching withdrawn NPRR list from {NPRR_WITHDRAWN_URL} ...")
-    try:
-        resp = requests.get(NPRR_WITHDRAWN_URL, headers=HEADERS, timeout=20)
-        resp.raise_for_status()
-    except requests.RequestException as exc:
-        print(f"  [ERR] Could not fetch withdrawn NPRR list: {exc}")
-        return []
-
-    numbers = re.findall(r"/mktrules/issues/NPRR(\d+)", resp.text)
-    return sorted(set(int(n) for n in numbers))
-
-
-def get_approved_nprrs() -> list[int]:
-    """
-    Scrape the ERCOT approved-NPRR report page and return a sorted list
-    of approved NPRR numbers.
-    """
-    print(f"Fetching approved NPRR list from {NPRR_APPROVED_URL} ...")
-    try:
-        resp = requests.get(NPRR_APPROVED_URL, headers=HEADERS, timeout=20)
-        resp.raise_for_status()
-    except requests.RequestException as exc:
-        print(f"  [ERR] Could not fetch approved NPRR list: {exc}")
-        return []
-
-    numbers = re.findall(r"/mktrules/issues/NPRR(\d+)", resp.text)
-    return sorted(set(int(n) for n in numbers))
-
-
-def get_document_links(nprr: int) -> list[dict]:
-    """
-    Fetch the ERCOT issue page for one NPRR and return a list of dicts
+    Fetch the ERCOT issue page for one SCR and return a list of dicts
     {'label': str, 'url': str} for every downloadable file found.
     Returns an empty list if the page is unreachable or has no files.
     """
-    url = ISSUE_URL.format(n=nprr)
+    url = ISSUE_URL.format(n=scr)
     try:
         resp = requests.get(url, headers=HEADERS, timeout=20)
         if resp.status_code == 404:
@@ -218,31 +198,31 @@ def download_file(url: str, dest_path: str) -> bool:
         return False
 
 
-def process_nprr_list(nprr_list: list[int], output_dir: str) -> tuple[int, int]:
+def process_scr_list(scr_list: list[int], output_dir: str) -> tuple[int, int]:
     """
-    For each NPRR in *nprr_list*, check for new documents and download them
-    into *output_dir*/NPRR{n}/.  Returns (files_downloaded, nprrs_updated).
+    For each SCR in *scr_list*, check for new documents and download them
+    into *output_dir*/SCR{n}/.  Returns (files_downloaded, scrs_updated).
     """
-    total_files = total_nprrs = 0
+    total_files = total_scrs = 0
 
-    for nprr in nprr_list:
-        print(f"\nNPRR{nprr}  ->  {ISSUE_URL.format(n=nprr)}")
-        links = get_document_links(nprr)
+    for scr in scr_list:
+        print(f"\nSCR{scr}  ->  {ISSUE_URL.format(n=scr)}")
+        links = get_document_links(scr)
         time.sleep(REQUEST_DELAY)
 
         if not links:
             print("  (no downloadable documents found or page does not exist)")
             continue
 
-        nprr_dir = os.path.join(output_dir, f"NPRR{nprr}")
+        scr_dir = os.path.join(output_dir, f"SCR{scr}")
 
         new_items = []
         for item in links:
             fname = sanitize(unquote(os.path.basename(item["url"].split("?")[0])))
             if not fname:
                 fname = sanitize(item["label"]) + ".bin"
-            fname = safe_fname(fname, nprr_dir)
-            dest  = os.path.join(nprr_dir, fname)
+            fname = safe_fname(fname, scr_dir)
+            dest  = os.path.join(scr_dir, fname)
             if not os.path.exists(dest):
                 new_items.append((item, fname, dest))
 
@@ -256,20 +236,20 @@ def process_nprr_list(nprr_list: list[int], output_dir: str) -> tuple[int, int]:
 
         print(f"  {len(new_items)} new file(s) to download "
               f"(out of {len(links)} total).")
-        os.makedirs(nprr_dir, exist_ok=True)
-        total_nprrs += 1
+        os.makedirs(scr_dir, exist_ok=True)
+        total_scrs += 1
 
         for item, fname, dest in new_items:
             if download_file(item["url"], dest):
                 total_files += 1
             time.sleep(REQUEST_DELAY)
 
-    return total_files, total_nprrs
+    return total_files, total_scrs
 
 
-def load_excel_nprrs(sheet_name: str) -> set[int]:
+def load_excel_scrs(sheet_name: str) -> set[int]:
     """
-    Read NPRR numbers from *sheet_name* in EXCEL_TRACKER.
+    Read SCR numbers from *sheet_name* in EXCEL_TRACKER.
     Returns an empty set if the file or sheet does not exist.
     """
     if not os.path.exists(EXCEL_TRACKER):
@@ -294,9 +274,9 @@ def load_excel_nprrs(sheet_name: str) -> set[int]:
         return set()
 
 
-def update_excel_nprrs(sheet_name: str, nprr_list: list[int]) -> None:
+def update_excel_scrs(sheet_name: str, scr_list: list[int]) -> None:
     """
-    Overwrite *sheet_name* in EXCEL_TRACKER with the full *nprr_list*,
+    Overwrite *sheet_name* in EXCEL_TRACKER with the full *scr_list*,
     sorted ascending.  Creates the workbook/sheet if they do not exist.
     """
     os.makedirs(os.path.dirname(EXCEL_TRACKER), exist_ok=True)
@@ -304,7 +284,6 @@ def update_excel_nprrs(sheet_name: str, nprr_list: list[int]) -> None:
         wb = openpyxl.load_workbook(EXCEL_TRACKER)
     else:
         wb = openpyxl.Workbook()
-        # Remove the default blank sheet created by openpyxl
         if "Sheet" in wb.sheetnames:
             del wb["Sheet"]
 
@@ -315,91 +294,109 @@ def update_excel_nprrs(sheet_name: str, nprr_list: list[int]) -> None:
         ws = wb.create_sheet(sheet_name)
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    ws.append(["NPRR_Number", f"Last Updated: {timestamp}"])
-    for n in sorted(nprr_list):
+    ws.append(["SCR_Number", f"Last Updated: {timestamp}"])
+    for n in sorted(scr_list):
         ws.append([n])
 
     wb.save(EXCEL_TRACKER)
-    print(f"  [Excel] '{sheet_name}' updated — {len(nprr_list)} NPRR(s) saved to {EXCEL_TRACKER} (as of {timestamp})")
+    print(f"  [Excel] '{sheet_name}' updated — {len(scr_list)} SCR(s) saved to {EXCEL_TRACKER} (as of {timestamp})")
+
+
+def resolve_new(full_list: list[int], sheet_name: str, label: str) -> list[int]:
+    """Compare *full_list* against Excel tracker and return only new SCRs."""
+    tracked = load_excel_scrs(sheet_name)
+    if tracked:
+        new = [n for n in full_list if n not in tracked]
+        print(f"  {len(tracked)} already tracked in Excel, "
+              f"{len(new)} new SCR(s) to process.")
+    else:
+        new = full_list
+        print(f"  No prior tracking found — will process all {label} SCRs.")
+    return new
 
 
 def main():
     # ── Pending ───────────────────────────────────────────────────────────────
-    if NPRR_NUMBERS:
-        pending_list = NPRR_NUMBERS
-        print("ERCOT NPRR Document Downloader  (manual list)")
+    if SCR_NUMBERS:
+        pending_list = SCR_NUMBERS
+        print("ERCOT SCR Document Downloader  (manual list)")
     else:
-        pending_list = get_pending_nprrs()
+        pending_list = get_pending_scrs()
         if not pending_list:
-            print("No pending NPRRs found.")
+            print("No pending SCRs found.")
         else:
-            print(f"Found {len(pending_list)} pending NPRR(s): "
+            print(f"Found {len(pending_list)} pending SCR(s): "
                   f"{pending_list[0]} - {pending_list[-1]}")
 
     # ── Withdrawn ─────────────────────────────────────────────────────────────
-    withdrawn_list = NPRR_NUMBERS if NPRR_NUMBERS else get_withdrawn_nprrs()
+    withdrawn_list = SCR_NUMBERS if SCR_NUMBERS else fetch_scr_numbers_from_report(SCR_WITHDRAWN_URL, "withdrawn")
+    withdrawn_new = []
     if withdrawn_list:
-        print(f"Found {len(withdrawn_list)} withdrawn NPRR(s): "
+        print(f"Found {len(withdrawn_list)} withdrawn SCR(s): "
               f"{withdrawn_list[0]} - {withdrawn_list[-1]}")
-        tracked_withdrawn = load_excel_nprrs("List_Withdrawn")
-        if tracked_withdrawn:
-            withdrawn_new = [n for n in withdrawn_list if n not in tracked_withdrawn]
-            print(f"  {len(tracked_withdrawn)} already tracked in Excel, "
-                  f"{len(withdrawn_new)} new NPRR(s) to process.")
-        else:
-            withdrawn_new = withdrawn_list
-            print("  No prior tracking found — will process all withdrawn NPRRs.")
+        withdrawn_new = resolve_new(withdrawn_list, "List_Withdrawn", "withdrawn")
 
     # ── Approved ──────────────────────────────────────────────────────────────
-    approved_list = NPRR_NUMBERS if NPRR_NUMBERS else get_approved_nprrs()
-    approved_list = [n for n in approved_list if n > APPROVED_MIN_NPRR]
+    approved_list = SCR_NUMBERS if SCR_NUMBERS else fetch_scr_numbers_from_report(SCR_APPROVED_URL, "approved")
+    approved_new = []
     if approved_list:
-        print(f"Found {len(approved_list)} approved NPRR(s) > {APPROVED_MIN_NPRR}: "
+        print(f"Found {len(approved_list)} approved SCR(s): "
               f"{approved_list[0]} - {approved_list[-1]}")
-        tracked_approved = load_excel_nprrs("List_Approved")
-        if tracked_approved:
-            approved_new = [n for n in approved_list if n not in tracked_approved]
-            print(f"  {len(tracked_approved)} already tracked in Excel, "
-                  f"{len(approved_new)} new NPRR(s) to process.")
-        else:
-            approved_new = approved_list
-            print("  No prior tracking found — will process all approved NPRRs.")
+        approved_new = resolve_new(approved_list, "List_Approved", "approved")
+
+    # ── Rejected ──────────────────────────────────────────────────────────────
+    rejected_list = SCR_NUMBERS if SCR_NUMBERS else fetch_scr_numbers_from_report(SCR_REJECTED_URL, "rejected")
+    rejected_new = []
+    if rejected_list:
+        print(f"Found {len(rejected_list)} rejected SCR(s): "
+              f"{rejected_list[0]} - {rejected_list[-1]}")
+        rejected_new = resolve_new(rejected_list, "List_Rejected", "rejected")
 
     print("=" * 60)
 
     # ── Process pending ───────────────────────────────────────────────────────
-    p_files = p_nprrs = 0
+    p_files = p_scrs = 0
     if pending_list:
         print(f"\n{'='*60}")
-        print(f"PENDING NPRRs  ->  {os.path.abspath(PENDING_DIR)}")
+        print(f"PENDING SCRs  ->  {os.path.abspath(BASE_DIR)}")
         print(f"{'='*60}")
-        p_files, p_nprrs = process_nprr_list(pending_list, PENDING_DIR)
-        update_excel_nprrs("List_Pending", pending_list)
+        p_files, p_scrs = process_scr_list(pending_list, BASE_DIR)
+        update_excel_scrs("List_Pending", pending_list)
 
     # ── Process withdrawn ─────────────────────────────────────────────────────
-    w_files = w_nprrs = 0
+    w_files = w_scrs = 0
     if withdrawn_list:
         print(f"\n{'='*60}")
-        print(f"WITHDRAWN NPRRs  ->  {os.path.abspath(WITHDRAWN_DIR)}")
+        print(f"WITHDRAWN SCRs  ->  {os.path.abspath(BASE_DIR)}")
         print(f"{'='*60}")
-        w_files, w_nprrs = process_nprr_list(withdrawn_new, WITHDRAWN_DIR)
-        update_excel_nprrs("List_Withdrawn", withdrawn_list)
+        w_files, w_scrs = process_scr_list(withdrawn_new, BASE_DIR)
+        update_excel_scrs("List_Withdrawn", withdrawn_list)
 
     # ── Process approved ──────────────────────────────────────────────────────
-    a_files = a_nprrs = 0
+    a_files = a_scrs = 0
     if approved_list:
         print(f"\n{'='*60}")
-        print(f"APPROVED NPRRs  ->  {os.path.abspath(APPROVED_DIR)}")
+        print(f"APPROVED SCRs  ->  {os.path.abspath(BASE_DIR)}")
         print(f"{'='*60}")
-        a_files, a_nprrs = process_nprr_list(approved_new, APPROVED_DIR)
-        update_excel_nprrs("List_Approved", approved_list)
+        a_files, a_scrs = process_scr_list(approved_new, BASE_DIR)
+        update_excel_scrs("List_Approved", approved_list)
+
+    # ── Process rejected ──────────────────────────────────────────────────────
+    r_files = r_scrs = 0
+    if rejected_list:
+        print(f"\n{'='*60}")
+        print(f"REJECTED SCRs  ->  {os.path.abspath(BASE_DIR)}")
+        print(f"{'='*60}")
+        r_files, r_scrs = process_scr_list(rejected_new, BASE_DIR)
+        update_excel_scrs("List_Rejected", rejected_list)
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)
-    print(f"Pending  : {p_files} new file(s) across {p_nprrs} NPRR(s)  ->  {os.path.abspath(PENDING_DIR)}")
-    print(f"Withdrawn: {w_files} new file(s) across {w_nprrs} NPRR(s)  ->  {os.path.abspath(WITHDRAWN_DIR)}")
-    print(f"Approved : {a_files} new file(s) across {a_nprrs} NPRR(s)  ->  {os.path.abspath(APPROVED_DIR)}")
-    print(f"Total    : {p_files + w_files + a_files} new file(s) downloaded.")
+    print(f"Pending  : {p_files} new file(s) across {p_scrs} SCR(s)  ->  {os.path.abspath(BASE_DIR)}")
+    print(f"Withdrawn: {w_files} new file(s) across {w_scrs} SCR(s)  ->  {os.path.abspath(BASE_DIR)}")
+    print(f"Approved : {a_files} new file(s) across {a_scrs} SCR(s)  ->  {os.path.abspath(BASE_DIR)}")
+    print(f"Rejected : {r_files} new file(s) across {r_scrs} SCR(s)  ->  {os.path.abspath(BASE_DIR)}")
+    print(f"Total    : {p_files + w_files + a_files + r_files} new file(s) downloaded.")
 
 
 if __name__ == "__main__":
