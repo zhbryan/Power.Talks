@@ -57,7 +57,7 @@ BASE_URL              = "https://www.ercot.com"
 COPMGRR_LIST_URL      = "https://www.ercot.com/mktrules/issues/copmgrr"
 COPMGRR_WITHDRAWN_URL = "https://www.ercot.com/mktrules/issues/reports/copmgrr/withdrawn"
 COPMGRR_APPROVED_URL  = "https://www.ercot.com/mktrules/issues/reports/copmgrr/approved"
-ISSUE_URL             = "https://www.ercot.com/mktrules/issues/COPMGRR{n}"
+ISSUE_URL             = "https://www.ercot.com/mktrules/issues/COPMGRR{n:03d}"
 
 HEADERS = {
     "User-Agent": (
@@ -225,7 +225,7 @@ def process_copmgrr_list(copmgrr_list: list[int], output_dir: str) -> tuple[int,
     total_files = total_copmgrrs = 0
 
     for copmgrr in copmgrr_list:
-        print(f"\nCOPMGRR{copmgrr}  ->  {ISSUE_URL.format(n=copmgrr)}")
+        print(f"\nCOPMGRR{copmgrr:03d}  ->  {ISSUE_URL.format(n=copmgrr)}")
         links = get_document_links(copmgrr)
         time.sleep(REQUEST_DELAY)
 
@@ -233,7 +233,7 @@ def process_copmgrr_list(copmgrr_list: list[int], output_dir: str) -> tuple[int,
             print("  (no downloadable documents found or page does not exist)")
             continue
 
-        copmgrr_dir = os.path.join(output_dir, f"COPMGRR{copmgrr}")
+        copmgrr_dir = os.path.join(output_dir, f"COPMGRR{copmgrr:03d}")
 
         new_items = []
         for item in links:
