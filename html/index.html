@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Power.Talks — AI speaking coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #F6F3EE;
+    --bg-2:      #EFEAE0;
+    --panel:     #FBF9F5;
+    --ink:       #1B1A17;
+    --ink-2:     #3E3C37;
+    --muted:     #86827A;
+    --rule:      #E4DFD3;
+    --rule-2:    #D8D2C3;
+    --accent:    #C8623E;   /* terracotta */
+    --accent-2:  #B0522F;
+    --accent-soft:#F3E3D8;
+    --ok:        #4E7A4A;
+    --warn:      #A3741B;
+    --radius:    14px;
+    --radius-sm: 10px;
+    --shadow-1:  0 1px 0 rgba(27,26,23,.04), 0 1px 2px rgba(27,26,23,.04);
+    --shadow-2:  0 8px 24px -10px rgba(27,26,23,.18), 0 2px 6px rgba(27,26,23,.06);
+    --sans:      'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+    --serif:     'Instrument Serif', Georgia, serif;
+    --mono:      'JetBrains Mono', ui-monospace, monospace;
+  }
+  [data-theme="dark"] {
+    --bg:        #121110;
+    --bg-2:      #191816;
+    --panel:     #1C1B19;
+    --ink:       #F1EEE7;
+    --ink-2:     #CDC9BF;
+    --muted:     #8A857B;
+    --rule:      #2A2824;
+    --rule-2:    #35322D;
+    --accent:    #E17A52;
+    --accent-2:  #CC6A44;
+    --accent-soft:#2A1E17;
+    --shadow-1:  0 1px 0 rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+    --shadow-2:  0 10px 28px -12px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.4);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  input, textarea { font: inherit; color: inherit; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--rule-2); border-radius: 8px; border: 2px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+  // Tweakable defaults that persist to disk via the host
+  window.POWER_TALKS_TWEAKS = /*EDITMODE-BEGIN*/{
+    "theme": "light",
+    "accent": "terracotta",
+    "sidebar": "expanded",
+    "rightPanel": "closed",
+    "typePair": "tight-serif"
+  }/*EDITMODE-END*/;
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="src/icons.jsx"></script>
+<script type="text/babel" src="src/data.jsx"></script>
+<script type="text/babel" src="src/illustration.jsx"></script>
+<script type="text/babel" src="src/meetingtracks.jsx"></script>
+<script type="text/babel" src="src/sidebar.jsx"></script>
+<script type="text/babel" src="src/topbar.jsx"></script>
+<script type="text/babel" src="src/messages.jsx"></script>
+<script type="text/babel" src="src/composer.jsx"></script>
+<script type="text/babel" src="src/rightpanel.jsx"></script>
+<script type="text/babel" src="src/tweaks.jsx"></script>
+<script type="text/babel" src="src/app.jsx"></script>
+</body>
+</html>

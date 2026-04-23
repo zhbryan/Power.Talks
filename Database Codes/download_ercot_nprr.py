@@ -38,7 +38,7 @@ APPROVED_MIN_NPRR = 100
 
 
 # Local folder where files will be saved (one sub-folder per NPRR).
-PENDING_DIR   = r"C:\Users\chunl\OneDrive\Documents\Business Ventures\Power.Talks\Documents Database\ERCOT.MKT.RULES\NPRR"
+PENDING_DIR   = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.MKT.RULES\NPRR"
 WITHDRAWN_DIR = PENDING_DIR
 APPROVED_DIR  = PENDING_DIR
 
@@ -50,7 +50,7 @@ DOWNLOAD_EXTS = {".pdf", ".doc", ".docx", ".xls", ".xlsx"}
 
 # Excel workbook used to track which NPRR numbers have been seen before.
 # The withdrawn list is stored in the "List_Withdrawn" sheet.
-EXCEL_TRACKER = r"C:\Users\chunl\OneDrive\Documents\Business Ventures\Power.Talks\Documents Database\ERCOT.MKT.RULES\NPRR\Current List of NPRRs.xlsx"
+EXCEL_TRACKER = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.MKT.RULES\NPRR\Current List of NPRRs.xlsx"
 
 # ─────────────────────────────────────────────────────────────────────────────
 
