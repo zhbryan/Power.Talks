@@ -48,6 +48,7 @@ const I = {
   Pin:     (p) => <Icon {...p}><path d="M12 17v4M9 3h6l-1 4 3 3v3H7v-3l3-3-1-4z"/></Icon>,
   Globe:   (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></Icon>,
   Bolt:    (p) => <Icon {...p}><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></Icon>,
+  Home:    (p) => <Icon {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></Icon>,
 };
 
 window.I = I;

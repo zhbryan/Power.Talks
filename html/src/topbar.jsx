@@ -1,4 +1,4 @@
-function Topbar({ sectionLabel, detailLabel, onToggleRight, rightOpen }) {
+function Topbar({ sectionLabel, detailLabel, onToggleRight, rightOpen, onHome }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const items = ["Home", "Pricing", "Account", "Contact"];
   const [active, setActive] = React.useState("Home");
@@ -75,7 +75,7 @@ function Topbar({ sectionLabel, detailLabel, onToggleRight, rightOpen }) {
         {items.map(it => (
           <a key={it} href="#"
             className={`pt-nav-item ${active === it ? "is-active" : ""}`}
-            onClick={(e) => { e.preventDefault(); setActive(it); }}
+            onClick={(e) => { e.preventDefault(); setActive(it); if (it === "Home" && onHome) onHome(); }}
           >{it}</a>
         ))}
       </nav>

@@ -1297,9 +1297,9 @@ const CONTEXTUAL_RUNS = {
     { id: "g3", tag: "LINKS",    title: "NOGRR–NPRR cross-references",      desc: "Find NOGRRs that are related to or driven by pending NPRRs.",                 est: "~45s",  kind: "analyze"     },
     { id: "g4", tag: "DRAFT",    title: "Draft operator comments",          desc: "Write technical comments for a specific NOGRR number.",                       est: "~2 min",kind: "generate"    },
   ],
-  "paper-trails:COPMBRR": [
-    { id: "c1", tag: "SUMMARY",  title: "Summarize active COMPBRRs",        desc: "Key commercial operations and market business requirement revisions.",         est: "~40s",  kind: "generate"    },
-    { id: "c2", tag: "ANALYSIS", title: "Business process impact",          desc: "Which COPMBRR changes would alter commercial workflows?",                     est: "~1 min",kind: "analyze"     },
+  "paper-trails:COPMGRR": [
+    { id: "c1", tag: "SUMMARY",  title: "Summarize active COMPGRRs",        desc: "Key commercial operations and market business requirement revisions.",         est: "~40s",  kind: "generate"    },
+    { id: "c2", tag: "ANALYSIS", title: "Business process impact",          desc: "Which COPMGRR changes would alter commercial workflows?",                     est: "~1 min",kind: "analyze"     },
   ],
   "paper-trails:PGRR": [
     { id: "p1", tag: "SUMMARY",  title: "Summarize pending PGRRs",          desc: "Planning guide revision requests currently under review.",                    est: "~40s",  kind: "generate"    },

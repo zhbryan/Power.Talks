@@ -1,6 +1,16 @@
-function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId, onSelect, onNew }) {
+function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId, onSelect, activeMarket, onMarketChange }) {
   const { RECENT_SESSIONS } = window.DATA;
+  const ISO_MARKETS = ["ERCOT","NYISO","MISO","NEISO","PJM","CAISO","SPP"];
+  const [marketOpen, setMarketOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!marketOpen) return;
+    const close = () => setMarketOpen(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [marketOpen]);
   const SECTIONS = [
+    { id: "market-home",      label: "Home",             icon: "Home"  },
     { id: "paper-trails",     label: "Paper Trails",     icon: "Book" },
     { id: "meeting-tracks",   label: "Meeting Tracks",   icon: "Waveform" },
     { id: "hot-topics",       label: "Hot Topics",       icon: "Flame" },
@@ -45,24 +55,49 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
         .pt-side-collapse:hover { background: var(--rule); color: var(--ink); }
         .pt-side.is-collapsed .pt-side-collapse { margin-left: 0; }
 
-        .pt-side-new {
-          margin: 2px 10px 10px;
-          padding: 10px 12px;
-          border: 1px solid var(--rule-2);
-          border-radius: 10px;
-          display: flex; align-items: center; gap: 10px;
-          background: var(--panel);
-          color: var(--ink);
-          font-weight: 500; font-size: 13px;
-          box-shadow: var(--shadow-1);
-          transition: border-color .15s, transform .1s;
+        .pt-iso-wrap {
+          position: relative; margin: 2px 10px 10px;
         }
-        .pt-side-new:hover { border-color: var(--accent); color: var(--accent); }
-        .pt-side.is-collapsed .pt-side-new {
-          margin: 2px 8px 10px;
+        .pt-iso-btn {
+          width: 100%; padding: 10px 12px;
+          border: 1px solid var(--rule-2); border-radius: 10px;
+          display: flex; align-items: center; gap: 9px;
+          background: var(--panel); color: var(--ink);
+          font-weight: 600; font-size: 13px; font-family: var(--mono);
+          box-shadow: var(--shadow-1);
+          transition: border-color .15s;
+          cursor: pointer;
+        }
+        .pt-iso-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .pt-iso-btn.is-open { border-color: var(--accent); }
+        .pt-iso-btn .chev { margin-left: auto; color: var(--muted); transition: transform .18s; }
+        .pt-iso-btn.is-open .chev { transform: rotate(180deg); }
+        .pt-side.is-collapsed .pt-iso-btn {
           padding: 10px; justify-content: center;
         }
-        .pt-side-new b { font-weight: 500; }
+        .pt-side.is-collapsed .pt-iso-btn .iso-label,
+        .pt-side.is-collapsed .pt-iso-btn .chev { display: none; }
+        .pt-iso-dropdown {
+          position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 100;
+          background: var(--panel); border: 1px solid var(--rule-2);
+          border-radius: 10px; box-shadow: var(--shadow-2);
+          overflow: hidden;
+        }
+        .pt-iso-opt {
+          width: 100%; padding: 9px 14px;
+          display: flex; align-items: center; gap: 10px;
+          font-family: var(--mono); font-size: 12.5px; font-weight: 600;
+          color: var(--ink-2); background: transparent; cursor: pointer;
+          transition: background .1s, color .1s;
+          text-align: left;
+        }
+        .pt-iso-opt:hover { background: var(--rule); color: var(--ink); }
+        .pt-iso-opt.is-on { color: var(--accent); }
+        .pt-iso-opt .dot {
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--accent); flex: 0 0 auto;
+        }
+        .pt-iso-opt .dot-gap { width: 6px; flex: 0 0 auto; }
 
         .pt-side-search {
           margin: 0 10px 10px;
@@ -137,7 +172,7 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
       `}</style>
 
       <div className="pt-side-top">
-        <a className="pt-brand" href="#" onClick={(e)=>e.preventDefault()}>
+        <a className="pt-brand" href="#" onClick={(e)=>{ e.preventDefault(); onSectionChange("market-home"); }}>
           <I.Logo size={26}/>
           <span><b>Power</b><i>.</i>Talks</span>
         </a>
@@ -146,10 +181,32 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
         </button>
       </div>
 
-      <button className="pt-side-new" onClick={onNew}>
-        <I.Plus size={16} sw={2}/>
-        <b>New journey</b>
-      </button>
+      {/* ISO market dropdown */}
+      <div className="pt-iso-wrap" onClick={e => e.stopPropagation()}>
+        <button
+          className={`pt-iso-btn ${marketOpen ? "is-open" : ""}`}
+          onClick={() => setMarketOpen(o => !o)}
+          title={activeMarket}
+        >
+          <I.Globe size={15}/>
+          <span className="iso-label">{activeMarket}</span>
+          <I.ChevD size={13} className="chev"/>
+        </button>
+        {marketOpen && (
+          <div className="pt-iso-dropdown">
+            {ISO_MARKETS.map(m => (
+              <button
+                key={m}
+                className={`pt-iso-opt ${activeMarket === m ? "is-on" : ""}`}
+                onClick={() => { onMarketChange(m); setMarketOpen(false); }}
+              >
+                {activeMarket === m ? <span className="dot"/> : <span className="dot-gap"/>}
+                {m}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="pt-side-search">
         <I.Search size={15}/>

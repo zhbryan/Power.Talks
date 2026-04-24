@@ -34,14 +34,15 @@ function App() {
 
   // App state
   const [sidebarExpanded, setSidebarExpanded] = React.useState(tweaks.sidebar === "expanded");
-  const [rightOpen, setRightOpen] = React.useState(false);
+  const [rightOpen, setRightOpen] = React.useState(tweaks.rightPanel === "open");
   React.useEffect(() => { setSidebarExpanded(tweaks.sidebar === "expanded"); }, [tweaks.sidebar]);
   React.useEffect(() => { setRightOpen(tweaks.rightPanel === "open"); }, [tweaks.rightPanel]);
 
   const [activeId, setActiveId] = React.useState("s1");
-  const [activeSection, setActiveSection] = React.useState("paper-trails");
+  const [activeMarket, setActiveMarket] = React.useState("ERCOT");
+  const [activeSection, setActiveSection] = React.useState("market-home");
   const [activePaperCode, setActivePaperCode] = React.useState("NPRR");
-  const [activeMeetingNode, setActiveMeetingNode] = React.useState("TAC");
+  const [activeMeetingNode, setActiveMeetingNode] = React.useState("BOD");
   const [activeNprr, setActiveNprr] = React.useState(null);
   const [draft, setDraft] = React.useState("");
 
@@ -55,7 +56,12 @@ function App() {
     "stats-illustrated": "Stats Illustrated",
     "gallery":           "Gallery",
   };
-  const sectionLabel = SECTION_LABELS[activeSection] || "";
+  const sectionLabel = activeSection === "market-home" ? activeMarket : (SECTION_LABELS[activeSection] || "");
+
+  const onMarketChange = (market) => {
+    setActiveMarket(market);
+    setActiveSection("market-home");
+  };
   let detailLabel = "";
   if (activeSection === "paper-trails") {
     const item = (window.PAPER_TRAIL_CODES || []).find(c => c.code === activePaperCode);
@@ -138,7 +144,8 @@ function App() {
         onSectionChange={setActiveSection}
         activeId={activeId}
         onSelect={setActiveId}
-        onNew={() => setDraft("")}
+        activeMarket={activeMarket}
+        onMarketChange={onMarketChange}
       />
 
       <Topbar
@@ -146,6 +153,7 @@ function App() {
         detailLabel={detailLabel}
         rightOpen={rightOpen}
         onToggleRight={() => setRightOpen(o => !o)}
+        onHome={() => setActiveSection("market-home")}
       />
 
       <div className="pt-main-col">
@@ -153,7 +161,9 @@ function App() {
           <MessageStream
             messages={MESSAGES}
             illustration={
-              activeSection === "paper-trails"
+              activeSection === "market-home"
+                ? <ERCOTHome onSectionChange={setActiveSection}/>
+                : activeSection === "paper-trails"
                 ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick}/>
                 : activeSection === "meeting-tracks"
                 ? <MeetingTracksOrgChart selected={activeMeetingNode} onSelect={onMeetingNodeClick}/>

@@ -147,7 +147,7 @@ window.Waveform = Waveform;
 const PAPER_TRAIL_CODES = [
   { code: "NPRR",   name: "Nodal Protocol Revision Request",        count: 1287 },
   { code: "SCR",    name: "System Change Request",                   count: 412 },
-  { code: "COPMBRR",name: "Commercial Ops Planning & Mkt Biz Req.",  count: 58  },
+  { code: "COPMGRR",name: "Commercial Ops Planning & Mkt Biz Req.",  count: 58  },
   { code: "NOGRR",  name: "Nodal Operating Guide Revision Request",  count: 274 },
   { code: "OBDRR",  name: "Other Binding Document Revision Request", count: 96  },
   { code: "PGRR",   name: "Planning Guide Revision Request",         count: 118 },
@@ -607,3 +607,130 @@ const FOLDER_PATHS = {
 window.PaperTrailsIllustration = PaperTrailsIllustration;
 window.PAPER_TRAIL_CODES = PAPER_TRAIL_CODES;
 window.FOLDER_PATHS = FOLDER_PATHS;
+
+// ERCOT market home page — shown when ERCOT is selected from the ISO market list
+function ERCOTHome({ onSectionChange }) {
+  const STATS = [
+    { label: "Grid Status",       value: "Normal",   unit: "",        ok: true  },
+    { label: "Current Load",      value: "52,847",   unit: "MW"               },
+    { label: "Wind Generation",   value: "14,203",   unit: "MW"               },
+    { label: "Solar Generation",  value: "6,891",    unit: "MW"               },
+    { label: "Installed Capacity",value: "89,312",   unit: "MW"               },
+    { label: "Active NPRRs",      value: "1,287",    unit: "tracked"          },
+  ];
+  const LINKS = [
+    { id: "paper-trails",    icon: "Book",      label: "Paper Trails",    desc: "NPRRs, NOGRRs, COPMGRRs and more" },
+    { id: "meeting-tracks",  icon: "Waveform",  label: "Meeting Tracks",  desc: "TAC, COPS, RMS committee activity" },
+    { id: "hot-topics",      icon: "Flame",     label: "Hot Topics",      desc: "Market design issues and debates"  },
+    { id: "daily-headlines", icon: "Lightning", label: "Daily Headlines", desc: "Latest ERCOT news and alerts"      },
+  ];
+  return (
+    <div className="pt-ercot-home">
+      <style>{`
+        .pt-ercot-home { padding: 24px 28px 32px; max-width: 760px; margin: 0 auto; }
+        .pt-ercot-hdr {
+          display: flex; align-items: center; gap: 14px; margin-bottom: 22px;
+        }
+        .pt-ercot-logo {
+          width: 48px; height: 48px; border-radius: 12px;
+          background: var(--accent); display: grid; place-items: center;
+          flex: 0 0 auto; color: #fff;
+        }
+        .pt-ercot-h1 {
+          font-family: var(--serif); font-size: 28px; font-weight: 400;
+          color: var(--ink); margin: 0; line-height: 1.15;
+        }
+        .pt-ercot-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+        .pt-ercot-badge {
+          margin-left: auto;
+          padding: 5px 12px; border-radius: 99px;
+          font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .06em;
+          background: color-mix(in oklab, #2d9e5a, transparent 85%);
+          color: #1e7a44;
+          border: 1px solid color-mix(in oklab, #2d9e5a, transparent 65%);
+        }
+        .pt-ercot-stats {
+          display: grid; grid-template-columns: repeat(3, 1fr);
+          gap: 10px; margin-bottom: 22px;
+        }
+        @media (max-width: 560px) { .pt-ercot-stats { grid-template-columns: repeat(2, 1fr); } }
+        .pt-ercot-stat {
+          padding: 14px 16px; border: 1px solid var(--rule);
+          border-radius: 10px; background: var(--panel);
+        }
+        .pt-ercot-stat-val {
+          font-family: var(--mono); font-size: 20px; font-weight: 700;
+          color: var(--ink); letter-spacing: -.01em;
+          display: flex; align-items: baseline; gap: 4px;
+        }
+        .pt-ercot-stat-val .u { font-size: 11px; font-weight: 500; color: var(--muted); }
+        .pt-ercot-stat.ok .pt-ercot-stat-val { color: #1e7a44; }
+        .pt-ercot-stat-lbl { font-size: 11.5px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+        .pt-ercot-rule { border: none; border-top: 1px solid var(--rule); margin: 0 0 18px; }
+        .pt-ercot-qlbl {
+          font-size: 11px; font-family: var(--mono); letter-spacing: .08em;
+          text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 10px;
+        }
+        .pt-ercot-links {
+          display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        }
+        @media (max-width: 560px) { .pt-ercot-links { grid-template-columns: 1fr; } }
+        .pt-ercot-lnk {
+          display: flex; align-items: flex-start; gap: 12px;
+          padding: 14px 16px; border: 1px solid var(--rule-2);
+          border-radius: 10px; background: var(--panel);
+          color: var(--ink); text-align: left; cursor: pointer;
+          transition: border-color .15s, transform .1s, box-shadow .1s;
+        }
+        .pt-ercot-lnk:hover {
+          border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-1);
+        }
+        .pt-ercot-lnk-ico {
+          width: 32px; height: 32px; border-radius: 8px;
+          background: var(--accent-soft); display: grid; place-items: center;
+          color: var(--accent-2); flex: 0 0 auto;
+        }
+        .pt-ercot-lnk b { display: block; font-weight: 500; font-size: 13.5px; margin-bottom: 2px; }
+        .pt-ercot-lnk span { font-size: 12px; color: var(--muted); line-height: 1.4; }
+      `}</style>
+
+      <div className="pt-ercot-hdr">
+        <div className="pt-ercot-logo"><I.Bolt size={22}/></div>
+        <div>
+          <h1 className="pt-ercot-h1">ERCOT</h1>
+          <div className="pt-ercot-sub">Electric Reliability Council of Texas</div>
+        </div>
+        <div className="pt-ercot-badge">GRID NORMAL</div>
+      </div>
+
+      <div className="pt-ercot-stats">
+        {STATS.map((s, i) => (
+          <div key={i} className={`pt-ercot-stat ${s.ok ? "ok" : ""}`}>
+            <div className="pt-ercot-stat-val">
+              {s.value}
+              {s.unit && <span className="u">{s.unit}</span>}
+            </div>
+            <div className="pt-ercot-stat-lbl">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <hr className="pt-ercot-rule"/>
+
+      <div className="pt-ercot-qlbl">Quick Access</div>
+      <div className="pt-ercot-links">
+        {LINKS.map(l => {
+          const Ico = I[l.icon];
+          return (
+            <button key={l.id} className="pt-ercot-lnk" onClick={() => onSectionChange && onSectionChange(l.id)}>
+              <div className="pt-ercot-lnk-ico"><Ico size={16}/></div>
+              <div><b>{l.label}</b><span>{l.desc}</span></div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+window.ERCOTHome = ERCOTHome;

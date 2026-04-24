@@ -1,11 +1,5 @@
 function Composer({ value, onChange, onSend, onSuggest }) {
-  const [mode, setMode] = React.useState("coach"); // coach | rehearse | analyze
   const [recording, setRecording] = React.useState(false);
-  const modes = [
-    { id: "coach",    label: "Coach",    icon: "Sparkle" },
-    { id: "rehearse", label: "Rehearse", icon: "Mic" },
-    { id: "analyze",  label: "Analyze",  icon: "Chart" },
-  ];
   const taRef = React.useRef(null);
   const autoResize = () => {
     const ta = taRef.current; if (!ta) return;
@@ -110,16 +104,6 @@ function Composer({ value, onChange, onSend, onSuggest }) {
         />
         <div className="pt-comp-row">
           <button className="pt-comp-attach" title="Attach"><I.Attach size={16}/></button>
-          {modes.map(m => (
-            <button key={m.id}
-              className={`pt-comp-chip ${mode === m.id ? "is-on" : ""}`}
-              onClick={() => setMode(m.id)}
-            >
-              {React.createElement(I[m.icon], { size: 13, sw: 2 })}
-              {m.label}
-            </button>
-          ))}
-          <div className="pt-comp-spacer"/>
           <button
             className={`pt-mic ${recording ? "is-rec" : ""}`}
             onClick={() => setRecording(r => !r)}
@@ -127,6 +111,7 @@ function Composer({ value, onChange, onSend, onSuggest }) {
           >
             <I.Mic size={16}/>
           </button>
+          <div className="pt-comp-spacer"/>
           <button
             className="pt-send"
             disabled={!hasText}
