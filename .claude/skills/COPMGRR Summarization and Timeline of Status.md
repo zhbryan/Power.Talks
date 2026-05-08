@@ -1,18 +1,18 @@
 ---
-name: COPMBRR-Summarization-and-Timeline
-description: Use when asked to summarize a COPMBRR, analyze its background and impacts, or produce a stakeholder timeline report for a COPMBRR document set.
+name: COPMGRR-Summarization-and-Timeline
+description: Use when asked to summarize a COPMGRR, analyze its background and impacts, or produce a stakeholder timeline report for a COPMGRR document set.
 ---
 
-# COPMBRR Summarization and Timeline of Status
+# COPMGRR Summarization and Timeline of Status
 
 ## Overview
 
-Reads all documents in a COPMBRR folder, synthesizes the revision's main ideas and potential impacts, and reconstructs the full ERCOT stakeholder discussion timeline. Outputs a `.docx` report saved to the COPMBRR's `Quick runs` sub-folder.
+Reads all documents in a COPMGRR folder, synthesizes the revision's main ideas and potential impacts, and reconstructs the full ERCOT stakeholder discussion timeline. Outputs a `.docx` report saved to the COPMGRR's `Quick runs` sub-folder.
 
 ## Output Location
 
 ```
-Documents Database/ERCOT.MKT.RULES/COPMBRR/COPMBRR<number>/Quick runs/COPMBRR<number> Summary.docx
+Documents Database/ERCOT.MKT.RULES/COPMGRR/COPMGRR<number>/Quick runs/COPMGRR<number> Summary.docx
 ```
 
 Create `Quick runs/` if it does not exist.
@@ -21,7 +21,7 @@ Create `Quick runs/` if it does not exist.
 
 ## Document Type Reference
 
-Each document in the COPMBRR folder has a distinct role. Read them all; use only what is relevant to each report section.
+Each document in the COPMGRR folder has a distinct role. Read them all; use only what is relevant to each report section.
 
 | Pattern in filename | Content |
 |---------------------|---------|
@@ -74,7 +74,7 @@ motion_lines = [s for s in strings if "motion" in s.lower() or "copmbrr" in s.lo
 
 ### Step 1 — Gather documents
 
-List all files in `Documents Database/ERCOT.MKT.RULES/COPMBRR/COPMBRR<number>/` and sort by document sequence number (the `NN` in `COPMBRRxx-NN`).
+List all files in `Documents Database/ERCOT.MKT.RULES/COPMGRR/COPMGRR<number>/` and sort by document sequence number (the `NN` in `COPMGRRxx-NN`).
 
 ### Step 2 — Extract core content
 
@@ -86,7 +86,7 @@ Read the `-01` document first. Extract:
 - Sponsor name, company, email, phone
 - Market segment
 
-If a `COPMBRR<number> Profile.json` already exists in `Quick runs/`, load it instead of re-extracting — it contains all fields pre-parsed.
+If a `COPMGRR<number> Profile.json` already exists in `Quick runs/`, load it instead of re-extracting — it contains all fields pre-parsed.
 
 ### Step 3 — Extract impact analysis
 
@@ -127,7 +127,7 @@ Infer from the latest document in the folder:
 Use `python-docx` to produce the `.docx` file. Structure:
 
 ```
-COPMBRR<number> — <Title>
+COPMGRR<number> — <Title>
 Summary Report
 ────────────────────────────────────────────
 1. Executive Summary
@@ -135,7 +135,7 @@ Summary Report
    - Why it matters (background context)
    - Key potential impacts on market participants
 
-2. COPMBRR Details
+2. COPMGRR Details
    - Status  |  Date Posted  |  Requested Resolution
    - Agreement Sections Revised
    - Sponsor
@@ -150,7 +150,7 @@ Summary Report
    ... one row per meeting event, chronological
 
 5. Current Status
-   - Plain-language statement of where the COPMBRR stands today
+   - Plain-language statement of where the COPMGRR stands today
    - Next expected step (if pending)
 ```
 
@@ -164,7 +164,7 @@ import os
 doc = Document()
 
 # Title
-t = doc.add_heading(f"COPMBRR{n} — {title}", level=1)
+t = doc.add_heading(f"COPMGRR{n} — {title}", level=1)
 
 # Section helper
 def section(doc, heading, body_lines):
@@ -184,7 +184,7 @@ for event in timeline_events:
     row[2].text = event["action"]
     row[3].text = event["outcome"]
 
-out_path = os.path.join(folder, "Quick runs", f"COPMBRR{n} Summary.docx")
+out_path = os.path.join(folder, "Quick runs", f"COPMGRR{n} Summary.docx")
 os.makedirs(os.path.dirname(out_path), exist_ok=True)
 doc.save(out_path)
 ```
@@ -209,5 +209,5 @@ doc.save(out_path)
 | Treating PRS/TAC ballots as reports | Ballots are vote records only; narrative is in the paired Report doc |
 | Using only the `-01` doc and ignoring PRS/TAC reports | PRS and TAC reports contain stakeholder concerns and agreement modifications — essential for the timeline |
 | Writing the timeline from filenames alone | Always read the Report documents; filenames give the date but not the outcome |
-| Saving as `.docx` to the wrong path | Must be `COPMBRR<number>/Quick runs/COPMBRR<number> Summary.docx` — not the root folder |
+| Saving as `.docx` to the wrong path | Must be `COPMGRR<number>/Quick runs/COPMGRR<number> Summary.docx` — not the root folder |
 | python-docx or pywin32 missing | `pip install python-docx pywin32` |

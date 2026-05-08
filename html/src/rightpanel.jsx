@@ -107,16 +107,109 @@ function NprrProfileCard({ nprr }) {
   );
 }
 
+function CopmgrrProfileCard({ copmgrr }) {
+  const [profile, setProfile] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setProfile(null);
+    const n = String(copmgrr).padStart(3, "0");
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/COPMGRR/COPMGRR${n}/Quick%20runs/COPMGRR${n}%20Profile.json`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setProfile(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [copmgrr]);
+
+  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Pending: "var(--warn)" };
+  const sc = profile ? (STATUS_COLOR[profile.status] || "var(--muted)") : "var(--muted)";
+  const numStr = String(copmgrr).padStart(3, "0");
+
+  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading profile…</div>;
+  if (error) {
+    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
+    return (
+      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
+        {isNetwork
+          ? <>No profile loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
+          : error.includes("404")
+            ? <>Profile not yet generated for COPMGRR{numStr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>COPMGRR Profile</span> skill to create it.</>
+            : <>Could not load profile. ({error})</>
+        }
+      </div>
+    );
+  }
+  if (!profile) return null;
+
+  const Field = ({ label, value }) => value ? (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
+    </div>
+  ) : null;
+
+  return (
+    <div>
+      <div className="np-status-row">
+        <span className="np-num">COPMGRR{numStr}</span>
+        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status}</span>
+      </div>
+      <div className="np-title">{profile.title}</div>
+
+      <Field label="Date Posted"           value={profile.date_posted_decision} />
+      <Field label="Requested Resolution"  value={profile.timeline_requested_resolution} />
+      <Field label="Effective Date"        value={profile.effective_date} />
+      <Field label="Market Segment"        value={profile.market_segment} />
+
+      <hr className="np-divider" />
+      <Field label="Sponsor"  value={profile.sponsor_name && `${profile.sponsor_name} · ${profile.sponsor_company}`} />
+      <Field label="Email"    value={profile.sponsor_email} />
+      <Field label="Phone"    value={profile.sponsor_phone} />
+
+      {profile.agreement_sections_requiring_revision?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Agreement Sections</div>
+        {profile.agreement_sections_requiring_revision.map((s, i) =>
+          <span key={i} className="np-proto-tag">{s}</span>
+        )}
+      </>}
+
+      {profile.reason_for_revision?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Reason for Revision</div>
+        <div>{profile.reason_for_revision.map((r, i) =>
+          <span key={i} className="np-reason-chip">{r}</span>
+        )}</div>
+      </>}
+
+      {profile.timeline?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Timeline</div>
+        <div className="np-tl">
+          {profile.timeline.map((t, i) => (
+            <div key={i} className="np-tl-row">
+              <div className={`np-tl-dot ${i === profile.timeline.length - 1 ? "last" : ""}`} />
+              <span className="np-tl-date">{t.date}</span>
+              <span className="np-tl-ev"><b>{t.event}</b></span>
+            </div>
+          ))}
+        </div>
+      </>}
+    </div>
+  );
+}
+
 function RightPanel({ open, onClose, onRunPrompt, context }) {
   const { SUGGESTED_RUNS, ARTIFACTS } = window.DATA;
   const [tab, setTab] = React.useState("runs"); // runs | artifacts | profile
 
   const ctx = context || {};
   const hasNprr = Boolean(ctx.nprr);
+  const hasCopmgrr = Boolean(ctx.copmgrr);
 
   React.useEffect(() => {
-    if (hasNprr) setTab("runs");
-  }, [ctx.nprr]);
+    if (hasNprr || hasCopmgrr) setTab("runs");
+  }, [ctx.nprr, ctx.copmgrr]);
 
   return (
     <aside className={`pt-right ${open ? "is-open" : ""}`} aria-hidden={!open}>
@@ -269,6 +362,8 @@ function RightPanel({ open, onClose, onRunPrompt, context }) {
         {tab === "runs" && (
           hasNprr
             ? <NprrProfileCard nprr={ctx.nprr} />
+            : hasCopmgrr
+            ? <CopmgrrProfileCard copmgrr={ctx.copmgrr} />
             : <>
                 <p className="pt-runs-note">Suggested study runs</p>
                 {(SUGGESTED_RUNS || []).map(r => (

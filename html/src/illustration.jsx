@@ -337,13 +337,13 @@ function NprrDetailView({ nprr, onBack }) {
   );
 }
 
-function NprrListPanel({ label, items, maxHeight, statusColor, onNprrClick }) {
+function NprrListPanel({ code = "NPRR", label, items, maxHeight, statusColor, onNprrClick }) {
   const [query, setQuery] = React.useState("");
-  const baseFolder = FOLDER_PATHS["NPRR"];
+  const baseFolder = FOLDER_PATHS[code];
   const filtered = items.filter(item => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
-    return String(item.n).includes(q) || item.title.toLowerCase().includes(q);
+    return String(item.n).includes(q) || (item.title || "").toLowerCase().includes(q);
   });
   return (
     <div className="pt-nprr-panel">
@@ -426,16 +426,16 @@ function NprrListPanel({ label, items, maxHeight, statusColor, onNprrClick }) {
 
       <div className="pt-nprr-list" style={{ maxHeight }}>
         {filtered.length === 0
-          ? <div className="pt-nprr-empty">No matching NPRRs</div>
+          ? <div className="pt-nprr-empty">No matching {code}s</div>
           : filtered.map(item => (
             <div
               key={item.n}
               className="pt-nprr-item"
-              onClick={() => onNprrClick ? onNprrClick(item.n) : window.open(`${baseFolder}/NPRR${item.n}`, "_blank")}
-              title={`NPRR${item.n} — ${item.title}`}
+              onClick={() => onNprrClick ? onNprrClick(item.n) : window.open(`${baseFolder}/${code}${String(item.n).padStart(code === "NPRR" ? 0 : 3, "0")}`, "_blank")}
+              title={`${code}${item.n} — ${item.title}`}
               style={{ cursor: "pointer" }}
             >
-              <span className="pt-nprr-num">NPRR{item.n}</span>
+              <span className="pt-nprr-num">{code}{code !== "NPRR" ? String(item.n).padStart(3, "0") : item.n}</span>
               <span className="pt-nprr-title">{item.title || "—"}</span>
             </div>
           ))
@@ -456,11 +456,156 @@ function NprrPanels({ onNprrClick }) {
   );
 }
 
-function PaperTrailsIllustration({ active, onActiveChange, onNprrClick }) {
+function CopmgrrDetailView({ copmgrr, onBack }) {
+  const [summary, setSummary] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error,   setError]   = React.useState(null);
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setSummary(null);
+    const n = String(copmgrr).padStart(3, "0");
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/COPMGRR/COPMGRR${n}/Quick%20runs/COPMGRR${n}%20Summary.json`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setSummary(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [copmgrr]);
+
+  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Pending: "var(--warn)" };
+  const sc = summary ? (STATUS_COLOR[summary.status] || "var(--muted)") : "var(--muted)";
+  const numStr = String(copmgrr).padStart(3, "0");
+
+  return (
+    <div style={{ position: "relative" }}>
+      <div className="nd-head">
+        <button className="nd-back" onClick={onBack}>← Back</button>
+        {summary && <>
+          <span className="nd-num">COPMGRR{numStr}</span>
+          <span className="nd-badge" style={{ background: sc + "22", color: sc }}>{summary.status}</span>
+        </>}
+      </div>
+
+      {loading && <div className="nd-loading">Loading summary…</div>}
+      {error && (() => {
+        const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
+        return (
+          <div className="nd-error">
+            {isNetwork
+              ? <>Cannot reach server — open via <b>http://localhost</b>, not file://.<br/>Path: <code style={{fontSize:10}}>/Power.Talks/Documents Database/ERCOT.MKT.RULES/COPMGRR/COPMGRR{numStr}/Quick runs/</code></>
+              : error.includes("404")
+                ? <>Summary not yet generated for COPMGRR{numStr}. Run the <b>COPMGRR Summarization and Timeline of Status</b> skill to create it.</>
+                : <>Could not load summary. ({error})</>
+            }
+          </div>
+        );
+      })()}
+
+      {summary && <>
+        <h2 className="nd-title">{summary.title}</h2>
+        <div className="nd-eyebrow">
+          Posted {summary.date_posted}
+          {summary.effective_date ? `  ·  Effective: ${summary.effective_date}` : ""}
+          {summary.sponsor ? `  ·  Sponsor: ${summary.sponsor}` : ""}
+        </div>
+
+        {summary.agreement_sections?.length > 0 && <>
+          <div>{summary.agreement_sections.map((s, i) =>
+            <span key={i} className="nd-proto-tag">{s}</span>
+          )}</div>
+        </>}
+
+        {summary.executive_summary && <>
+          <div className="nd-sec-hd">Executive Summary</div>
+          <div className="nd-body">{summary.executive_summary}</div>
+        </>}
+
+        {summary.background && <>
+          <div className="nd-sec-hd">Background</div>
+          <div className="nd-body">{summary.background}</div>
+        </>}
+
+        {summary.key_change && <>
+          <div className="nd-sec-hd">Key Change</div>
+          <div className="nd-body">{summary.key_change}</div>
+        </>}
+
+        {summary.impacts?.length > 0 && <>
+          <div className="nd-sec-hd">Potential Impacts</div>
+          <div className="nd-impact-list">
+            {summary.impacts.map((imp, i) => (
+              <div key={i} className="nd-impact-row">
+                <span className="nd-impact-cat">{imp.category}</span>
+                <span className="nd-impact-txt">{imp.text}</span>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {summary.impact_analysis?.length > 0 && <>
+          <div className="nd-sec-hd">Impact Analysis</div>
+          {summary.impact_analysis.map((ia, i) => (
+            <div key={i}>
+              <div className="nd-ia-lbl">{ia.label}</div>
+              <table className="nd-table">
+                <thead><tr><th>Category</th><th>Detail</th></tr></thead>
+                <tbody>
+                  {ia.rows.map((row, j) => (
+                    <tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </>}
+
+        {summary.timeline?.length > 0 && <>
+          <div className="nd-sec-hd">Stakeholder Discussion Timeline</div>
+          <table className="nd-tl-table">
+            <thead>
+              <tr>
+                <th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summary.timeline.map((t, i) => (
+                <tr key={i}>
+                  <td className="nd-tl-date-cell">{t.date}</td>
+                  <td className="nd-tl-body-cell">{t.body}</td>
+                  <td className="nd-tl-action-cell">{t.action}</td>
+                  <td>{t.notes}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>}
+
+        {summary.current_status?.length > 0 && <>
+          <div className="nd-sec-hd">Current Status</div>
+          {summary.current_status.map((p, i) =>
+            <div key={i} className="nd-body">{p}</div>
+          )}
+        </>}
+      </>}
+    </div>
+  );
+}
+
+function CopmgrrPanels({ onCopmgrrClick }) {
+  const d = window.DATA || {};
+  return (
+    <React.Fragment>
+      <NprrListPanel code="COPMGRR" label="Pending"   items={d.COPMGRR_PENDING   || []} maxHeight="200px" statusColor="var(--warn)"  onNprrClick={onCopmgrrClick} />
+      <NprrListPanel code="COPMGRR" label="Approved"  items={d.COPMGRR_APPROVED  || []} maxHeight="200px" statusColor="var(--ok)"    onNprrClick={onCopmgrrClick} />
+      <NprrListPanel code="COPMGRR" label="Withdrawn" items={d.COPMGRR_WITHDRAWN || []} maxHeight="130px" statusColor="var(--muted)" onNprrClick={onCopmgrrClick} />
+    </React.Fragment>
+  );
+}
+
+function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgrrClick }) {
   const activeItem = PAPER_TRAIL_CODES.find(c => c.code === active) || PAPER_TRAIL_CODES[0];
   const [selectedNprr, setSelectedNprr] = React.useState(null);
+  const [selectedCopmgrr, setSelectedCopmgrr] = React.useState(null);
 
-  React.useEffect(() => { setSelectedNprr(null); }, [active]);
+  React.useEffect(() => { setSelectedNprr(null); setSelectedCopmgrr(null); }, [active]);
 
   const handleNprrClick = (n) => {
     setSelectedNprr(n);
@@ -469,6 +614,14 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick }) {
   const handleBack = () => {
     setSelectedNprr(null);
     if (onNprrClick) onNprrClick(null);
+  };
+  const handleCopmgrrClick = (n) => {
+    setSelectedCopmgrr(n);
+    if (onCopmgrrClick) onCopmgrrClick(n);
+  };
+  const handleCopmgrrBack = () => {
+    setSelectedCopmgrr(null);
+    if (onCopmgrrClick) onCopmgrrClick(null);
   };
   return (
     <div className="pt-paper">
@@ -593,15 +746,24 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick }) {
             </div>
           : <NprrPanels onNprrClick={handleNprrClick} />
       )}
+
+      {active === "COPMGRR" && (
+        selectedCopmgrr
+          ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
+              <CopmgrrDetailView copmgrr={selectedCopmgrr} onBack={handleCopmgrrBack} />
+            </div>
+          : <CopmgrrPanels onCopmgrrClick={handleCopmgrrClick} />
+      )}
     </div>
   );
 }
 
 // Local OneDrive folder paths for codes that have downloaded document sets
 const FOLDER_PATHS = {
-  "NPRR":  "file:///E:/wamp64/www/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NPRR",
-  "SCR":   "file:///E:/wamp64/www/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/SCR",
-  "NOGRR": "file:///E:/wamp64/www/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NOGRR",
+  "NPRR":    "file:///E:/wamp64/www/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NPRR",
+  "SCR":     "file:///E:/wamp64/www/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/SCR",
+  "NOGRR":   "file:///E:/wamp64/www/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NOGRR",
+  "COPMGRR": "file:///E:/wamp64/www/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/COPMGRR",
 };
 
 window.PaperTrailsIllustration = PaperTrailsIllustration;
