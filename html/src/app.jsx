@@ -45,10 +45,12 @@ function App() {
   const [activeMeetingNode, setActiveMeetingNode] = React.useState("BOD");
   const [activeNprr, setActiveNprr] = React.useState(null);
   const [activeCopmgrr, setActiveCopmgrr] = React.useState(null);
+  const [activePgrr, setActivePgrr] = React.useState(null);
   const [draft, setDraft] = React.useState("");
 
   React.useEffect(() => { setActiveNprr(null); }, [activeSection, activePaperCode]);
   React.useEffect(() => { setActiveCopmgrr(null); }, [activeSection, activePaperCode]);
+  React.useEffect(() => { setActivePgrr(null); }, [activeSection, activePaperCode]);
 
   const SECTION_LABELS = {
     "paper-trails":      "Paper Trails",
@@ -83,6 +85,10 @@ function App() {
   };
   const onCopmgrrClick = (n) => {
     setActiveCopmgrr(n);
+    if (n !== null) setRightOpen(true);
+  };
+  const onPgrrClick = (n) => {
+    setActivePgrr(n);
     if (n !== null) setRightOpen(true);
   };
   const onMeetingNodeClick = (id) => {
@@ -170,7 +176,7 @@ function App() {
               activeSection === "market-home"
                 ? <ERCOTHome onSectionChange={setActiveSection}/>
                 : activeSection === "paper-trails"
-                ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick}/>
+                ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick} onPgrrClick={onPgrrClick}/>
                 : activeSection === "meeting-tracks"
                 ? <MeetingTracksOrgChart selected={activeMeetingNode} onSelect={onMeetingNodeClick}/>
                 : <TalkIllustration title={CURRENT_TALK_TITLE} meta={CURRENT_TALK_META}/>
@@ -189,7 +195,7 @@ function App() {
         open={rightOpen}
         onClose={() => setRightOpen(false)}
         onRunPrompt={onRunPrompt}
-        context={{ section: activeSection, code: activePaperCode, node: activeMeetingNode, nprr: activeNprr, copmgrr: activeCopmgrr }}
+        context={{ section: activeSection, code: activePaperCode, node: activeMeetingNode, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr }}
       />
 
       <TweaksPanel

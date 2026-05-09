@@ -199,6 +199,74 @@ function CopmgrrProfileCard({ copmgrr }) {
   );
 }
 
+function PgrrProfileCard({ pgrr }) {
+  const [profile, setProfile] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setProfile(null);
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/PGRR/PGRR${pgrr}/Quick%20runs/PGRR${pgrr}%20Profile.json`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setProfile(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [pgrr]);
+
+  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Pending: "var(--warn)" };
+  const sc = profile ? (STATUS_COLOR[profile.status] || "var(--muted)") : "var(--muted)";
+
+  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading profile…</div>;
+  if (error) {
+    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
+    return (
+      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
+        {isNetwork
+          ? <>No profile loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
+          : error.includes("404")
+            ? <>Profile not yet generated for PGRR{pgrr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>PGRR Profile</span> skill to create it.</>
+            : <>Could not load profile. ({error})</>
+        }
+      </div>
+    );
+  }
+  if (!profile) return null;
+
+  const Field = ({ label, value }) => value ? (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
+    </div>
+  ) : null;
+
+  return (
+    <div>
+      <div className="np-status-row">
+        <span className="np-num">PGRR{profile.issue_number}</span>
+        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status}</span>
+      </div>
+      <div className="np-title">{profile.title}</div>
+
+      <Field label="Date Posted"           value={profile.date_posted_decision} />
+      <Field label="Requested Resolution"  value={profile.timeline_requested_resolution} />
+      <Field label="Effective Date"        value={profile.effective_date} />
+      <Field label="Market Segment"        value={profile.market_segment} />
+
+      <hr className="np-divider" />
+      <Field label="Sponsor"  value={profile.sponsor_name && `${profile.sponsor_name} · ${profile.sponsor_company}`} />
+      <Field label="Email"    value={profile.sponsor_email} />
+      <Field label="Phone"    value={profile.sponsor_phone} />
+
+      {profile.governing_document_sections?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Planning Guide Sections</div>
+        {profile.governing_document_sections.map((s, i) =>
+          <span key={i} className="np-proto-tag">{s}</span>
+        )}
+      </>}
+    </div>
+  );
+}
+
 function RightPanel({ open, onClose, onRunPrompt, context }) {
   const { SUGGESTED_RUNS, ARTIFACTS } = window.DATA;
   const [tab, setTab] = React.useState("runs"); // runs | artifacts | profile
@@ -206,10 +274,11 @@ function RightPanel({ open, onClose, onRunPrompt, context }) {
   const ctx = context || {};
   const hasNprr = Boolean(ctx.nprr);
   const hasCopmgrr = Boolean(ctx.copmgrr);
+  const hasPgrr = Boolean(ctx.pgrr);
 
   React.useEffect(() => {
-    if (hasNprr || hasCopmgrr) setTab("runs");
-  }, [ctx.nprr, ctx.copmgrr]);
+    if (hasNprr || hasCopmgrr || hasPgrr) setTab("runs");
+  }, [ctx.nprr, ctx.copmgrr, ctx.pgrr]);
 
   return (
     <aside className={`pt-right ${open ? "is-open" : ""}`} aria-hidden={!open}>
@@ -364,6 +433,8 @@ function RightPanel({ open, onClose, onRunPrompt, context }) {
             ? <NprrProfileCard nprr={ctx.nprr} />
             : hasCopmgrr
             ? <CopmgrrProfileCard copmgrr={ctx.copmgrr} />
+            : hasPgrr
+            ? <PgrrProfileCard pgrr={ctx.pgrr} />
             : <>
                 <p className="pt-runs-note">Suggested study runs</p>
                 {(SUGGESTED_RUNS || []).map(r => (

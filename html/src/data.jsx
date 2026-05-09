@@ -1374,10 +1374,69 @@ const COPMGRR_APPROVED = [
   { n: 53, title: "Administrative Change for Commercial Operations Market Guide re NPRR1298" },
 ];
 
+// Pending PGRRs — updated 2026-05-09 from ERCOT tracker
+const PGRR_PENDING = [
+  { n: 122, title: "Reliability Performance Criteria for Loss of Load" },
+  { n: 123, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
+  { n: 124, title: "ESR Maintenance Exception to Modifications" },
+  { n: 126, title: "Related to NPRR1284, Guaranteed Reliability Load Process" },
+  { n: 128, title: "Regional Transmission Plan Review of Grid Enhancing Technologies" },
+  { n: 130, title: "Related to NPRR1295, GTC Exit Solutions" },
+  { n: 133, title: "Clarifying Legacy Generation Breaker Control for PGRR115 Implementation" },
+  { n: 134, title: "Interconnection Studies Reform for Dispatchable Loads" },
+  { n: 136, title: "Large Load Interconnection Study Scope Documentation" },
+  { n: 138, title: "Large Load Interconnection Study Review and Approval Process" },
+  { n: 139, title: "Related to NPRR1314, Planning Guide Glossary Transition" },
+  { n: 140, title: "Related to NPRR1317, Creation of Non-Settled Generator (NSG) and Clarification of Distributed Generation Types" },
+  { n: 141, title: "Large Load Interconnection Study Reform for Substantiated Load" },
+  { n: 142, title: "In-kind Definition for Generation" },
+  { n: 143, title: "Steady State Planning Schedule Posting Location Update" },
+  { n: 144, title: "Dynamic Model Submission and Review Requirements for Large Loads including Large Electronic Loads" },
+  { n: 145, title: "Batch Zero Process for Large Load Interconnections" },
+];
+
+// Approved PGRRs — updated 2026-05-09
+const PGRR_APPROVED = [
+  { n: 100, title: "Steady-State Case Building Timeline Update" },
+  { n: 101, title: "Related to NPRR1133, Clarify Responsibilities for Submission of Planning Model Data" },
+  { n: 102, title: "Dynamic Operation Model Improvement" },
+  { n: 103, title: "Establish Time Limit for Generator Commissioning Following Approval to Synchronize" },
+  { n: 104, title: "Related to NPRR1157, Incorporation of PUCT Approval into Revision Request Process" },
+  { n: 106, title: "Clarify Projects Included in Transmission Project Information and Tracking (TPIT)" },
+  { n: 107, title: "Related to NPRR1180, Inclusion of Forecasted Load in Planning Analyses" },
+  { n: 108, title: "Related to NPRR1183, ECEII Definition Clarification and Updates to Posting Rules" },
+  { n: 109, title: "Dynamic Model Review Process Improvement for Inverter-Based Resource (IBR) Modifications" },
+  { n: 110, title: "Revision to Accommodate Steady-State Node-Breaker Modeling" },
+  { n: 112, title: "Dynamic Data Model and Full Interconnection Study (FIS) Deadline for Quarterly Studies" },
+  { n: 113, title: "Related to NPRR1198, Congestion Mitigation Using Topology Reconfigurations" },
+  { n: 114, title: "Related to NPRR1212, Clarification of Distribution Service Provider's Obligation" },
+  { n: 115, title: "Related to NPRR1234, Interconnection Requirements for Large Loads and Modeling Standards" },
+  { n: 116, title: "Related to NPRR1240, Access to Transmission Planning Information" },
+  { n: 117, title: "Addition of Resiliency Assessment and Criteria to Reflect PUCT Rule Changes" },
+  { n: 118, title: "Related to NPRR1246, Energy Storage Resource Terminology Alignment for the Single Model" },
+  { n: 119, title: "Stability Constraint Modeling Assumptions in the Regional Transmission Plan" },
+  { n: 120, title: "SSO Prevention for Generator Interconnection" },
+  { n: 121, title: "Related to NOGRR272, Advanced Grid Support Requirements for Inverter-Based ESRs" },
+  { n: 125, title: "Update of LSIPA Compliance Attestation" },
+  { n: 127, title: "Addition of Proposed Generation to the Planning Models" },
+  { n: 129, title: "Establish Grid Reliability and Resiliency Assessment (GRRA) Posting Requirements" },
+  { n: 131, title: "Requirements for Interconnection Cost Reporting for Transmission-Connected Generation" },
+  { n: 132, title: "Update to Standard Generation Interconnection Agreement (SGIA) Requirement" },
+  { n: 137, title: "Administrative Change for Planning Guide - NPRR1298" },
+];
+
+// Withdrawn PGRRs — updated 2026-05-09
+const PGRR_WITHDRAWN = [
+  { n: 105, title: "Deliverability Criteria for DC Tie Imports" },
+  { n: 111, title: "Related to NPRR1191, Registration, Interconnection, and Operation of Customers with Large Loads" },
+  { n: 135, title: "Large Load Interconnection Queue Process Revision" },
+];
+
 window.DATA = {
   RECENT_SESSIONS, PROJECTS, STARTER_PROMPTS, SUGGESTED_RUNS, ARTIFACTS,
   CURRENT_TALK_TITLE, CURRENT_TALK_META, MESSAGES,
   NPRR_PENDING, NPRR_WITHDRAWN, NPRR_APPROVED,
   COPMGRR_PENDING, COPMGRR_WITHDRAWN, COPMGRR_APPROVED,
+  PGRR_PENDING, PGRR_WITHDRAWN, PGRR_APPROVED,
   CONTEXTUAL_RUNS,
 };

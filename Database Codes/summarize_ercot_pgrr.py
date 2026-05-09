@@ -347,6 +347,49 @@ def process_issue(folder, n):
 
     write_summary_docx(out_path, issue_id, title, exec_summary, issue_details,
                         impact_text, timeline, current_status)
+
+    # JSON summary for the web UI
+    sponsor_str = ''
+    if sponsor:
+        sponsor_str = f"{sponsor} · {company}" if company else sponsor
+
+    impacts = []
+    if biz_case:
+        impacts.append({"category": "Business Case / Justification", "text": biz_case[:500]})
+
+    impact_analysis = []
+    if impact_text:
+        impact_analysis.append({
+            "label": "Impact Analysis Summary",
+            "rows": [["Summary", impact_text[:600]]]
+        })
+
+    tl_events = [
+        {"date": ev["date"], "body": ev["body"], "action": ev["action"], "notes": ev["outcome"]}
+        for ev in timeline
+    ]
+
+    summary_json = {
+        "pgrr_number": n,
+        "title": title,
+        "status": status,
+        "date_posted": date_post or "",
+        "effective_date": profile.get("effective_date") or "",
+        "planning_sections": sections,
+        "sponsor": sponsor_str,
+        "executive_summary": exec_summary,
+        "background": reason or "",
+        "key_change": rev_desc or "",
+        "impacts": impacts,
+        "impact_analysis": impact_analysis,
+        "timeline": tl_events,
+        "current_status": [current_status],
+    }
+
+    json_path = os.path.join(quick, f"{issue_id} Summary.json")
+    with open(json_path, 'w', encoding='utf-8') as f:
+        json.dump(summary_json, f, indent=2, ensure_ascii=False)
+
     return out_path
 
 # ─── MAIN ────────────────────────────────────────────────────────────────────
