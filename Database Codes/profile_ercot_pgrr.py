@@ -12,6 +12,14 @@ from docx import Document
 import openpyxl
 import win32com.client
 
+# ─── TIMELINE PATTERNS ───────────────────────────────────────────────────────
+_TL_BALLOT_PAT = re.compile(r'(ros|tac|prs|rms)\s*(?:email\s*)?ballot', re.IGNORECASE)
+_TL_REPORT_PAT = re.compile(r'(ros|tac|prs|rms)\s*report', re.IGNORECASE)
+_TL_BOARD_PAT  = re.compile(r'board.?report', re.IGNORECASE)
+_TL_PUCT_PAT   = re.compile(r'puct.?(?:report|filing)', re.IGNORECASE)
+_TL_ERCOT_PAT  = re.compile(r'ercot.?comments', re.IGNORECASE)
+_TL_IMPACT_PAT = re.compile(r'impact.?analysis', re.IGNORECASE)
+
 # ─── SETTINGS ────────────────────────────────────────────────────────────────
 BASE_DIR = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.MKT.RULES\PGRR"
 EXCEL_TRACKER = os.path.join(BASE_DIR, "Current List of PGRRs.xlsx")
@@ -69,6 +77,64 @@ def tables_from_doc(path):
 _MONTH_FMTS = ['%B %d, %Y', '%B %d %Y', '%b %d, %Y', '%b %d %Y',
                '%m/%d/%Y', '%m/%d/%y', '%Y-%m-%d']
 
+def date_from_fname(fname):
+    stem = os.path.splitext(fname)[0]
+    for pat in [r'[_\-](\d{6}|\d{8})(?:\s|$)', r'\s(\d{6}|\d{8})\s*$', r'(\d{8})']:
+        m = re.search(pat, stem)
+        if m:
+            d = m.group(1)
+            try:
+                if len(d) == 6:
+                    return datetime.strptime(d, '%m%d%y').strftime('%Y-%m-%d')
+                else:
+                    return datetime.strptime(d, '%m%d%Y').strftime('%Y-%m-%d')
+            except ValueError:
+                pass
+    return None
+
+def parse_reason_list(text):
+    if not text:
+        return []
+    parts = re.split(r'[\x01\x02\x03]+', text)
+    result = []
+    for p in parts:
+        p = p.strip().rstrip('.')
+        p = re.sub(r'^Other\s*:\s*\(explain\)\s*', 'Other: ', p, flags=re.IGNORECASE)
+        p = re.sub(r'^\s*[\-\*•]\s*', '', p).strip()
+        if p and len(p) > 3:
+            result.append(p)
+    return result
+
+def build_profile_timeline(folder, date_posted):
+    events = []
+    if date_posted:
+        events.append({'date': date_posted, 'event': 'PGRR Posted', 'doc': 'Initial posting'})
+    for fname in sorted(os.listdir(folder)):
+        fpath = os.path.join(folder, fname)
+        if os.path.isdir(fpath):
+            continue
+        fl = fname.lower()
+        date_str = date_from_fname(fname) or 'Unknown'
+        stem = os.path.splitext(fname)[0]
+        if _TL_BALLOT_PAT.search(fl):
+            m = _TL_BALLOT_PAT.search(fl)
+            body = m.group(1).upper()
+            events.append({'date': date_str, 'event': f'{body} Ballot', 'doc': stem})
+        elif _TL_BOARD_PAT.search(fl):
+            events.append({'date': date_str, 'event': 'Board Report', 'doc': stem})
+        elif _TL_PUCT_PAT.search(fl):
+            events.append({'date': date_str, 'event': 'PUCT Filing', 'doc': stem})
+        elif _TL_REPORT_PAT.search(fl):
+            m = _TL_REPORT_PAT.search(fl)
+            body = m.group(1).upper()
+            events.append({'date': date_str, 'event': f'{body} Report', 'doc': stem})
+        elif _TL_ERCOT_PAT.search(fl):
+            events.append({'date': date_str, 'event': 'ERCOT Comments', 'doc': stem})
+        elif _TL_IMPACT_PAT.search(fl):
+            events.append({'date': date_str, 'event': 'Impact Analysis', 'doc': stem})
+    events.sort(key=lambda x: (x['date'] if x['date'] != 'Unknown' else '9999-99-99', x['event']))
+    return events
+
 def normalize_date(text):
     if not text:
         return None
@@ -103,7 +169,7 @@ def extract_fields_from_tables(tables):
         'title': None, 'date_posted_decision': None,
         'timeline_requested_resolution': None, 'effective_date': None,
         'governing_document_sections': [], 'related_documents_requiring_revision': [],
-        'revision_description': None, 'reason_for_revision': None,
+        'revision_description': None, 'reason_for_revision': [],
         'business_case': None, 'sponsor_name': None, 'sponsor_email': None,
         'sponsor_company': None, 'sponsor_phone': None, 'market_segment': None,
     }
@@ -138,7 +204,8 @@ def extract_fields_from_tables(tables):
             elif 'revision description' in cl:
                 fields['revision_description'] = fields['revision_description'] or v
             elif 'reason for revision' in cl:
-                fields['reason_for_revision'] = fields['reason_for_revision'] or v
+                if not fields['reason_for_revision']:
+                    fields['reason_for_revision'] = parse_reason_list(v)
             elif 'business case' in cl or 'justification' in cl or 'market impacts' in cl:
                 fields['business_case'] = fields['business_case'] or v
 
@@ -188,13 +255,14 @@ def build_profile(folder, issue_num, status):
         "governing_document_sections": [],
         "related_documents_requiring_revision": [],
         "revision_description": None,
-        "reason_for_revision": None,
+        "reason_for_revision": [],
         "business_case": None,
         "sponsor_name": None,
         "sponsor_email": None,
         "sponsor_company": None,
         "sponsor_phone": None,
         "market_segment": None,
+        "timeline": [],
     }
 
     path, ext = find_main_doc(folder)
@@ -206,6 +274,7 @@ def build_profile(folder, issue_num, status):
         except Exception as e:
             print(f"  Warning parsing {os.path.basename(path)}: {e}")
 
+    profile["timeline"] = build_profile_timeline(folder, profile.get("date_posted_decision"))
     return profile
 
 # ─── MAIN ────────────────────────────────────────────────────────────────────

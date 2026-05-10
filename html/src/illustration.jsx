@@ -476,6 +476,38 @@ function CopmgrrDetailView({ copmgrr, onBack }) {
 
   return (
     <div style={{ position: "relative" }}>
+      <style>{`
+        .nd-head { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+        .nd-back { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:11px; color:var(--muted); padding:5px 10px; border-radius:6px; border:1px solid var(--rule-2); background:var(--bg); transition:border-color .15s, color .15s; cursor:pointer; }
+        .nd-back:hover { border-color:var(--accent); color:var(--accent); }
+        .nd-num { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent-2); letter-spacing:.04em; }
+        .nd-badge { padding:2px 10px; border-radius:99px; font-size:10.5px; font-weight:600; font-family:var(--mono); letter-spacing:.06em; }
+        .nd-title { font-family:var(--serif); font-size:22px; font-weight:400; color:var(--ink); line-height:1.2; margin:0 0 6px; }
+        .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px; }
+        .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+        .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
+        .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
+        .nd-impact-txt { color:var(--ink-2); }
+        .nd-ia-lbl { font-size:12px; font-weight:600; color:var(--ink-2); margin:10px 0 5px; }
+        .nd-table { width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:12px; }
+        .nd-table th { text-align:left; font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:5px 8px; border-bottom:1px solid var(--rule-2); }
+        .nd-table td { padding:5px 8px; border-bottom:1px solid var(--rule); color:var(--ink-2); vertical-align:top; }
+        .nd-table tr:last-child td { border-bottom:0; }
+        .nd-table td:first-child { font-weight:600; color:var(--ink); white-space:nowrap; width:30%; }
+        .nd-tl-table { width:100%; border-collapse:collapse; font-size:11px; }
+        .nd-tl-table th { text-align:left; font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:5px 6px; border-bottom:1px solid var(--rule-2); }
+        .nd-tl-table td { padding:5px 6px; border-bottom:1px solid var(--rule); color:var(--ink-2); vertical-align:top; }
+        .nd-tl-table tr:last-child td { border-bottom:0; background:color-mix(in oklab,var(--ok),transparent 88%); }
+        .nd-tl-table tr:last-child td { font-weight:500; color:var(--ink); }
+        .nd-tl-date-cell { font-family:var(--mono); font-size:10px; white-space:nowrap; color:var(--muted); }
+        .nd-tl-body-cell { font-family:var(--mono); font-size:10px; color:var(--accent-2); white-space:nowrap; }
+        .nd-tl-action-cell { font-weight:600; color:var(--ink); }
+        .nd-proto-tag { font-family:var(--mono); font-size:11px; color:var(--accent-2); padding:4px 10px; border-radius:6px; background:var(--accent-soft); border:1px solid var(--rule-2); display:inline-block; margin:0 4px 4px 0; }
+        .nd-loading { padding:40px 0; text-align:center; color:var(--muted); font-family:var(--mono); font-size:12px; }
+        .nd-error { padding:16px 0; color:var(--muted); font-family:var(--mono); font-size:11.5px; }
+      `}</style>
       <div className="nd-head">
         <button className="nd-back" onClick={onBack}>← Back</button>
         {summary && <>
@@ -618,6 +650,38 @@ function PgrrDetailView({ pgrr, onBack }) {
 
   return (
     <div style={{ position: "relative" }}>
+      <style>{`
+        .nd-head { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+        .nd-back { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:11px; color:var(--muted); padding:5px 10px; border-radius:6px; border:1px solid var(--rule-2); background:var(--bg); transition:border-color .15s, color .15s; cursor:pointer; }
+        .nd-back:hover { border-color:var(--accent); color:var(--accent); }
+        .nd-num { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent-2); letter-spacing:.04em; }
+        .nd-badge { padding:2px 10px; border-radius:99px; font-size:10.5px; font-weight:600; font-family:var(--mono); letter-spacing:.06em; }
+        .nd-title { font-family:var(--serif); font-size:22px; font-weight:400; color:var(--ink); line-height:1.2; margin:0 0 6px; }
+        .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px; }
+        .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+        .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
+        .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
+        .nd-impact-txt { color:var(--ink-2); }
+        .nd-ia-lbl { font-size:12px; font-weight:600; color:var(--ink-2); margin:10px 0 5px; }
+        .nd-table { width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:12px; }
+        .nd-table th { text-align:left; font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:5px 8px; border-bottom:1px solid var(--rule-2); }
+        .nd-table td { padding:5px 8px; border-bottom:1px solid var(--rule); color:var(--ink-2); vertical-align:top; }
+        .nd-table tr:last-child td { border-bottom:0; }
+        .nd-table td:first-child { font-weight:600; color:var(--ink); white-space:nowrap; width:30%; }
+        .nd-tl-table { width:100%; border-collapse:collapse; font-size:11px; }
+        .nd-tl-table th { text-align:left; font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:5px 6px; border-bottom:1px solid var(--rule-2); }
+        .nd-tl-table td { padding:5px 6px; border-bottom:1px solid var(--rule); color:var(--ink-2); vertical-align:top; }
+        .nd-tl-table tr:last-child td { border-bottom:0; background:color-mix(in oklab,var(--ok),transparent 88%); }
+        .nd-tl-table tr:last-child td { font-weight:500; color:var(--ink); }
+        .nd-tl-date-cell { font-family:var(--mono); font-size:10px; white-space:nowrap; color:var(--muted); }
+        .nd-tl-body-cell { font-family:var(--mono); font-size:10px; color:var(--accent-2); white-space:nowrap; }
+        .nd-tl-action-cell { font-weight:600; color:var(--ink); }
+        .nd-proto-tag { font-family:var(--mono); font-size:11px; color:var(--accent-2); padding:4px 10px; border-radius:6px; background:var(--accent-soft); border:1px solid var(--rule-2); display:inline-block; margin:0 4px 4px 0; }
+        .nd-loading { padding:40px 0; text-align:center; color:var(--muted); font-family:var(--mono); font-size:12px; }
+        .nd-error { padding:16px 0; color:var(--muted); font-family:var(--mono); font-size:11.5px; }
+      `}</style>
       <div className="nd-head">
         <button className="nd-back" onClick={onBack}>← Back</button>
         {summary && <>
@@ -930,19 +994,13 @@ window.FOLDER_PATHS = FOLDER_PATHS;
 
 // ERCOT market home page — shown when ERCOT is selected from the ISO market list
 function ERCOTHome({ onSectionChange }) {
-  const STATS = [
-    { label: "Grid Status",       value: "Normal",   unit: "",        ok: true  },
-    { label: "Current Load",      value: "52,847",   unit: "MW"               },
-    { label: "Wind Generation",   value: "14,203",   unit: "MW"               },
-    { label: "Solar Generation",  value: "6,891",    unit: "MW"               },
-    { label: "Installed Capacity",value: "89,312",   unit: "MW"               },
-    { label: "Active NPRRs",      value: "1,287",    unit: "tracked"          },
-  ];
   const LINKS = [
-    { id: "paper-trails",    icon: "Book",      label: "Paper Trails",    desc: "NPRRs, NOGRRs, COPMGRRs and more" },
-    { id: "meeting-tracks",  icon: "Waveform",  label: "Meeting Tracks",  desc: "TAC, COPS, RMS committee activity" },
-    { id: "hot-topics",      icon: "Flame",     label: "Hot Topics",      desc: "Market design issues and debates"  },
-    { id: "daily-headlines", icon: "Lightning", label: "Daily Headlines", desc: "Latest ERCOT news and alerts"      },
+    { id: "paper-trails",     icon: "Book",      label: "Paper Trails",     desc: "NPRRs, NOGRRs, COPMGRRs and more"  },
+    { id: "meeting-tracks",   icon: "Waveform",  label: "Meeting Tracks",   desc: "TAC, COPS, RMS committee activity"  },
+    { id: "hot-topics",       icon: "Flame",     label: "Hot Topics",       desc: "Market design issues and debates"   },
+    { id: "daily-headlines",  icon: "Lightning", label: "Daily Headlines",  desc: "Latest ERCOT news and alerts"       },
+    { id: "stats-illustrated",icon: "Chart",     label: "Stats Illustrator",desc: "Charts, data, and market analytics" },
+    { id: "gallery",          icon: "Folder",    label: "Gallery",          desc: "Documents, filings, and archives"   },
   ];
   return (
     <div className="pt-ercot-home">
@@ -957,36 +1015,22 @@ function ERCOTHome({ onSectionChange }) {
           flex: 0 0 auto; color: #fff;
         }
         .pt-ercot-h1 {
-          font-family: var(--serif); font-size: 28px; font-weight: 400;
+          font-family: var(--serif); font-size: 32px; font-weight: 700;
           color: var(--ink); margin: 0; line-height: 1.15;
         }
         .pt-ercot-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
-        .pt-ercot-badge {
-          margin-left: auto;
-          padding: 5px 12px; border-radius: 99px;
-          font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .06em;
-          background: color-mix(in oklab, #2d9e5a, transparent 85%);
-          color: #1e7a44;
-          border: 1px solid color-mix(in oklab, #2d9e5a, transparent 65%);
+        .pt-ercot-intro { margin-bottom: 20px; }
+        .pt-ercot-intro-eye {
+          font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+          text-transform: uppercase; color: var(--muted); font-weight: 500;
+          margin-bottom: 7px;
         }
-        .pt-ercot-stats {
-          display: grid; grid-template-columns: repeat(3, 1fr);
-          gap: 10px; margin-bottom: 22px;
+        .pt-ercot-intro-body {
+          font-size: 13px; color: var(--ink-2); line-height: 1.75;
         }
-        @media (max-width: 560px) { .pt-ercot-stats { grid-template-columns: repeat(2, 1fr); } }
-        .pt-ercot-stat {
-          padding: 14px 16px; border: 1px solid var(--rule);
-          border-radius: 10px; background: var(--panel);
+        .pt-ercot-intro-divider {
+          border: none; border-top: 1px dashed var(--rule-2); margin: 18px 0;
         }
-        .pt-ercot-stat-val {
-          font-family: var(--mono); font-size: 20px; font-weight: 700;
-          color: var(--ink); letter-spacing: -.01em;
-          display: flex; align-items: baseline; gap: 4px;
-        }
-        .pt-ercot-stat-val .u { font-size: 11px; font-weight: 500; color: var(--muted); }
-        .pt-ercot-stat.ok .pt-ercot-stat-val { color: #1e7a44; }
-        .pt-ercot-stat-lbl { font-size: 11.5px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
-        .pt-ercot-rule { border: none; border-top: 1px solid var(--rule); margin: 0 0 18px; }
         .pt-ercot-qlbl {
           font-size: 11px; font-family: var(--mono); letter-spacing: .08em;
           text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 10px;
@@ -1020,22 +1064,25 @@ function ERCOTHome({ onSectionChange }) {
           <h1 className="pt-ercot-h1">ERCOT</h1>
           <div className="pt-ercot-sub">Electric Reliability Council of Texas</div>
         </div>
-        <div className="pt-ercot-badge">GRID NORMAL</div>
       </div>
 
-      <div className="pt-ercot-stats">
-        {STATS.map((s, i) => (
-          <div key={i} className={`pt-ercot-stat ${s.ok ? "ok" : ""}`}>
-            <div className="pt-ercot-stat-val">
-              {s.value}
-              {s.unit && <span className="u">{s.unit}</span>}
-            </div>
-            <div className="pt-ercot-stat-lbl">{s.label}</div>
-          </div>
-        ))}
+      <div className="pt-ercot-intro">
+        <div className="pt-ercot-intro-eye">About ERCOT</div>
+        <div className="pt-ercot-intro-body">
+          ERCOT (Electric Reliability Council of Texas) is the independent system operator (ISO) for roughly 90% of Texas's electric load, managing over 89,000 MW of generation capacity and serving approximately 26 million customers. As a non-profit, member-governed organization, ERCOT operates one of the largest competitive wholesale electricity markets in North America. The market is energy-only — there is no separate capacity market — relying instead on real-time scarcity pricing and ancillary service markets to maintain grid reliability and incentivize investment in generation resources. ERCOT is unique among U.S. ISOs in operating an intrastate grid largely isolated from neighboring interconnections, giving Texas significant autonomy over its own market design. Most recently, ERCOT launched Real-Time Co-optimization with Batteries (RTC-B), a landmark market enhancement that simultaneously optimizes energy and ancillary service awards for battery storage resources in the real-time market — enabling batteries to provide multiple grid services at once and significantly improving the efficiency of storage dispatch across the grid.
+        </div>
       </div>
 
-      <hr className="pt-ercot-rule"/>
+      <hr className="pt-ercot-intro-divider"/>
+
+      <div className="pt-ercot-intro">
+        <div className="pt-ercot-intro-eye">Market Rules &amp; Stakeholder Process</div>
+        <div className="pt-ercot-intro-body">
+          ERCOT's market rules are codified in the Nodal Protocols and several associated guides — the Planning Guide, Operating Guide, Retail Market Guide, Verifiable Cost Manual, and others. Changes to these rules are proposed through standardized revision requests submitted by any market participant, ERCOT staff, or the Public Utility Commission of Texas (PUCT): NPRRs (Nodal Protocol), NOGRRs (Operating Guide), PGRRs (Planning Guide), COPMGRRs (Commercial Operations), and more. Each request advances through a structured stakeholder review — working groups and subcommittees (WMS, COPS, RMS, PRS) analyze and discuss the proposal, which then proceeds to the Technical Advisory Committee (TAC) for recommendation. TAC sends approved revisions to the ERCOT Board of Directors for final vote. The PUCT holds ultimate regulatory authority and may direct or override Board decisions on significant market design matters.
+        </div>
+      </div>
+
+      <hr className="pt-ercot-intro-divider"/>
 
       <div className="pt-ercot-qlbl">Quick Access</div>
       <div className="pt-ercot-links">

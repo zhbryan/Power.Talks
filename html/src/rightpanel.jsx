@@ -150,6 +150,24 @@ function CopmgrrProfileCard({ copmgrr }) {
 
   return (
     <div>
+      <style>{`
+        .np-status-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+        .np-badge { padding:2px 10px; border-radius:99px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; }
+        .np-num { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent-2); }
+        .np-title { font-family:var(--serif); font-size:16px; font-weight:400; color:var(--ink); line-height:1.3; margin-bottom:14px; }
+        .np-divider { border:0; border-top:1px dashed var(--rule-2); margin:12px 0; }
+        .np-sec-lbl { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+        .np-proto-tag { font-family:var(--mono); font-size:10.5px; color:var(--accent-2); padding:3px 8px; border-radius:5px; background:var(--accent-soft); border:1px solid var(--rule-2); display:block; margin-bottom:4px; }
+        .np-reason-chip { font-size:11px; color:var(--ink-2); padding:3px 8px; border-radius:99px; border:1px solid var(--rule-2); background:var(--bg); display:inline-block; margin:0 4px 4px 0; }
+        .np-tl { display:flex; flex-direction:column; position:relative; }
+        .np-tl::before { content:""; position:absolute; left:6px; top:6px; bottom:6px; width:1px; background:var(--rule-2); }
+        .np-tl-row { display:flex; align-items:flex-start; gap:10px; padding:4px 0; }
+        .np-tl-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; border:2px solid var(--accent); background:var(--bg); z-index:1; margin-top:1px; }
+        .np-tl-dot.last { background:var(--accent); }
+        .np-tl-date { font-family:var(--mono); font-size:9.5px; color:var(--muted); white-space:nowrap; min-width:68px; margin-top:2px; }
+        .np-tl-ev { font-size:11.5px; color:var(--ink-2); }
+        .np-tl-ev b { color:var(--ink); font-weight:600; }
+      `}</style>
       <div className="np-status-row">
         <span className="np-num">COPMGRR{numStr}</span>
         <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status}</span>
@@ -240,6 +258,24 @@ function PgrrProfileCard({ pgrr }) {
 
   return (
     <div>
+      <style>{`
+        .np-status-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+        .np-badge { padding:2px 10px; border-radius:99px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; }
+        .np-num { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent-2); }
+        .np-title { font-family:var(--serif); font-size:16px; font-weight:400; color:var(--ink); line-height:1.3; margin-bottom:14px; }
+        .np-divider { border:0; border-top:1px dashed var(--rule-2); margin:12px 0; }
+        .np-sec-lbl { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+        .np-proto-tag { font-family:var(--mono); font-size:10.5px; color:var(--accent-2); padding:3px 8px; border-radius:5px; background:var(--accent-soft); border:1px solid var(--rule-2); display:block; margin-bottom:4px; }
+        .np-reason-chip { font-size:11px; color:var(--ink-2); padding:3px 8px; border-radius:99px; border:1px solid var(--rule-2); background:var(--bg); display:inline-block; margin:0 4px 4px 0; }
+        .np-tl { display:flex; flex-direction:column; position:relative; }
+        .np-tl::before { content:""; position:absolute; left:6px; top:6px; bottom:6px; width:1px; background:var(--rule-2); }
+        .np-tl-row { display:flex; align-items:flex-start; gap:10px; padding:4px 0; }
+        .np-tl-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; border:2px solid var(--accent); background:var(--bg); z-index:1; margin-top:1px; }
+        .np-tl-dot.last { background:var(--accent); }
+        .np-tl-date { font-family:var(--mono); font-size:9.5px; color:var(--muted); white-space:nowrap; min-width:68px; margin-top:2px; }
+        .np-tl-ev { font-size:11.5px; color:var(--ink-2); }
+        .np-tl-ev b { color:var(--ink); font-weight:600; }
+      `}</style>
       <div className="np-status-row">
         <span className="np-num">PGRR{profile.issue_number}</span>
         <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status}</span>
@@ -263,11 +299,50 @@ function PgrrProfileCard({ pgrr }) {
           <span key={i} className="np-proto-tag">{s}</span>
         )}
       </>}
+
+      {profile.reason_for_revision?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Reason for Revision</div>
+        <div>{profile.reason_for_revision.map((r, i) =>
+          <span key={i} className="np-reason-chip">{r}</span>
+        )}</div>
+      </>}
+
+      {profile.timeline?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Timeline</div>
+        <div className="np-tl">
+          {profile.timeline.map((t, i) => (
+            <div key={i} className="np-tl-row">
+              <div className={`np-tl-dot ${i === profile.timeline.length - 1 ? "last" : ""}`} />
+              <span className="np-tl-date">{t.date}</span>
+              <span className="np-tl-ev"><b>{t.event}</b></span>
+            </div>
+          ))}
+        </div>
+      </>}
     </div>
   );
 }
 
-function RightPanel({ open, onClose, onRunPrompt, context }) {
+const ERCOT_HOME_ARTIFACTS = [
+  {
+    id: "ercot-a1",
+    title: "ERCOT major milestones timeline",
+    desc: "Generate a historical timeline of ERCOT's major milestones since its founding — from deregulation and market launch through nodal transition, Winter Storm Uri, and the RTC-B era.",
+    icon: "Clock",
+    tag: "History"
+  },
+  {
+    id: "ercot-a2",
+    title: "ERCOT stakeholder process org chart",
+    desc: "Show the current ERCOT stakeholder process organization chart — working groups, subcommittees, TAC, and Board.",
+    icon: "Share",
+    tag: "Visual"
+  },
+];
+
+function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const { SUGGESTED_RUNS, ARTIFACTS } = window.DATA;
   const [tab, setTab] = React.useState("runs"); // runs | artifacts | profile
 
@@ -275,10 +350,16 @@ function RightPanel({ open, onClose, onRunPrompt, context }) {
   const hasNprr = Boolean(ctx.nprr);
   const hasCopmgrr = Boolean(ctx.copmgrr);
   const hasPgrr = Boolean(ctx.pgrr);
+  const isErcotHome = ctx.section === "market-home";
+  const activeArtifacts = isErcotHome ? ERCOT_HOME_ARTIFACTS : (ARTIFACTS || []);
 
   React.useEffect(() => {
     if (hasNprr || hasCopmgrr || hasPgrr) setTab("runs");
   }, [ctx.nprr, ctx.copmgrr, ctx.pgrr]);
+
+  React.useEffect(() => {
+    if (isErcotHome) setTab("artifacts");
+  }, [isErcotHome]);
 
   return (
     <aside className={`pt-right ${open ? "is-open" : ""}`} aria-hidden={!open}>
@@ -417,10 +498,12 @@ function RightPanel({ open, onClose, onRunPrompt, context }) {
       </div>
 
       <div className="pt-right-tabs">
-        <button
-          className={`pt-right-tab ${tab === "runs" ? "is-on" : ""}`}
-          onClick={() => setTab("runs")}
-        >For the talk</button>
+        {!isErcotHome && (
+          <button
+            className={`pt-right-tab ${tab === "runs" ? "is-on" : ""}`}
+            onClick={() => setTab("runs")}
+          >For the talk</button>
+        )}
         <button
           className={`pt-right-tab ${tab === "artifacts" ? "is-on" : ""}`}
           onClick={() => setTab("artifacts")}
@@ -428,7 +511,7 @@ function RightPanel({ open, onClose, onRunPrompt, context }) {
       </div>
 
       <div className="pt-right-scroll">
-        {tab === "runs" && (
+        {tab === "runs" && !isErcotHome && (
           hasNprr
             ? <NprrProfileCard nprr={ctx.nprr} />
             : hasCopmgrr
@@ -450,10 +533,10 @@ function RightPanel({ open, onClose, onRunPrompt, context }) {
 
         {tab === "artifacts" && (
           <div>
-            {(ARTIFACTS || []).map(a => {
+            {activeArtifacts.map(a => {
               const Icon = I[a.icon] || I.Sparkle;
               return (
-                <div key={a.id} className="pt-artifact" onClick={() => onRunPrompt(a)}>
+                <div key={a.id} className="pt-artifact" onClick={() => onArtifactClick ? onArtifactClick(a) : onRunPrompt(a)}>
                   <div className="pt-artifact-ico"><Icon size={16}/></div>
                   <div className="pt-artifact-body">
                     <div className="pt-artifact-title">{a.title}</div>

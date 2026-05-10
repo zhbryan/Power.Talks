@@ -302,7 +302,8 @@ def process_issue(folder, n):
     title     = profile.get('title') or issue_id
     sections  = profile.get('governing_document_sections', [])
     rev_desc  = profile.get('revision_description')
-    reason    = profile.get('reason_for_revision')
+    _reason   = profile.get('reason_for_revision')
+    reason    = '; '.join(_reason) if isinstance(_reason, list) else (_reason or '')
     biz_case  = profile.get('business_case')
     status    = profile.get('status') or infer_status(folder)
     date_post = profile.get('date_posted_decision')
@@ -378,7 +379,7 @@ def process_issue(folder, n):
         "planning_sections": sections,
         "sponsor": sponsor_str,
         "executive_summary": exec_summary,
-        "background": reason or "",
+        "background": reason,
         "key_change": rev_desc or "",
         "impacts": impacts,
         "impact_analysis": impact_analysis,

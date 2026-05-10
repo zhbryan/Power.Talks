@@ -57,7 +57,7 @@ function App() {
     "meeting-tracks":    "Meeting Tracks",
     "hot-topics":        "Hot Topics",
     "daily-headlines":   "Daily Headlines",
-    "stats-illustrated": "Stats Illustrated",
+    "stats-illustrated": "Stats Illustrator",
     "gallery":           "Gallery",
   };
   const sectionLabel = activeSection === "market-home" ? activeMarket : (SECTION_LABELS[activeSection] || "");
@@ -99,6 +99,30 @@ function App() {
   const onRunPrompt = (r) => {
     setDraft(`${r.title} — ${r.desc}`);
   };
+
+  const [injectedPanels, setInjectedPanels] = React.useState([]);
+  const scrollRef = React.useRef(null);
+  const lastPanelRef = React.useRef(null);
+
+  const ARTIFACT_SRCS = {
+    "ercot-a1": "/Power.Talks/html/ERCOT%20Major%20Milestones.html",
+    "ercot-a2": "/Power.Talks/html/ERCOT%20Stakeholder%20Org%20Chart.html",
+  };
+
+  const onArtifactClick = (a) => {
+    const src = ARTIFACT_SRCS[a.id];
+    if (src) {
+      setInjectedPanels(prev => [...prev, { key: Date.now(), src, title: a.title }]);
+    } else {
+      onRunPrompt(a);
+    }
+  };
+
+  React.useEffect(() => {
+    if (injectedPanels.length > 0 && lastPanelRef.current) {
+      lastPanelRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [injectedPanels.length]);
 
   const onSend = () => {
     if (!draft.trim()) return;
@@ -169,7 +193,7 @@ function App() {
       />
 
       <div className="pt-main-col">
-        <div className="pt-main-scroll">
+        <div className="pt-main-scroll" ref={scrollRef}>
           <MessageStream
             messages={MESSAGES}
             illustration={
@@ -182,6 +206,18 @@ function App() {
                 : <TalkIllustration title={CURRENT_TALK_TITLE} meta={CURRENT_TALK_META}/>
             }
           />
+          {injectedPanels.map((p, i) => (
+            <div key={p.key} ref={i === injectedPanels.length - 1 ? lastPanelRef : null} style={{ borderTop: "1px solid var(--rule)" }}>
+              <iframe
+                src={p.src}
+                title={p.title}
+                style={{ width: "100%", border: "none", display: "block" }}
+                onLoad={(e) => {
+                  try { e.target.style.height = e.target.contentDocument.documentElement.scrollHeight + "px"; } catch(_) {}
+                }}
+              />
+            </div>
+          ))}
         </div>
         <Composer
           value={draft}
@@ -195,6 +231,7 @@ function App() {
         open={rightOpen}
         onClose={() => setRightOpen(false)}
         onRunPrompt={onRunPrompt}
+        onArtifactClick={onArtifactClick}
         context={{ section: activeSection, code: activePaperCode, node: activeMeetingNode, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr }}
       />
 

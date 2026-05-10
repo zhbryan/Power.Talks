@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ERCOT Major Milestones — Power.Talks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #F6F3EE;
+    --panel:      #FBF9F5;
+    --ink:        #1B1A17;
+    --ink-2:      #3E3C37;
+    --muted:      #86827A;
+    --rule:       #E4DFD3;
+    --rule-2:     #D8D2C3;
+    --accent:     #C8623E;
+    --accent-2:   #B0522F;
+    --accent-soft:#F3E3D8;
+    --sans:       'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+    --serif:      'Instrument Serif', Georgia, serif;
+    --mono:       'JetBrains Mono', ui-monospace, monospace;
+  }
+  [data-theme="dark"] {
+    --bg:         #121110;
+    --panel:      #1C1B19;
+    --ink:        #F1EEE7;
+    --ink-2:      #CDC9BF;
+    --muted:      #8A857B;
+    --rule:       #2A2824;
+    --rule-2:     #35322D;
+    --accent:     #E17A52;
+    --accent-2:   #CC6A44;
+    --accent-soft:#2A1E17;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── Page layout ── */
+  .page { max-width: 680px; margin: 0 auto; padding: 52px 32px 96px; }
+
+  /* ── Header ── */
+  .hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .hdr-logo {
+    width: 44px; height: 44px; border-radius: 11px;
+    background: var(--accent); display: grid; place-items: center;
+    flex-shrink: 0; color: #fff;
+  }
+  .hdr-h1 {
+    font-family: var(--serif); font-size: 26px; font-weight: 700;
+    color: var(--ink); margin: 0; line-height: 1.2;
+  }
+  .hdr-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .hdr-rule { border: none; border-top: 1px solid var(--rule); margin: 22px 0 34px; }
+  .sec-lbl {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
+    margin-bottom: 32px;
+  }
+
+  /* ── Timeline ── */
+  .tl { position: relative; }
+
+  .tl-item {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 0;
+  }
+
+  /* Date column */
+  .tl-left {
+    width: 76px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    text-align: right;
+    padding-top: 2px;
+    padding-right: 0;
+  }
+  .tl-year {
+    display: block;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--accent-2); line-height: 1.4;
+  }
+  .tl-month {
+    display: block;
+    font-family: var(--mono); font-size: 9.5px;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: .06em; line-height: 1.5;
+  }
+
+  /* Center gutter: dot + connector line */
+  .tl-mid {
+    width: 44px;
+    flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .tl-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid var(--accent); background: var(--panel);
+    flex-shrink: 0; margin-top: 4px; z-index: 1;
+  }
+  .tl-item.major .tl-dot { background: var(--accent); }
+  .tl-line {
+    flex: 1; width: 1px; background: var(--rule-2); margin-top: 5px;
+  }
+  .tl-item:last-child .tl-line { display: none; }
+
+  /* Content */
+  .tl-right {
+    flex: 1;
+    padding-bottom: 38px;
+  }
+  .tl-item:last-child .tl-right { padding-bottom: 0; }
+
+  .tl-tag {
+    display: inline-block;
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+    color: var(--accent-2); background: var(--accent-soft);
+    padding: 2px 9px; border-radius: 99px;
+    margin-bottom: 6px;
+  }
+  .tl-title {
+    font-family: var(--serif); font-size: 16px;
+    color: var(--ink); margin: 0 0 6px; line-height: 1.3;
+  }
+  .tl-item.major .tl-title { font-size: 17px; }
+  .tl-desc {
+    font-size: 12.5px; color: var(--ink-2);
+    line-height: 1.72; margin: 0;
+  }
+
+  @media (max-width: 500px) {
+    .page { padding: 36px 18px 72px; }
+    .tl-left { width: 54px; }
+    .tl-year { font-size: 11px; }
+    .hdr-h1 { font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hdr">
+    <div class="hdr-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+    </div>
+    <div>
+      <div class="hdr-h1">ERCOT Major Milestones</div>
+      <div class="hdr-sub">Electric Reliability Council of Texas · Timeline</div>
+    </div>
+  </div>
+
+  <hr class="hdr-rule"/>
+  <div class="sec-lbl">Key milestones since founding</div>
+
+  <div class="tl">
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">1970</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">ERCOT Council Founded</div>
+        <p class="tl-desc">Established as a reliability council to coordinate the Texas interconnection following the 1965 Northeast blackout. ERCOT operates as an electrically isolated island largely separate from neighboring grids, giving Texas substantial autonomy over its own reliability standards.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">1996</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">Wholesale Market Opens</div>
+        <p class="tl-desc">The PUC of Texas begins opening wholesale generation to competition in response to FERC Order 888, laying the groundwork for full retail deregulation and ERCOT's evolution into a competitive market operator.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">1999</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">Senate Bill 7 — Electric Choice Act</div>
+        <p class="tl-desc">Landmark legislation restructures the Texas electricity market, mandating full retail competition starting January 2002 and formally establishing ERCOT as the independent system operator and market administrator for the competitive Texas grid.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2002</span>
+        <span class="tl-month">Jan</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">Retail Competition Begins</div>
+        <p class="tl-desc">Texas launches full retail electric choice across most of the ERCOT footprint, giving roughly 85% of the state's electricity customers the ability to select their own retail electric provider (REP) in one of the largest competitive retail markets in the world.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2003</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">Nodal Market Design Adopted</div>
+        <p class="tl-desc">ERCOT's board selects a nodal market design over the existing zonal model to improve locational price signals, reduce transmission congestion costs, and create a more efficient generation dispatch framework.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2007</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">CREZ Transmission Authorized</div>
+        <p class="tl-desc">The PUC approves the Competitive Renewable Energy Zones (CREZ) initiative, designating wind-rich corridors in West Texas and the Panhandle and authorizing approximately 3,600 miles of new high-voltage transmission lines to connect them to major load centers.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2010</span>
+        <span class="tl-month">Dec</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">Nodal Market Goes Live</div>
+        <p class="tl-desc">After years of development and delay, ERCOT transitions from zonal to nodal market operations, implementing locational marginal pricing (LMP) at over 8,500 settlement points and enabling granular, node-level dispatch instructions for the first time.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2013</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">CREZ Transmission Complete</div>
+        <p class="tl-desc">The final CREZ transmission lines are energized, unlocking over 11,000 MW of previously constrained wind generation in West Texas. Texas solidifies its position as the leading U.S. state for wind energy capacity.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2014</span>
+        <span class="tl-month">Jun</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">ORDC Adopted</div>
+        <p class="tl-desc">ERCOT implements the Operating Reserve Demand Curve (ORDC), an administrative mechanism that adds a real-time scarcity adder to energy prices when operating reserves fall below defined thresholds. By pricing reliability directly into the market, ORDC improves dispatch incentives during tight conditions and reduces reliance on manual emergency interventions.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2019</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">100 GW Generation Milestone</div>
+        <p class="tl-desc">ERCOT's total installed generation capacity surpasses 100,000 MW for the first time, reflecting rapid growth in wind, solar, and gas resources driven by Texas's competitive market and surging population.</p>
+      </div>
+    </div>
+
+    <div class="tl-item major">
+      <div class="tl-left">
+        <span class="tl-year">2021</span>
+        <span class="tl-month">Feb</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-tag">Historic Event</div>
+        <div class="tl-title">Winter Storm Uri</div>
+        <p class="tl-desc">A catastrophic winter storm causes the largest grid failure in ERCOT's history. Nearly 10 million Texans lose power — many for days — in subfreezing temperatures. Approximately 246 people die and economic losses exceed $195 billion. The event triggers sweeping scrutiny of ERCOT's market design, weatherization standards, and governance structure.</p>
+      </div>
+    </div>
+
+    <div class="tl-item major">
+      <div class="tl-left">
+        <span class="tl-year">2021</span>
+        <span class="tl-month">Jun</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-tag">Legislative Reform</div>
+        <div class="tl-title">SB 2 & SB 3 Enacted</div>
+        <p class="tl-desc">The Texas legislature passes sweeping Uri-response legislation: SB 3 mandates winterization standards for power plants and critical fuel infrastructure; SB 2 overhauls ERCOT governance, replacing its industry-majority board with a majority of independent directors and adding mandatory financial disclosure and accountability requirements.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2022</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">Capacity Market Proposal Rejected</div>
+        <p class="tl-desc">After a year-long debate, the PUC of Texas rejects the Performance Credit Mechanism (PCM) — a proposed capacity market — choosing instead to pursue targeted enhancements to the energy-only market design, including expanded ancillary service products and improved performance incentives.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2023</span>
+        <span class="tl-month">Aug</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">All-Time Demand Record</div>
+        <p class="tl-desc">ERCOT sets an all-time peak demand record of 85,508 MW during an extreme August heat wave, driven by surging population growth and record temperatures. The grid holds without emergency conditions, marking progress in reliability following post-Uri reforms.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2024</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">Large Load Demand Surge</div>
+        <p class="tl-desc">ERCOT's interconnection queue is overwhelmed by an unprecedented wave of large load requests — primarily from cryptocurrency mining operations, AI data centers, and other high-intensity industrial users seeking tens of thousands of megawatts of new demand. The surge creates transmission planning pressure, raises reliability concerns, and prompts ERCOT and the PUC to develop new policies for registering and managing "large flexible loads."</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2025</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-tag">Legislative Reform</div>
+        <div class="tl-title">SB 6 — Large Load Framework</div>
+        <p class="tl-desc">The 89th Texas Legislature passes Senate Bill 6, establishing a regulatory framework for large flexible loads including cryptocurrency miners, AI data centers, and high-consumption industrial users. The law requires loads above defined thresholds to register with ERCOT, demonstrate curtailability during grid emergencies, and meet new interconnection standards — addressing reliability and cost-allocation concerns as data-intensive industries reshape the Texas demand profile.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <span class="tl-year">2025</span>
+        <span class="tl-month">Dec</span>
+      </div>
+      <div class="tl-mid"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-title">RTC-B Goes Live</div>
+        <p class="tl-desc">Real-Time Co-optimization with Batteries (RTC-B) launches, simultaneously optimizing energy and ancillary service awards for battery storage resources in the real-time market. A landmark step in integrating storage into ERCOT's market design, enabling batteries to provide multiple grid services at once and significantly improving the efficiency of storage dispatch across the grid.</p>
+      </div>
+    </div>
+
+  </div><!-- /tl -->
+</div><!-- /page -->
+</body>
+</html>

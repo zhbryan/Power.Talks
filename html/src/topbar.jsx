@@ -19,7 +19,8 @@ function Topbar({ sectionLabel, detailLabel, onToggleRight, rightOpen, onHome })
           font-size: 13.5px; color: var(--ink); font-weight: 500;
           min-width: 0;
         }
-        .pt-top-title .crumb { color: var(--muted); font-weight: 400; }
+        .pt-top-title .crumb { color: var(--ink); font-weight: 700; font-size: 15px; }
+        .pt-top-crumb-logo { height: 25px; width: auto; display: block; opacity: 0.88; }
         .pt-top-title .sep  { color: var(--rule-2); }
         .pt-top-title .name {
           overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 360px;
@@ -62,9 +63,11 @@ function Topbar({ sectionLabel, detailLabel, onToggleRight, rightOpen, onHome })
           .pt-nav { display: none; }
         }
       `}</style>
-
       <div className="pt-top-title">
-        <span className="crumb">{sectionLabel}</span>
+        {sectionLabel === "ERCOT"
+          ? <img className="pt-top-crumb-logo" src="/Power.Talks/Documents%20Database/ERCOT-logo.svg" alt="ERCOT"/>
+          : <span className="crumb">{sectionLabel}</span>
+        }
         {detailLabel && <>
           <span className="sep">/</span>
           <span className="name">{detailLabel}</span>

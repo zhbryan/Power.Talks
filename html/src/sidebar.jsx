@@ -14,7 +14,7 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
     { id: "meeting-tracks",   label: "Meeting Tracks",   icon: "Waveform" },
     { id: "hot-topics",       label: "Hot Topics",       icon: "Flame" },
     { id: "daily-headlines",  label: "Daily Headlines",  icon: "Lightning" },
-    { id: "stats-illustrated",label: "Stats Illustrated",icon: "Chart" },
+    { id: "stats-illustrated",label: "Stats Illustrator",icon: "Chart" },
     { id: "gallery",          label: "Gallery",          icon: "Folder" },
   ];
   return (
@@ -53,6 +53,8 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
         }
         .pt-side-collapse:hover { background: var(--rule); color: var(--ink); }
         .pt-side.is-collapsed .pt-side-collapse { margin-left: 0; }
+        .pt-side.is-collapsed .pt-brand { display: none; }
+        .pt-side.is-collapsed .pt-side-top { justify-content: center; }
 
         .pt-iso-wrap {
           position: relative; margin: 2px 10px 10px;
@@ -76,6 +78,11 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
         }
         .pt-side.is-collapsed .pt-iso-btn .iso-label,
         .pt-side.is-collapsed .pt-iso-btn .chev { display: none; }
+        .pt-side.is-collapsed .pt-iso-wrap { display: none; }
+        .pt-side.is-collapsed .pt-side-search { display: none; }
+        .pt-side.is-collapsed .pt-side-row { display: none; }
+        .pt-side.is-collapsed .pt-side-recents { display: none; }
+        .pt-side.is-collapsed .pt-side-foot { display: none; }
         .pt-iso-dropdown {
           position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 100;
           background: var(--panel); border: 1px solid var(--rule-2);
@@ -172,8 +179,7 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
 
       <div className="pt-side-top">
         <a className="pt-brand" href="#" onClick={(e)=>{ e.preventDefault(); onSectionChange("market-home"); }}>
-          <I.Logo size={26}/>
-          <span><b>Power</b><i>.</i>Talks</span>
+          <span><b>Power</b><b><i>.</i></b><b>Talks</b></span>
         </a>
         <button className="pt-side-collapse" onClick={onToggle} aria-label="Collapse sidebar">
           {expanded ? <I.ChevL size={16}/> : <I.ChevR size={16}/>}
@@ -229,24 +235,26 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
           );
         })}
 
-        <div className="pt-side-label">Recents</div>
-        {RECENT_SESSIONS.length === 0 ? (
-          <div style={{
-            padding: "6px 12px", margin: "0 4px",
-            color: "var(--muted)", fontSize: 12, fontStyle: "italic"
-          }}>No recent items</div>
-        ) : RECENT_SESSIONS.slice(0, 5).map(s => (
-          <div
-            key={s.id}
-            className={`pt-side-row`}
-            onClick={() => onSelect(s.id)}
-            title={s.title}
-          >
-            <I.Clock size={14}/>
-            <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
-            <span className="pt-side-time">{s.time}</span>
-          </div>
-        ))}
+        <div className="pt-side-recents">
+          <div className="pt-side-label">Recents</div>
+          {RECENT_SESSIONS.length === 0 ? (
+            <div style={{
+              padding: "6px 12px", margin: "0 4px",
+              color: "var(--muted)", fontSize: 12, fontStyle: "italic"
+            }}>No recent items</div>
+          ) : RECENT_SESSIONS.slice(0, 5).map(s => (
+            <div
+              key={s.id}
+              className={`pt-side-row`}
+              onClick={() => onSelect(s.id)}
+              title={s.title}
+            >
+              <I.Clock size={14}/>
+              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
+              <span className="pt-side-time">{s.time}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="pt-side-foot">
