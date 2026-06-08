@@ -1,6 +1,6 @@
 ---
 name: ERCOT_Market_Rules_Downloader
-description: Skill for maintaining and running ERCOT market rules document downloaders. Covers how the scripts work, how to run them, how to configure them, and how to create a new downloader for any market rules category — NPRR, NOGRR, PGRR, RMGRR, SCR, COPMGRR, OBDRR, RRGRR, SMOGRR, VCMRR.
+description: Skill for maintaining and running ERCOT market rules document downloaders. Covers how the scripts work, how to run them, how to configure them, and how to create a new downloader for any market rules category — NPRR, NOGRR, PGRR, RMGRR, SCR, COPMGRR.
 trigger: When the user asks about downloading ERCOT market rules documents, running any market rules downloader, updating rule files, or creating a new downloader script for a category.
 ---
 
@@ -14,14 +14,10 @@ Each market rules category has a dedicated downloader script in `Database Codes/
 |---|---|---|
 | NPRR | `download_ercot_nprr.py` | Pending, Withdrawn, Approved |
 | NOGRR | `download_ercot_nogrr.py` | Pending, Withdrawn, Approved, Rejected |
-| PGRR | *(create from template)* | Pending, Withdrawn, Approved |
-| RMGRR | *(create from template)* | Pending, Withdrawn, Approved |
+| PGRR | `download_ercot_pgrr.py` | Pending, Withdrawn, Approved |
+| RMGRR | `download_ercot_rmgrr.py` | Pending, Withdrawn, Approved |
 | SCR | `download_ercot_scr.py` | Pending, Withdrawn, Approved, Rejected |
 | COPMGRR | `download_ercot_copmgrr.py` | Pending, Withdrawn, Approved |
-| OBDRR | *(create from template)* | Pending, Withdrawn, Approved |
-| RRGRR | *(create from template)* | Pending, Withdrawn, Approved |
-| SMOGRR | *(create from template)* | Pending, Withdrawn, Approved |
-| VCMRR | *(create from template)* | Pending, Withdrawn, Approved |
 
 All downloaded files are saved to:
 ```
@@ -102,10 +98,6 @@ pip install requests beautifulsoup4 openpyxl
 | RMGRR | `/mktrules/issues/rmgrr` | `.../reports/rmgrr/pending` | `.../reports/rmgrr/withdrawn` | `.../reports/rmgrr/approved` | — | `/mktrules/issues/RMGRR{n}` |
 | SCR | `/mktrules/issues/scr` | `.../reports/scr/pending` | `.../reports/scr/withdrawn` | `.../reports/scr/approved` | `.../reports/scr/rejected` | `/mktrules/issues/SCR{n}` |
 | COPMGRR | `/mktrules/issues/copmgrr` | — | `.../reports/copmgrr/withdrawn` | `.../reports/copmgrr/approved` | — | `/mktrules/issues/COPMGRR{n:03d}` |
-| OBDRR | `/mktrules/issues/obdrr` | `.../reports/obdrr/pending` | `.../reports/obdrr/withdrawn` | `.../reports/obdrr/approved` | — | `/mktrules/issues/OBDRR{n}` |
-| RRGRR | `/mktrules/issues/rrgrr` | `.../reports/rrgrr/pending` | `.../reports/rrgrr/withdrawn` | `.../reports/rrgrr/approved` | — | `/mktrules/issues/RRGRR{n}` |
-| SMOGRR | `/mktrules/issues/smogrr` | `.../reports/smogrr/pending` | `.../reports/smogrr/withdrawn` | `.../reports/smogrr/approved` | — | `/mktrules/issues/SMOGRR{n}` |
-| VCMRR | `/mktrules/issues/vcmrr` | `.../reports/vcmrr/pending` | `.../reports/vcmrr/withdrawn` | `.../reports/vcmrr/approved` | — | `/mktrules/issues/VCMRR{n}` |
 
 All base URLs are relative to `https://www.ercot.com`. Verify the report page URLs are live before creating a new script — not all categories publish all status pages.
 
