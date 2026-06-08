@@ -8,7 +8,7 @@ trigger: When the user asks about downloading ERCOT market rules documents, runn
 
 ## Overview
 
-Each market rules category has a dedicated downloader script in `Database Codes/`. All scripts share the same architecture — they scrape ERCOT's website for all statuses of a revision request type, compare against locally saved files, and download only what is new.
+Each market rules category has a dedicated downloader script in `Database Codes/download_MKT_Rules/`. All scripts share the same architecture — they scrape ERCOT's website for all statuses of a revision request type, compare against locally saved files, and download only what is new.
 
 | Category | Script | Statuses covered |
 |---|---|---|
@@ -32,7 +32,7 @@ Documents Database/ERCOT.MKT.RULES/<CATEGORY>/
 
 ```bash
 cd "E:\wamp64\www\Power.Talks"
-python "Database Codes/download_ercot_nprr.py"
+python "Database Codes/download_MKT_Rules/download_ercot_nprr.py"
 ```
 
 Replace `download_ercot_nprr.py` with the script for the desired category.
@@ -105,7 +105,7 @@ All base URLs are relative to `https://www.ercot.com`. Verify the report page UR
 
 ## Creating a New Script
 
-Use `download_ercot_nprr.py` as the base template. Apply these substitutions throughout:
+Use `Database Codes/download_MKT_Rules/download_ercot_nprr.py` as the base template. Apply these substitutions throughout:
 
 | NPRR value | Replace with |
 |---|---|
