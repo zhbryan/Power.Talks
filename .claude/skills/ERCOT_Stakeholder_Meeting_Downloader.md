@@ -8,7 +8,7 @@ trigger: When the user asks about downloading ERCOT stakeholder meeting document
 
 ## Overview
 
-`Database Codes/download_ercot_ros.py` is the generic template for downloading ERCOT stakeholder committee meeting documents. It scrapes the committee's year pages on `ercot.com/committees`, collects calendar page URLs for each meeting, fetches each calendar page for downloadable documents, and saves them locally — skipping any files already present.
+All committee downloader scripts live in `Database Codes/download_STKHDR_Meets/`. Each script follows the same architecture: scrapes the committee's year pages on `ercot.com/committees`, collects calendar page URLs for each meeting, fetches each calendar page for downloadable documents, and saves them locally — skipping any files already present.
 
 All downloaded files are saved to:
 ```
@@ -25,7 +25,7 @@ One sub-folder per meeting date. Files are never overwritten — only new files 
 
 ```bash
 cd "E:\wamp64\www\Power.Talks"
-python "Database Codes/download_ercot_ros.py"
+python "Database Codes/download_STKHDR_Meets/download_ercot_ros.py"
 ```
 
 **Dependencies** (install once):
@@ -81,7 +81,7 @@ pip install requests beautifulsoup4
 
 ## Creating a Downloader for Another Committee
 
-Use `download_ercot_ros.py` as the template. Apply these substitutions:
+Use `Database Codes/download_STKHDR_Meets/download_ercot_ros.py` as the template. Apply these substitutions:
 
 | ROS value | Replace with |
 |-----------|-------------|
