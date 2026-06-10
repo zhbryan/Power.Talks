@@ -1,6 +1,6 @@
 ---
 name: ERCOT-Market-Rules-Profile
-description: Use when asked to create, build, or generate a profile or summary JSON for any ERCOT market rules revision request — NPRR, NOGRR, PGRR, RMGRR, SCR, COPMGRR, OBDRR, RRGRR, SMOGRR, or VCMRR.
+description: Use when asked to create, build, or generate a profile or summary JSON for any ERCOT market rules revision request — NPRR, NOGRR, PGRR, RMGRR, SCR, or COPMGRR.
 ---
 
 # ERCOT Market Rules Profile Creator
@@ -19,10 +19,6 @@ Creates a structured JSON profile file for any ERCOT market rules revision reque
 | `RMGRR` | Retail Market Guide Revision Request | Retail Market Guide |
 | `SCR` | System Change Request | ERCOT Systems / IT |
 | `COPMGRR` | Congestion Offset Payment Mechanism Guide Revision Request | COPM Bilateral Agreement |
-| `OBDRR` | Operating Bulletin Disposition Revision Request | Operating Bulletins |
-| `RRGRR` | Registration and Qualification Guide Revision Request | Registration and Qualification Guide |
-| `SMOGRR` | Standard Market Design and Operations Guide Revision Request | SMD Operations Guide |
-| `VCMRR` | Variable Cost and Make-Whole Revenue Revision Request | VCMRR Agreement / Guide |
 
 ## Input
 
@@ -49,10 +45,6 @@ Documents Database/ERCOT.MKT.RULES/<CATEGORY>/<ISSUE_ID>/Quick runs/<ISSUE_ID> P
 | RMGRR | `RMGRR{n}` | `RMGRR150` |
 | SCR | `SCR{n}` | `SCR800` |
 | COPMGRR | `COPMGRR{n:03d}` (zero-padded 3 digits) | `COPMGRR015` |
-| OBDRR | `OBDRR{n}` | `OBDRR50` |
-| RRGRR | `RRGRR{n}` | `RRGRR30` |
-| SMOGRR | `SMOGRR{n}` | `SMOGRR20` |
-| VCMRR | `VCMRR{n}` | `VCMRR10` |
 
 ---
 
@@ -91,10 +83,6 @@ Extract the following fields from the issue documents. Use `null` for any field 
 | RMGRR | Retail Market Guide section numbers |
 | SCR | System/functional area identifiers, e.g. `["MIS", "NMMS", "EMS"]` |
 | COPMGRR | COPM Bilateral Agreement section identifiers |
-| OBDRR | Operating Bulletin number(s) being superseded or incorporated |
-| RRGRR | Registration and Qualification Guide section numbers |
-| SMOGRR | SMD Operations Guide section numbers |
-| VCMRR | Agreement or guide section identifiers |
 
 ## JSON Template
 
