@@ -869,12 +869,12 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
         .pt-paper-grid {
           position: relative;
           display: grid;
-          grid-template-columns: repeat(5, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 8px;
           margin-top: 14px;
         }
-        @media (max-width: 720px) {
-          .pt-paper-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+        @media (max-width: 480px) {
+          .pt-paper-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
         }
         .pt-paper-btn {
           position: relative;
