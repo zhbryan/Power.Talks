@@ -145,16 +145,12 @@ window.Waveform = Waveform;
 
 // Paper Trails — a grid of interactive rule/code buttons that open a detail pane
 const PAPER_TRAIL_CODES = [
-  { code: "NPRR",   name: "Nodal Protocol Revision Request",        count: 1287 },
-  { code: "SCR",    name: "System Change Request",                   count: 412 },
-  { code: "COPMGRR",name: "Commercial Ops Planning & Mkt Biz Req.",  count: 58  },
-  { code: "NOGRR",  name: "Nodal Operating Guide Revision Request",  count: 274 },
-  { code: "OBDRR",  name: "Other Binding Document Revision Request", count: 96  },
-  { code: "PGRR",   name: "Planning Guide Revision Request",         count: 118 },
-  { code: "RMGRR",  name: "Retail Market Guide Revision Request",    count: 203 },
-  { code: "RRGRR",  name: "Resource Registration Glossary RR",       count: 47  },
-  { code: "SMOGRR", name: "Settlement Metering Op. Guide RR",        count: 81  },
-  { code: "VCMRR",  name: "Verifiable Cost Manual Revision Request", count: 39  },
+  { code: "NPRR",   name: "Nodal Protocol Revision Request",       count: 1287 },
+  { code: "SCR",    name: "System Change Request",                  count: 412 },
+  { code: "COPMGRR",name: "Commercial Ops Planning & Mkt Biz Req.", count: 58  },
+  { code: "NOGRR",  name: "Nodal Operating Guide Revision Request", count: 274 },
+  { code: "PGRR",   name: "Planning Guide Revision Request",        count: 118 },
+  { code: "RMGRR",  name: "Retail Market Guide Revision Request",   count: 203 },
 ];
 
 function NprrDetailView({ nprr, onBack }) {

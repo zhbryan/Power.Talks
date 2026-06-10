@@ -8,7 +8,7 @@ Usage:  py -3 rebuild_standalone.py
 import json, base64, gzip, re, shutil
 from pathlib import Path
 
-STANDALONE = Path(__file__).parent / "Power.Talks (standalone).html"
+STANDALONE = Path(__file__).parent / "Power.Talks home page.html"
 SRC_DIR    = Path(__file__).parent / "src"
 
 def compress(text: str) -> str:

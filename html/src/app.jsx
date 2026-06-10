@@ -40,7 +40,7 @@ function App() {
 
   const [activeId, setActiveId] = React.useState("s1");
   const [activeMarket, setActiveMarket] = React.useState("ERCOT");
-  const [activeSection, setActiveSection] = React.useState("market-home");
+  const [activeSection, setActiveSection] = React.useState("paper-trails");
   const [activePaperCode, setActivePaperCode] = React.useState("NPRR");
   const [activeMeetingNode, setActiveMeetingNode] = React.useState("BOD");
   const [activeNprr, setActiveNprr] = React.useState(null);
