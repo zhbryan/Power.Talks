@@ -1,6 +1,6 @@
 ---
 name: ERCOT-Market-Rules-Summarization-and-Timeline
-description: Use when asked to summarize any ERCOT market rules revision request, analyze its background and impacts, or produce a stakeholder timeline report — covers NPRR, NOGRR, PGRR, RMGRR, SCR, COPMGRR, OBDRR, RRGRR, SMOGRR, and VCMRR.
+description: Use when asked to summarize any ERCOT market rules revision request, analyze its background and impacts, or produce a stakeholder timeline report — covers NPRR, NOGRR, PGRR, RMGRR, SCR, and COPMGRR.
 ---
 
 # ERCOT Market Rules Summarization and Timeline of Status
@@ -19,10 +19,6 @@ Reads all documents in an ERCOT market rules issue folder, synthesizes the revis
 | `RMGRR` | Retail Market Guide Revision Request | Retail Market Guide |
 | `SCR` | System Change Request | ERCOT Systems / IT |
 | `COPMGRR` | Congestion Offset Payment Mechanism Guide Revision Request | COPM Bilateral Agreement |
-| `OBDRR` | Operating Bulletin Disposition Revision Request | Operating Bulletins |
-| `RRGRR` | Registration and Qualification Guide Revision Request | Registration and Qualification Guide |
-| `SMOGRR` | Standard Market Design and Operations Guide Revision Request | SMD Operations Guide |
-| `VCMRR` | Variable Cost and Make-Whole Revenue Revision Request | VCMRR Agreement / Guide |
 
 ## Input
 
@@ -225,10 +221,6 @@ doc.save(out_path)
 | RMGRR | Note retail settlement or metering rule changes |
 | SCR | Note which ERCOT systems are affected; implementation window if stated |
 | COPMGRR | Note COPM Bilateral Agreement section and effect on COPM settlement |
-| OBDRR | Identify which Operating Bulletin is being incorporated or superseded |
-| RRGRR | Note registration or qualification criteria being changed |
-| SMOGRR | Note operational or market design procedures affected |
-| VCMRR | Note variable cost or make-whole payment methodology changes |
 
 ---
 
