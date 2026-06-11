@@ -800,13 +800,186 @@ function PgrrPanels({ onPgrrClick }) {
   );
 }
 
-function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgrrClick, onPgrrClick }) {
+function ScrDetailView({ scr, onBack }) {
+  const [summary, setSummary] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error,   setError]   = React.useState(null);
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setSummary(null);
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/SCR/SCR${scr}/Quick%20runs/SCR${scr}%20Summary.json`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setSummary(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [scr]);
+
+  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Rejected: "var(--warn)", Pending: "var(--warn)" };
+  const sc = summary ? (STATUS_COLOR[summary.status] || "var(--muted)") : "var(--muted)";
+
+  return (
+    <div style={{ position: "relative" }}>
+      <style>{`
+        .nd-head { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+        .nd-back { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:11px; color:var(--muted); padding:5px 10px; border-radius:6px; border:1px solid var(--rule-2); background:var(--bg); transition:border-color .15s, color .15s; cursor:pointer; }
+        .nd-back:hover { border-color:var(--accent); color:var(--accent); }
+        .nd-num { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent-2); letter-spacing:.04em; }
+        .nd-badge { padding:2px 10px; border-radius:99px; font-size:10.5px; font-weight:600; font-family:var(--mono); letter-spacing:.06em; }
+        .nd-title { font-family:var(--serif); font-size:22px; font-weight:400; color:var(--ink); line-height:1.2; margin:0 0 6px; }
+        .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px; }
+        .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+        .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
+        .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
+        .nd-impact-txt { color:var(--ink-2); }
+        .nd-ia-lbl { font-size:12px; font-weight:600; color:var(--ink-2); margin:10px 0 5px; }
+        .nd-table { width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:12px; }
+        .nd-table th { text-align:left; font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:5px 8px; border-bottom:1px solid var(--rule-2); }
+        .nd-table td { padding:5px 8px; border-bottom:1px solid var(--rule); color:var(--ink-2); vertical-align:top; }
+        .nd-table tr:last-child td { border-bottom:0; }
+        .nd-table td:first-child { font-weight:600; color:var(--ink); white-space:nowrap; width:30%; }
+        .nd-tl-table { width:100%; border-collapse:collapse; font-size:11px; }
+        .nd-tl-table th { text-align:left; font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:5px 6px; border-bottom:1px solid var(--rule-2); }
+        .nd-tl-table td { padding:5px 6px; border-bottom:1px solid var(--rule); color:var(--ink-2); vertical-align:top; }
+        .nd-tl-table tr:last-child td { border-bottom:0; background:color-mix(in oklab,var(--ok),transparent 88%); }
+        .nd-tl-table tr:last-child td { font-weight:500; color:var(--ink); }
+        .nd-tl-date-cell { font-family:var(--mono); font-size:10px; white-space:nowrap; color:var(--muted); }
+        .nd-tl-body-cell { font-family:var(--mono); font-size:10px; color:var(--accent-2); white-space:nowrap; }
+        .nd-tl-action-cell { font-weight:600; color:var(--ink); }
+        .nd-proto-tag { font-family:var(--mono); font-size:11px; color:var(--accent-2); padding:4px 10px; border-radius:6px; background:var(--accent-soft); border:1px solid var(--rule-2); display:inline-block; margin:0 4px 4px 0; }
+        .nd-loading { padding:40px 0; text-align:center; color:var(--muted); font-family:var(--mono); font-size:12px; }
+        .nd-error { padding:16px 0; color:var(--muted); font-family:var(--mono); font-size:11.5px; }
+      `}</style>
+      <div className="nd-head">
+        <button className="nd-back" onClick={onBack}>← Back</button>
+        {summary && <>
+          <span className="nd-num">SCR{summary.scr_number}</span>
+          <span className="nd-badge" style={{ background: sc + "22", color: sc }}>{summary.status}</span>
+        </>}
+      </div>
+
+      {loading && <div className="nd-loading">Loading summary…</div>}
+      {error && (() => {
+        const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
+        return (
+          <div className="nd-error">
+            {isNetwork
+              ? <>Cannot reach server — open via <b>http://localhost</b>, not file://.<br/>Path: <code style={{fontSize:10}}>/Power.Talks/Documents Database/ERCOT.MKT.RULES/SCR/SCR{scr}/Quick runs/</code></>
+              : error.includes("404")
+                ? <>Summary not yet generated for SCR{scr}. Run the <b>SCR Summarization and Timeline of Status</b> skill to create it.</>
+                : <>Could not load summary. ({error})</>
+            }
+          </div>
+        );
+      })()}
+
+      {summary && <>
+        <h2 className="nd-title">{summary.title}</h2>
+        <div className="nd-eyebrow">
+          Posted {summary.date_posted}
+          {summary.effective_date ? `  ·  Effective: ${summary.effective_date}` : ""}
+          {summary.sponsor ? `  ·  Sponsor: ${summary.sponsor}` : ""}
+        </div>
+
+        {summary.systems_affected?.length > 0 && <>
+          <div>{summary.systems_affected.map((s, i) =>
+            <span key={i} className="nd-proto-tag">{s}</span>
+          )}</div>
+        </>}
+
+        {summary.executive_summary && <>
+          <div className="nd-sec-hd">Executive Summary</div>
+          <div className="nd-body">{summary.executive_summary}</div>
+        </>}
+
+        {summary.background && <>
+          <div className="nd-sec-hd">Reason for Change</div>
+          <div className="nd-body">{summary.background}</div>
+        </>}
+
+        {summary.key_change && <>
+          <div className="nd-sec-hd">Key System Change</div>
+          <div className="nd-body">{summary.key_change}</div>
+        </>}
+
+        {summary.impacts?.length > 0 && <>
+          <div className="nd-sec-hd">Potential Impacts</div>
+          <div className="nd-impact-list">
+            {summary.impacts.map((imp, i) => (
+              <div key={i} className="nd-impact-row">
+                <span className="nd-impact-cat">{imp.category}</span>
+                <span className="nd-impact-txt">{imp.text}</span>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {summary.impact_analysis?.length > 0 && <>
+          <div className="nd-sec-hd">Impact Analysis</div>
+          {summary.impact_analysis.map((ia, i) => (
+            <div key={i}>
+              <div className="nd-ia-lbl">{ia.label}</div>
+              <table className="nd-table">
+                <thead><tr><th>Category</th><th>Detail</th></tr></thead>
+                <tbody>
+                  {ia.rows.map((row, j) => (
+                    <tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </>}
+
+        {summary.timeline?.length > 0 && <>
+          <div className="nd-sec-hd">Stakeholder Discussion Timeline</div>
+          <table className="nd-tl-table">
+            <thead>
+              <tr><th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              {summary.timeline.map((t, i) => (
+                <tr key={i}>
+                  <td className="nd-tl-date-cell">{t.date}</td>
+                  <td className="nd-tl-body-cell">{t.body}</td>
+                  <td className="nd-tl-action-cell">{t.action}</td>
+                  <td>{t.notes}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>}
+
+        {summary.current_status?.length > 0 && <>
+          <div className="nd-sec-hd">Current Status</div>
+          {summary.current_status.map((p, i) =>
+            <div key={i} className="nd-body">{p}</div>
+          )}
+        </>}
+      </>}
+    </div>
+  );
+}
+
+function ScrPanels({ onScrClick }) {
+  const d = window.DATA || {};
+  return (
+    <React.Fragment>
+      <NprrListPanel code="SCR" label="Approved"  items={d.SCR_APPROVED  || []} maxHeight="200px" statusColor="var(--ok)"    onNprrClick={onScrClick} />
+      <NprrListPanel code="SCR" label="Withdrawn" items={d.SCR_WITHDRAWN || []} maxHeight="130px" statusColor="var(--muted)" onNprrClick={onScrClick} />
+      <NprrListPanel code="SCR" label="Rejected"  items={d.SCR_REJECTED  || []} maxHeight="80px"  statusColor="var(--warn)"  onNprrClick={onScrClick} />
+    </React.Fragment>
+  );
+}
+
+function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgrrClick, onPgrrClick, onScrClick }) {
   const activeItem = PAPER_TRAIL_CODES.find(c => c.code === active) || PAPER_TRAIL_CODES[0];
   const [selectedNprr, setSelectedNprr] = React.useState(null);
   const [selectedCopmgrr, setSelectedCopmgrr] = React.useState(null);
   const [selectedPgrr, setSelectedPgrr] = React.useState(null);
+  const [selectedScr, setSelectedScr] = React.useState(null);
 
-  React.useEffect(() => { setSelectedNprr(null); setSelectedCopmgrr(null); setSelectedPgrr(null); }, [active]);
+  React.useEffect(() => { setSelectedNprr(null); setSelectedCopmgrr(null); setSelectedPgrr(null); setSelectedScr(null); }, [active]);
 
   const handleNprrClick = (n) => {
     setSelectedNprr(n);
@@ -831,6 +1004,14 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
   const handlePgrrBack = () => {
     setSelectedPgrr(null);
     if (onPgrrClick) onPgrrClick(null);
+  };
+  const handleScrClick = (n) => {
+    setSelectedScr(n);
+    if (onScrClick) onScrClick(n);
+  };
+  const handleScrBack = () => {
+    setSelectedScr(null);
+    if (onScrClick) onScrClick(null);
   };
   return (
     <div className="pt-paper">
@@ -970,6 +1151,14 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
               <PgrrDetailView pgrr={selectedPgrr} onBack={handlePgrrBack} />
             </div>
           : <PgrrPanels onPgrrClick={handlePgrrClick} />
+      )}
+
+      {active === "SCR" && (
+        selectedScr
+          ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
+              <ScrDetailView scr={selectedScr} onBack={handleScrBack} />
+            </div>
+          : <ScrPanels onScrClick={handleScrClick} />
       )}
     </div>
   );

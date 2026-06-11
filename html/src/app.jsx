@@ -46,11 +46,13 @@ function App() {
   const [activeNprr, setActiveNprr] = React.useState(null);
   const [activeCopmgrr, setActiveCopmgrr] = React.useState(null);
   const [activePgrr, setActivePgrr] = React.useState(null);
+  const [activeScr, setActiveScr] = React.useState(null);
   const [draft, setDraft] = React.useState("");
 
   React.useEffect(() => { setActiveNprr(null); }, [activeSection, activePaperCode]);
   React.useEffect(() => { setActiveCopmgrr(null); }, [activeSection, activePaperCode]);
   React.useEffect(() => { setActivePgrr(null); }, [activeSection, activePaperCode]);
+  React.useEffect(() => { setActiveScr(null); }, [activeSection, activePaperCode]);
 
   const SECTION_LABELS = {
     "paper-trails":      "Paper Trails",
@@ -89,6 +91,10 @@ function App() {
   };
   const onPgrrClick = (n) => {
     setActivePgrr(n);
+    if (n !== null) setRightOpen(true);
+  };
+  const onScrClick = (n) => {
+    setActiveScr(n);
     if (n !== null) setRightOpen(true);
   };
   const onMeetingNodeClick = (id) => {
@@ -200,7 +206,7 @@ function App() {
               activeSection === "market-home"
                 ? <ERCOTHome onSectionChange={setActiveSection}/>
                 : activeSection === "paper-trails"
-                ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick} onPgrrClick={onPgrrClick}/>
+                ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick} onPgrrClick={onPgrrClick} onScrClick={onScrClick}/>
                 : activeSection === "meeting-tracks"
                 ? <MeetingTracksOrgChart selected={activeMeetingNode} onSelect={onMeetingNodeClick}/>
                 : <TalkIllustration title={CURRENT_TALK_TITLE} meta={CURRENT_TALK_META}/>
