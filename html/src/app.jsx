@@ -195,7 +195,10 @@ function App() {
         expanded={sidebarExpanded}
         onToggle={() => setSidebarExpanded(e => !e)}
         activeSection={activeSection}
-        onSectionChange={setActiveSection}
+        onSectionChange={(id) => {
+          if (id === "paper-trails") setActivePaperCode("NPRR");
+          setActiveSection(id);
+        }}
         activeId={activeId}
         onSelect={setActiveId}
         activeMarket={activeMarket}

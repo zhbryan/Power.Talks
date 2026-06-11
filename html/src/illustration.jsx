@@ -336,11 +336,13 @@ function NprrDetailView({ nprr, onBack }) {
 function NprrListPanel({ code = "NPRR", label, items, maxHeight, statusColor, onNprrClick }) {
   const [query, setQuery] = React.useState("");
   const baseFolder = FOLDER_PATHS[code];
-  const filtered = items.filter(item => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return String(item.n).includes(q) || (item.title || "").toLowerCase().includes(q);
-  });
+  const filtered = items
+    .filter(item => {
+      const q = query.trim().toLowerCase();
+      if (!q) return true;
+      return String(item.n).includes(q) || (item.title || "").toLowerCase().includes(q);
+    })
+    .sort((a, b) => b.n - a.n);
   return (
     <div className="pt-nprr-panel">
       <style>{`
@@ -1329,7 +1331,6 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
         <div>
           <div className="pt-paper-eye">Paper Trails</div>
           <h2 className="pt-paper-title">Pick a revision track</h2>
-          <div className="pt-paper-sub">Select a rule-stack code to scope the conversation.</div>
         </div>
       </div>
 
