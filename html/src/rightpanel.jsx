@@ -1,3 +1,7 @@
+// Profiles written before the unified skill schema store reason_for_revision
+// as an array; newer ones store a single string. Normalize to an array.
+function asList(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
+
 function NprrProfileCard({ nprr }) {
   const [profile, setProfile] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
@@ -59,7 +63,7 @@ function NprrProfileCard({ nprr }) {
       `}</style>
 
       <div className="np-status-row">
-        <span className="np-num">NPRR{profile.nprr_number}</span>
+        <span className="np-num">NPRR{profile.issue_number ?? profile.nprr_number ?? nprr}</span>
         <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status}</span>
       </div>
       <div className="np-title">{profile.title}</div>
@@ -74,18 +78,18 @@ function NprrProfileCard({ nprr }) {
       <Field label="Email"     value={profile.sponsor_email} />
       <Field label="Phone"     value={profile.sponsor_phone} />
 
-      {profile.protocol_sections_requiring_revision?.length > 0 && <>
+      {asList(profile.governing_document_sections || profile.protocol_sections_requiring_revision).length > 0 && <>
         <hr className="np-divider" />
         <div className="np-sec-lbl">Protocol Sections</div>
-        {profile.protocol_sections_requiring_revision.map((s, i) =>
+        {asList(profile.governing_document_sections || profile.protocol_sections_requiring_revision).map((s, i) =>
           <span key={i} className="np-proto-tag">{s}</span>
         )}
       </>}
 
-      {profile.reason_for_revision?.length > 0 && <>
+      {asList(profile.reason_for_revision).length > 0 && <>
         <hr className="np-divider" />
         <div className="np-sec-lbl">Reason for Revision</div>
-        <div>{profile.reason_for_revision.map((r, i) =>
+        <div>{asList(profile.reason_for_revision).map((r, i) =>
           <span key={i} className="np-reason-chip">{r}</span>
         )}</div>
       </>}
@@ -184,18 +188,18 @@ function CopmgrrProfileCard({ copmgrr }) {
       <Field label="Email"    value={profile.sponsor_email} />
       <Field label="Phone"    value={profile.sponsor_phone} />
 
-      {profile.agreement_sections_requiring_revision?.length > 0 && <>
+      {asList(profile.governing_document_sections || profile.agreement_sections_requiring_revision).length > 0 && <>
         <hr className="np-divider" />
         <div className="np-sec-lbl">Agreement Sections</div>
-        {profile.agreement_sections_requiring_revision.map((s, i) =>
+        {asList(profile.governing_document_sections || profile.agreement_sections_requiring_revision).map((s, i) =>
           <span key={i} className="np-proto-tag">{s}</span>
         )}
       </>}
 
-      {profile.reason_for_revision?.length > 0 && <>
+      {asList(profile.reason_for_revision).length > 0 && <>
         <hr className="np-divider" />
         <div className="np-sec-lbl">Reason for Revision</div>
-        <div>{profile.reason_for_revision.map((r, i) =>
+        <div>{asList(profile.reason_for_revision).map((r, i) =>
           <span key={i} className="np-reason-chip">{r}</span>
         )}</div>
       </>}
@@ -300,10 +304,10 @@ function PgrrProfileCard({ pgrr }) {
         )}
       </>}
 
-      {profile.reason_for_revision?.length > 0 && <>
+      {asList(profile.reason_for_revision).length > 0 && <>
         <hr className="np-divider" />
         <div className="np-sec-lbl">Reason for Revision</div>
-        <div>{profile.reason_for_revision.map((r, i) =>
+        <div>{asList(profile.reason_for_revision).map((r, i) =>
           <span key={i} className="np-reason-chip">{r}</span>
         )}</div>
       </>}
@@ -320,6 +324,246 @@ function PgrrProfileCard({ pgrr }) {
             </div>
           ))}
         </div>
+      </>}
+    </div>
+  );
+}
+
+function ScrSummaryCard({ scr }) {
+  const [summary, setSummary] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setSummary(null);
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/SCR/SCR${scr}/Quick%20runs/SCR${scr}%20Summary.json`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setSummary(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [scr]);
+
+  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Rejected: "var(--warn)", Pending: "var(--warn)" };
+  const sc = summary ? (STATUS_COLOR[summary.status] || "var(--muted)") : "var(--muted)";
+
+  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading summary…</div>;
+  if (error) {
+    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
+    return (
+      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
+        {isNetwork
+          ? <>No summary loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
+          : error.includes("404")
+            ? <>Summary not yet generated for SCR{scr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>SCR Summarization</span> skill to create it.</>
+            : <>Could not load summary. ({error})</>
+        }
+      </div>
+    );
+  }
+  if (!summary) return null;
+
+  const Field = ({ label, value }) => value ? (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
+    </div>
+  ) : null;
+
+  const tl = summary.timeline || [];
+  const tlSlice = tl.length > 6 ? tl.slice(-6) : tl;
+
+  return (
+    <div>
+      <div className="np-status-row">
+        <span className="np-num">SCR{summary.scr_number}</span>
+        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{summary.status}</span>
+      </div>
+      <div className="np-title">{summary.title}</div>
+      <Field label="Date Posted"    value={summary.date_posted} />
+      <Field label="Effective Date" value={summary.effective_date} />
+      <Field label="Sponsor"        value={summary.sponsor} />
+      {summary.systems_affected?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Systems Affected</div>
+        {summary.systems_affected.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)}
+      </>}
+      {summary.executive_summary && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Executive Summary</div>
+        <div style={{ fontSize: "12px", color: "var(--ink-2)", lineHeight: 1.6 }}>{summary.executive_summary}</div>
+      </>}
+      {tlSlice.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Recent Activity</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <tbody>
+            {tlSlice.map((t, i) => (
+              <tr key={i}>
+                <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", whiteSpace: "nowrap", paddingRight: 8, paddingBottom: 4, verticalAlign: "top" }}>{t.date}</td>
+                <td style={{ color: "var(--ink-2)", paddingBottom: 4, verticalAlign: "top" }}>{t.action || t.event}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </>}
+    </div>
+  );
+}
+
+function NogrSummaryCard({ nogrr }) {
+  const [summary, setSummary] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setSummary(null);
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NOGRR/NOGRR${nogrr}/Quick%20runs/NOGRR${nogrr}%20Summary.json`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setSummary(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [nogrr]);
+
+  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Rejected: "var(--warn)", Pending: "var(--warn)" };
+  const sc = summary ? (STATUS_COLOR[summary.status] || "var(--muted)") : "var(--muted)";
+
+  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading summary…</div>;
+  if (error) {
+    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
+    return (
+      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
+        {isNetwork
+          ? <>No summary loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
+          : error.includes("404")
+            ? <>Summary not yet generated for NOGRR{nogrr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>NOGRR Summarization</span> skill to create it.</>
+            : <>Could not load summary. ({error})</>
+        }
+      </div>
+    );
+  }
+  if (!summary) return null;
+
+  const Field = ({ label, value }) => value ? (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
+    </div>
+  ) : null;
+
+  const tl = summary.timeline || [];
+  const tlSlice = tl.length > 6 ? tl.slice(-6) : tl;
+
+  return (
+    <div>
+      <div className="np-status-row">
+        <span className="np-num">NOGRR{summary.nogrr_number}</span>
+        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{summary.status}</span>
+      </div>
+      <div className="np-title">{summary.title}</div>
+      <Field label="Date Posted"    value={summary.date_posted} />
+      <Field label="Effective Date" value={summary.effective_date} />
+      <Field label="Sponsor"        value={summary.sponsor} />
+      {summary.guide_sections?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Guide Sections</div>
+        {summary.guide_sections.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)}
+      </>}
+      {summary.executive_summary && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Executive Summary</div>
+        <div style={{ fontSize: "12px", color: "var(--ink-2)", lineHeight: 1.6 }}>{summary.executive_summary}</div>
+      </>}
+      {tlSlice.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Recent Activity</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <tbody>
+            {tlSlice.map((t, i) => (
+              <tr key={i}>
+                <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", whiteSpace: "nowrap", paddingRight: 8, paddingBottom: 4, verticalAlign: "top" }}>{t.date}</td>
+                <td style={{ color: "var(--ink-2)", paddingBottom: 4, verticalAlign: "top" }}>{t.action || t.event}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </>}
+    </div>
+  );
+}
+
+function RmgrSummaryCard({ rmgrr }) {
+  const [summary, setSummary] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setSummary(null);
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/RMGRR/RMGRR${rmgrr}/Quick%20runs/RMGRR${rmgrr}%20Summary.json`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setSummary(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [rmgrr]);
+
+  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Pending: "var(--warn)" };
+  const sc = summary ? (STATUS_COLOR[summary.status] || "var(--muted)") : "var(--muted)";
+
+  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading summary…</div>;
+  if (error) {
+    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
+    return (
+      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
+        {isNetwork
+          ? <>No summary loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
+          : error.includes("404")
+            ? <>Summary not yet generated for RMGRR{rmgrr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>RMGRR Summarization</span> skill to create it.</>
+            : <>Could not load summary. ({error})</>
+        }
+      </div>
+    );
+  }
+  if (!summary) return null;
+
+  const Field = ({ label, value }) => value ? (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
+    </div>
+  ) : null;
+
+  const tl = summary.timeline || [];
+  const tlSlice = tl.length > 6 ? tl.slice(-6) : tl;
+
+  return (
+    <div>
+      <div className="np-status-row">
+        <span className="np-num">RMGRR{summary.rmgrr_number}</span>
+        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{summary.status}</span>
+      </div>
+      <div className="np-title">{summary.title}</div>
+      <Field label="Date Posted"    value={summary.date_posted} />
+      <Field label="Effective Date" value={summary.effective_date} />
+      <Field label="Sponsor"        value={summary.sponsor} />
+      {summary.guide_sections?.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Guide Sections</div>
+        {summary.guide_sections.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)}
+      </>}
+      {summary.executive_summary && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Executive Summary</div>
+        <div style={{ fontSize: "12px", color: "var(--ink-2)", lineHeight: 1.6 }}>{summary.executive_summary}</div>
+      </>}
+      {tlSlice.length > 0 && <>
+        <hr className="np-divider" />
+        <div className="np-sec-lbl">Recent Activity</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <tbody>
+            {tlSlice.map((t, i) => (
+              <tr key={i}>
+                <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", whiteSpace: "nowrap", paddingRight: 8, paddingBottom: 4, verticalAlign: "top" }}>{t.date}</td>
+                <td style={{ color: "var(--ink-2)", paddingBottom: 4, verticalAlign: "top" }}>{t.action || t.event}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </>}
     </div>
   );
@@ -350,12 +594,15 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const hasNprr = Boolean(ctx.nprr);
   const hasCopmgrr = Boolean(ctx.copmgrr);
   const hasPgrr = Boolean(ctx.pgrr);
+  const hasScr = Boolean(ctx.scr);
+  const hasNogrr = Boolean(ctx.nogrr);
+  const hasRmgrr = Boolean(ctx.rmgrr);
   const isErcotHome = ctx.section === "market-home";
   const activeArtifacts = isErcotHome ? ERCOT_HOME_ARTIFACTS : (ARTIFACTS || []);
 
   React.useEffect(() => {
-    if (hasNprr || hasCopmgrr || hasPgrr) setTab("runs");
-  }, [ctx.nprr, ctx.copmgrr, ctx.pgrr]);
+    if (hasNprr || hasCopmgrr || hasPgrr || hasScr || hasNogrr || hasRmgrr) setTab("runs");
+  }, [ctx.nprr, ctx.copmgrr, ctx.pgrr, ctx.scr, ctx.nogrr, ctx.rmgrr]);
 
   React.useEffect(() => {
     if (isErcotHome) setTab("artifacts");
@@ -518,6 +765,12 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
             ? <CopmgrrProfileCard copmgrr={ctx.copmgrr} />
             : hasPgrr
             ? <PgrrProfileCard pgrr={ctx.pgrr} />
+            : hasScr
+            ? <ScrSummaryCard scr={ctx.scr} />
+            : hasNogrr
+            ? <NogrSummaryCard nogrr={ctx.nogrr} />
+            : hasRmgrr
+            ? <RmgrSummaryCard rmgrr={ctx.rmgrr} />
             : <>
                 <p className="pt-runs-note">Suggested study runs</p>
                 {(SUGGESTED_RUNS || []).map(r => (

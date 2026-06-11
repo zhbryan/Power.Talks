@@ -33,7 +33,7 @@ from urllib.parse import urljoin, unquote
 NOGRR_NUMBERS = None
 
 # Local folder where files will be saved (one sub-folder per NOGRR).
-BASE_DIR = r"C:\Users\chunl\OneDrive\Documents\Business Ventures\Power.Talks\Documents Database\ERCOT.MKT.RULES\NOGRR"
+BASE_DIR = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.MKT.RULES\NOGRR"
 
 # Seconds to pause between HTTP requests (be polite to the server).
 REQUEST_DELAY = 1.5

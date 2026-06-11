@@ -28,6 +28,46 @@ BASE_DIR      = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.MKT.RULES\N
 AI_MODEL      = "claude-haiku-4-5-20251001"
 AI_MAX_TOKENS = 600
 
+# Only rebuild summaries whose issue folder gained documents since the last
+# run, or whose Profile.json was refreshed after the summary was written.
+# Set False to force a full rebuild of every issue.
+ONLY_STALE = True
+
+SUMMARY_DOC_EXTS = ('.pdf', '.doc', '.docx', '.xls', '.xlsx')
+
+def issue_docs(folder):
+    import os
+    return sorted(f for f in os.listdir(folder)
+                  if os.path.isfile(os.path.join(folder, f))
+                  and os.path.splitext(f)[1].lower() in SUMMARY_DOC_EXTS)
+
+def summary_is_stale(folder, issue_id):
+    import os, json
+    quick = os.path.join(folder, "Quick runs")
+    jpath = os.path.join(quick, f"{issue_id} Summary.json")
+    dpath = os.path.join(quick, f"{issue_id} Summary.docx")
+    if not (os.path.exists(jpath) and os.path.exists(dpath)):
+        return True
+    try:
+        with open(jpath, encoding='utf-8') as f:
+            sj = json.load(f)
+    except Exception:
+        return True
+    src = sj.get('source_documents')
+    if isinstance(src, list):
+        if sorted(src) != issue_docs(folder):
+            return True
+    else:
+        dmt = os.path.getmtime(dpath)
+        if any(os.path.getmtime(os.path.join(folder, f)) > dmt
+               for f in issue_docs(folder)):
+            return True
+    ppath = os.path.join(quick, f"{issue_id} Profile.json")
+    if os.path.exists(ppath) and os.path.getmtime(ppath) > os.path.getmtime(jpath):
+        return True
+    return False
+
+
 # ─── TEXT EXTRACTION ─────────────────────────────────────────────────────────
 def text_from_docx(path):
     try:
@@ -119,8 +159,8 @@ def date_from_fname(fname):
     return None
 
 # ─── TIMELINE BUILDER ────────────────────────────────────────────────────────
-_BALLOT_PAT = re.compile(r'(ros|tac|prs|rms)\s*(?:email\s*)?ballot', re.IGNORECASE)
-_REPORT_PAT = re.compile(r'(ros|tac|prs|rms)\s*report', re.IGNORECASE)
+_BALLOT_PAT = re.compile(r'(ros|tac|prs|rms)[\s_-]*(?:email[\s_-]*)?ballot', re.IGNORECASE)
+_REPORT_PAT = re.compile(r'(ros|tac|prs|rms)[\s_-]*report', re.IGNORECASE)
 _BOARD_PAT  = re.compile(r'board.?report', re.IGNORECASE)
 _PUCT_PAT   = re.compile(r'puct.?report', re.IGNORECASE)
 _IMPACT_PAT = re.compile(r'impact.?analysis', re.IGNORECASE)
@@ -153,7 +193,7 @@ def infer_status(folder):
         return "Approved"
     if any(_REPORT_PAT.search(f) and 'tac' in f for f in files):
         return "Pending Board Action"
-    if any(_REPORT_PAT.search(f) and 'ros' in f for f in files):
+    if any(_REPORT_PAT.search(f) and ('ros' in f or 'prs' in f or 'rms' in f or 'cops' in f) for f in files):
         return "In ROS/TAC Review"
     return "Recently Posted / Pending ROS"
 
@@ -311,6 +351,8 @@ def process_issue(folder, n):
 
     sponsor_str = f"{sponsor} · {company}" if sponsor and company else (sponsor or '')
     summary_json = {
+        "source_documents":   issue_docs(folder),
+        "summary_last_updated": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
         "nogrr_number":       n,
         "title":              title,
         "status":             status,
@@ -337,6 +379,11 @@ def main():
         d for d in os.listdir(BASE_DIR)
         if os.path.isdir(os.path.join(BASE_DIR, d)) and re.match(r'NOGRR\d+', d)
     ], key=lambda x: int(re.search(r'\d+', x).group()))
+
+    if ONLY_STALE:
+        folders = [d for d in folders
+                   if summary_is_stale(os.path.join(BASE_DIR, d), d)]
+        print(f"ONLY_STALE: {len(folders)} issue(s) need a summary rebuild.")
 
     print(f"Processing {len(folders)} NOGRR folders...\n")
     ok = err = 0

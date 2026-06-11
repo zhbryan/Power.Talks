@@ -1,13 +1,17 @@
 ---
 name: ERCOT-Market-Rules-Profile
-description: Use when asked to create, build, or generate a profile or summary JSON for any ERCOT market rules revision request — NPRR, NOGRR, PGRR, RMGRR, SCR, or COPMGRR.
+description: Use when asked to create, build, generate, update, or refresh a profile or summary JSON for any ERCOT market rules revision request — NPRR, NOGRR, PGRR, RMGRR, SCR, or COPMGRR. Also covers detecting issues whose profiles are stale because new documents were downloaded.
 ---
 
 # ERCOT Market Rules Profile Creator
 
 ## Overview
 
-Creates a structured JSON profile file for any ERCOT market rules revision request, extracting all key metadata from the issue's downloaded documents. The output is saved under the issue's own folder in a `Quick runs` sub-folder.
+Creates and maintains a structured JSON profile file for any ERCOT market rules revision request, extracting all key metadata from the issue's downloaded documents. The output is saved under the issue's own folder in a `Quick runs` sub-folder.
+
+Two modes:
+- **Create mode** — build a profile from scratch for one issue (original behavior).
+- **Update mode** — scan the database for issues that received new documents since their profile was written (e.g. after a downloader run), then refresh only those profiles. See **Update Mode** section.
 
 ## Scope — All Market Rules Categories
 
@@ -73,6 +77,14 @@ Extract the following fields from the issue documents. Use `null` for any field 
 | 17 | `sponsor_phone` | Sponsor phone number (string) |
 | 18 | `market_segment` | Market segment(s) affected (string or array) |
 
+### Maintenance Fields (required on every create and update)
+
+| JSON Key | Contents |
+|---|---|
+| `timeline` | Array of `{"date": "YYYY-MM-DD", "event": "...", "doc": "..."}` — one entry per milestone document (posting, ballots, reports, comments, impact analysis, Board/PUCT actions), sorted by date ascending |
+| `source_documents` | Array of all document filenames in the issue folder that the profile reflects. This is how Update mode detects new documents — always set it to the full current folder listing when writing a profile. |
+| `profile_last_updated` | ISO 8601 timestamp (`YYYY-MM-DDTHH:MM:SS`) of when the profile was last written |
+
 ### Category-Specific Notes for `governing_document_sections`
 
 | Category | What this field contains |
@@ -105,7 +117,10 @@ Extract the following fields from the issue documents. Use `null` for any field 
   "sponsor_email": null,
   "sponsor_company": null,
   "sponsor_phone": null,
-  "market_segment": null
+  "market_segment": null,
+  "timeline": [],
+  "source_documents": [],
+  "profile_last_updated": null
 }
 ```
 
@@ -158,6 +173,40 @@ motion_lines = [s for s in strings if "motion" in s.lower() or category.lower() 
 
 ---
 
+## Update Mode — Detecting New Documents and Refreshing Profiles
+
+Run this after any downloader run (see `ERCOT_Market_Rules_Downloader` skill) or whenever asked to "update/refresh profiles".
+
+### Step 1 — Detect stale profiles
+
+```bash
+python "Database Codes/profile_MKT_Rules/find_stale_profiles.py"
+```
+
+The script scans every issue folder under `Documents Database/ERCOT.MKT.RULES/<CATEGORY>/` and reports, as JSON:
+
+- **`missing`** — issue folders that have documents but no `Quick runs/<ISSUE_ID> Profile.json` at all.
+- **`stale`** — profiles whose issue folder contains documents not listed in the profile's `source_documents` array. For legacy profiles without `source_documents`, it falls back to comparing document file mtimes against the profile file's mtime.
+
+Each entry lists the exact new document filenames, so only those need to be read.
+
+### Step 2 — Refresh each flagged profile
+
+For **missing** profiles: run Create mode (full extraction, all fields).
+
+For **stale** profiles, read only the new documents and update incrementally:
+
+1. Append a `timeline` entry per new document (date from the `MMDDYY` suffix in the filename → `20YY-MM-DD`; event from the document type, e.g. `ROS Ballot`, `TAC Report`, `ERCOT Comments`). Keep the array sorted by date; never duplicate an existing entry.
+2. Re-evaluate status-bearing documents — a `TAC Report`, `Board_Report`, or `PUCT_Report` may change `status` (e.g. `Pending` → `Approved`) and `effective_date`. Read the report text to confirm the outcome; do not infer approval from the filename alone.
+3. Leave all other fields untouched unless a new document explicitly revises them (e.g. revised sponsor, retitled request).
+4. Set `source_documents` to the full current folder listing and refresh `profile_last_updated`.
+
+### Step 3 — Report
+
+Summarize per category: profiles created, profiles updated, and any status changes (issue → old status → new status).
+
+---
+
 ## Steps
 
 1. Identify the category and issue number from the user's request or document filenames.
@@ -165,9 +214,10 @@ motion_lines = [s for s in strings if "motion" in s.lower() or category.lower() 
 3. Read the primary `-01` document and any supporting documents in the issue folder.
 4. Extract all 18 fields. For array fields, produce a JSON array; use `[]` if none found.
 5. Normalize dates to ISO 8601 (`YYYY-MM-DD`). Use a descriptive string only when no calendar date is available.
-6. Ensure `Quick runs/` exists under `Documents Database/ERCOT.MKT.RULES/<CATEGORY>/<ISSUE_ID>/`.
-7. Write the JSON file with 2-space indentation.
-8. Report the saved file path and list any fields that could not be populated.
+6. Build the maintenance fields: `timeline` from the documents found, `source_documents` from the full folder listing, `profile_last_updated` from the current time.
+7. Ensure `Quick runs/` exists under `Documents Database/ERCOT.MKT.RULES/<CATEGORY>/<ISSUE_ID>/`.
+8. Write the JSON file with 2-space indentation.
+9. Report the saved file path and list any fields that could not be populated.
 
 ---
 
@@ -180,3 +230,5 @@ motion_lines = [s for s in strings if "motion" in s.lower() or category.lower() 
 | Skipping `.doc` files | Use win32com for all `.doc` files; python-docx only reads `.docx` |
 | Leaving dates as raw text | Normalize to `YYYY-MM-DD`; use a string only when no date is available |
 | Omitting empty arrays | Use `[]` for array fields with no data, never omit or use `null` |
+| Forgetting `source_documents` when writing a profile | Update mode relies on it — always set it to the full current folder listing on every write |
+| Changing `status` from a ballot/report filename alone | Read the report text; only TAC/Board/PUCT outcomes change status, and reports can table or remand an issue |

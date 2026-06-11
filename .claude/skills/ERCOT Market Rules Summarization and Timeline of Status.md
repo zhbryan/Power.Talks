@@ -1,13 +1,17 @@
 ---
 name: ERCOT-Market-Rules-Summarization-and-Timeline
-description: Use when asked to summarize any ERCOT market rules revision request, analyze its background and impacts, or produce a stakeholder timeline report — covers NPRR, NOGRR, PGRR, RMGRR, SCR, and COPMGRR.
+description: Use when asked to summarize any ERCOT market rules revision request, analyze its background and impacts, produce a stakeholder timeline report, or update/refresh summaries after new documents are downloaded — covers NPRR, NOGRR, PGRR, RMGRR, SCR, and COPMGRR.
 ---
 
 # ERCOT Market Rules Summarization and Timeline of Status
 
 ## Overview
 
-Reads all documents in an ERCOT market rules issue folder, synthesizes the revision's main ideas and potential impacts, and reconstructs the full ERCOT stakeholder discussion timeline. Outputs a `.docx` report saved to the issue's `Quick runs` sub-folder.
+Reads all documents in an ERCOT market rules issue folder, synthesizes the revision's main ideas and potential impacts, and reconstructs the full ERCOT stakeholder discussion timeline. Outputs a `.docx` report (plus a companion `.json`) saved to the issue's `Quick runs` sub-folder.
+
+Two ways to run:
+- **Single issue (manual)** — follow the Step-by-Step Execution below for one issue.
+- **Batch / Update mode (scripts)** — run the per-category scripts in `Database Codes/summarize_MKT_Rules/`, which rebuild only the issues that received new documents. See **Update Mode** section.
 
 ## Scope — All Market Rules Categories
 
@@ -32,6 +36,42 @@ Documents Database/ERCOT.MKT.RULES/<CATEGORY>/<ISSUE_ID>/Quick runs/<ISSUE_ID> S
 ```
 
 Create `Quick runs/` if it does not exist. Issue ID formatting follows the same rules as the Profile skill (COPMGRR zero-pads to 3 digits; all others are plain integers).
+
+A companion `<ISSUE_ID> Summary.json` is written alongside the `.docx` with the same content in structured form, plus two maintenance fields:
+
+| JSON Key | Contents |
+|---|---|
+| `source_documents` | All document filenames in the issue folder that the summary reflects — this is how Update mode detects new documents |
+| `summary_last_updated` | ISO 8601 timestamp of when the summary was last written |
+
+---
+
+## Update Mode — Detecting New Documents and Refreshing Summaries
+
+Run this after any downloader run (see `ERCOT_Market_Rules_Downloader` skill) and after profiles have been refreshed (see `ERCOT-Market-Rules-Profile` skill — summaries pull their metadata from `Profile.json`, so update profiles first).
+
+Each category has a batch script:
+
+```bash
+cd "E:\wamp64\www\Power.Talks"
+python "Database Codes/summarize_MKT_Rules/summarize_ercot_nprr.py"     # NPRR
+python "Database Codes/summarize_MKT_Rules/summarize_ercot_nogrr.py"   # NOGRR
+python "Database Codes/summarize_MKT_Rules/summarize_ercot_pgrr.py"    # PGRR
+python "Database Codes/summarize_MKT_Rules/summarize_ercot_rmgrr.py"   # RMGRR
+python "Database Codes/summarize_MKT_Rules/summarize_ercot_scr.py"     # SCR
+python "Database Codes/summarize_MKT_Rules/summarize_ercot_copmgrr.py" # COPMGRR
+```
+
+With `ONLY_STALE = True` (the default, set in each script's SETTINGS block), a script rebuilds an issue's summary only when any of these is true:
+
+1. `Summary.docx` or `Summary.json` does not exist yet (new issue).
+2. The folder's document list differs from the summary's `source_documents` (new documents downloaded).
+3. For legacy summaries without `source_documents`: any document's mtime is newer than the `Summary.docx`.
+4. The issue's `Profile.json` is newer than the `Summary.json` (profile was refreshed — summaries derive metadata from it).
+
+Set `ONLY_STALE = False` to force a full rebuild of every issue in a category.
+
+**Dependencies:** `pip install python-docx pywin32 openpyxl anthropic` — the scripts call the Claude API (`ANTHROPIC_API_KEY`) for the executive summary, with a non-AI fallback if the call fails. Microsoft Word must be installed for `.doc` extraction.
 
 ---
 
@@ -233,4 +273,6 @@ doc.save(out_path)
 | Ignoring PRS/TAC reports | They contain stakeholder concerns and language modifications — essential for the timeline |
 | Writing the timeline from filenames alone | Always read the Report documents; filenames give dates but not outcomes |
 | Wrong output path | Must be `<ISSUE_ID>/Quick runs/<ISSUE_ID> Summary.docx`, not the category root |
-| Missing dependencies | `pip install python-docx pywin32` |
+| Missing dependencies | `pip install python-docx pywin32 openpyxl anthropic` |
+| Summarizing before profiles are refreshed | Summaries read `Profile.json` for metadata — run the Profile skill's Update Mode first |
+| Omitting `source_documents` in `Summary.json` | Update mode relies on it to detect new documents — the batch scripts write it automatically |

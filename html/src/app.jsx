@@ -253,7 +253,7 @@ function App() {
         onClose={() => setRightOpen(false)}
         onRunPrompt={onRunPrompt}
         onArtifactClick={onArtifactClick}
-        context={{ section: activeSection, code: activePaperCode, node: activeMeetingNode, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr }}
+        context={{ section: activeSection, code: activePaperCode, node: activeMeetingNode, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr }}
       />
 
       <TweaksPanel
