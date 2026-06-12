@@ -160,8 +160,8 @@ def date_from_fname(fname):
     return None
 
 # ─── TIMELINE BUILDER ────────────────────────────────────────────────────────
-_BALLOT_PAT = re.compile(r'(ros|tac|prs|rms)[\s_-]*(?:email[\s_-]*)?ballot', re.IGNORECASE)
-_REPORT_PAT = re.compile(r'(ros|tac|prs|rms)[\s_-]*report', re.IGNORECASE)
+_BALLOT_PAT = re.compile(r'(ros|tac|prs|rms|wms|cops)[\s_-]*(?:email[\s_-]*)?ballot', re.IGNORECASE)
+_REPORT_PAT = re.compile(r'(ros|tac|prs|rms|wms|cops)[\s_-]*report', re.IGNORECASE)
 _BOARD_PAT  = re.compile(r'board.?report', re.IGNORECASE)
 _PUCT_PAT   = re.compile(r'puct.?report', re.IGNORECASE)
 _IMPACT_PAT = re.compile(r'impact.?analysis', re.IGNORECASE)
@@ -194,7 +194,7 @@ def infer_status(folder):
         return "Approved"
     if any(_REPORT_PAT.search(f) and 'tac' in f for f in files):
         return "Pending Board Action"
-    if any(_REPORT_PAT.search(f) and ('ros' in f or 'prs' in f or 'rms' in f or 'cops' in f) for f in files):
+    if any(_REPORT_PAT.search(f) and ('ros' in f or 'prs' in f or 'rms' in f or 'wms' in f or 'cops' in f) for f in files):
         return "In ROS/TAC Review"
     return "Recently Posted / Pending ROS"
 

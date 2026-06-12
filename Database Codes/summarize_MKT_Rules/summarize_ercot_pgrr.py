@@ -163,8 +163,8 @@ def date_from_fname(fname):
     return None
 
 # ─── TIMELINE BUILDER ────────────────────────────────────────────────────────
-_BALLOT_PAT   = re.compile(r'(ros|tac|prs|rms)[\s_-]*(?:email[\s_-]*)?ballot', re.IGNORECASE)
-_REPORT_PAT   = re.compile(r'(ros|tac|prs|rms)[\s_-]*report', re.IGNORECASE)
+_BALLOT_PAT   = re.compile(r'(ros|tac|prs|rms|wms|cops)[\s_-]*(?:email[\s_-]*)?ballot', re.IGNORECASE)
+_REPORT_PAT   = re.compile(r'(ros|tac|prs|rms|wms|cops)[\s_-]*report', re.IGNORECASE)
 _BOARD_PAT    = re.compile(r'board.?report', re.IGNORECASE)
 _PUCT_PAT     = re.compile(r'puct.?report', re.IGNORECASE)
 _ERCOT_PAT    = re.compile(r'ercot.?comments', re.IGNORECASE)

@@ -872,3 +872,196 @@ function MeetingTracksOrgChart({ selected, onSelect }) {
 }
 
 window.MeetingTracksOrgChart = MeetingTracksOrgChart;
+
+// ─── ERCOT Stakeholder Org Chart (in-app panel) ──────────────────────────────
+// Native React version of the chart defined by the "ERCOT Stakeholder Org
+// Chart" skill. Keep hierarchy and names in sync with that skill and with
+// html/ERCOT Stakeholder Org Chart.html (the standalone copy).
+
+const EOC_BOARD_COMMITTEES = [
+  ["F&A", "Finance & Audit Committee"],
+  ["HR&G", "Human Resources & Governance Committee"],
+  ["T&S", "Technology & Security Committee"],
+];
+
+const EOC_TAC_GROUPS = [
+  ["LLWG", "Large Load Working Group"],
+  ["CFSG", "Credit Finance Sub Group"],
+  ["RTCBTF", "Real-Time Co-Optimization & Batteries Task Force (winding down)"],
+];
+
+const EOC_SUBS = [
+  { abbr: "PRS", name: "Protocol Revision Subcommittee", label: null, groups: [],
+    emptyNote: "No standing working groups — revision drafting handled in PRS workshops" },
+  { abbr: "ROS", name: "Reliability & Operations Subcommittee", label: "Working Groups", groups: [
+    ["BSWG", "Black Start Working Group"],
+    ["DWG", "Dynamics Working Group"],
+    ["IBRWG", "Inverter-Based Resources Working Group"],
+    ["MWG", "Meter Working Group"],
+    ["NDSWG", "Network Data Support Working Group"],
+    ["OWG", "Operations Working Group"],
+    ["OTWG", "Operations Training Working Group"],
+    ["PDCWG", "Performance, Disturbance & Compliance Working Group"],
+    ["PLWG", "Planning Working Group"],
+    ["SPWG", "System Protection Working Group"],
+    ["SSWG", "Steady State Working Group"],
+    ["VPWG", "Voltage Profile Working Group"],
+  ]},
+  { abbr: "RMS", name: "Retail Market Subcommittee", label: "Working Groups & Task Forces", groups: [
+    ["TDTMS", "Texas Data Transport & MarkeTrans Services Working Group"],
+    ["RMTTF", "Retail Market Training Task Force"],
+  ]},
+  { abbr: "WMS", name: "Wholesale Market Subcommittee", label: "Working Groups", groups: [
+    ["CMWG", "Congestion Management Working Group"],
+    ["DSWG", "Demand Side Working Group"],
+    ["SAWG", "Supply Analysis Working Group"],
+    ["WMWG", "Wholesale Market Working Group"],
+  ]},
+];
+
+function EocWgRows({ items }) {
+  return items.map(([abbr, name], i) => (
+    <div key={i} className="eoc-wg-row">
+      <span className="eoc-wg-abbr">{abbr}</span>
+      <span className="eoc-wg-name">{name}</span>
+    </div>
+  ));
+}
+
+function ErcotOrgChart() {
+  return (
+    <div className="eoc-wrap">
+      <style>{`
+        .eoc-wrap { max-width: 980px; margin: 0 auto; padding: 40px 32px 64px; }
+        .eoc-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+        .eoc-hdr-logo { width: 40px; height: 40px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; flex-shrink: 0; color: #fff; }
+        .eoc-hdr-h1 { font-family: var(--serif); font-size: 24px; line-height: 1.15; color: var(--ink); }
+        .eoc-hdr-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .eoc-rule { border: 0; border-top: 1px solid var(--rule); margin: 18px 0 22px; }
+        .eoc-sec-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 26px; }
+        .eoc-org { display: flex; flex-direction: column; align-items: center; }
+        .eoc-vline { width: 1px; height: 34px; background: var(--rule-2); }
+        .eoc-tier { position: relative; display: flex; justify-content: center; width: 100%; }
+        .eoc-hline { position: absolute; top: 50%; height: 1px; width: 30px; left: calc(50% + 122px); background: var(--rule-2); }
+        .eoc-satellite { position: absolute; left: calc(50% + 152px); top: 50%; transform: translateY(-50%); border: 1px dashed var(--rule-2); border-radius: 10px; background: var(--bg-2); padding: 9px 12px; min-width: 215px; }
+        .eoc-sat-eye { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+        .eoc-wg-row { display: flex; gap: 7px; padding: 1.5px 0; align-items: baseline; }
+        .eoc-wg-abbr { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--accent-2); white-space: nowrap; min-width: 52px; }
+        .eoc-wg-name { font-size: 10px; color: var(--ink-2); line-height: 1.35; }
+        .eoc-hbranch { position: relative; display: flex; width: 100%; }
+        .eoc-hbranch::before { content: ''; position: absolute; top: 0; left: 12.5%; right: 12.5%; height: 1px; background: var(--rule-2); }
+        .eoc-col { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 7px; }
+        .eoc-wg-stack { border: 1px dashed var(--rule-2); border-radius: 10px; background: var(--bg-2); padding: 9px 11px; width: 100%; max-width: 215px; }
+        .eoc-wg-stack--empty { text-align: center; font-size: 10px; color: var(--muted); font-style: italic; }
+        .eoc-node { border: 1px solid var(--rule-2); border-radius: 10px; background: var(--panel); padding: 13px 18px; text-align: center; position: relative; z-index: 1; }
+        .eoc-abbr { font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--accent-2); letter-spacing: .04em; margin-bottom: 4px; }
+        .eoc-name { font-size: 11.5px; color: var(--ink-2); line-height: 1.45; }
+        .eoc-role { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: 6px; }
+        .eoc-node--puct { background: var(--accent); border-color: var(--accent-2); min-width: 230px; }
+        .eoc-node--puct .eoc-abbr { color: #fff; font-size: 14px; }
+        .eoc-node--puct .eoc-name { color: rgba(255,255,255,.82); }
+        .eoc-node--puct .eoc-role { color: rgba(255,255,255,.58); }
+        .eoc-node--board { background: var(--bg-2); min-width: 230px; }
+        .eoc-node--tac { border-color: var(--accent); border-width: 1.5px; min-width: 240px; }
+        .eoc-node--sub { min-width: 118px; }
+        .eoc-node--sub .eoc-abbr { font-size: 12px; }
+        .eoc-node--sub .eoc-name { font-size: 10.5px; }
+        .eoc-note { margin-top: 48px; padding: 14px 18px; border: 1px dashed var(--rule-2); border-radius: 10px; font-size: 11.5px; color: var(--ink-2); line-height: 1.7; }
+        .eoc-note-eye { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 5px; }
+        @media (max-width: 900px) {
+          .eoc-satellite { position: static; transform: none; margin-top: 10px; }
+          .eoc-hline { display: none; }
+          .eoc-tier { flex-direction: column; align-items: center; }
+          .eoc-hbranch { flex-direction: column; align-items: center; gap: 22px; }
+          .eoc-hbranch::before { display: none; }
+        }
+      `}</style>
+
+      <div className="eoc-hdr">
+        <div className="eoc-hdr-logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+        <div>
+          <div className="eoc-hdr-h1">ERCOT Stakeholder Process</div>
+          <div className="eoc-hdr-sub">Organizational Chart — Revision Review Hierarchy</div>
+        </div>
+      </div>
+      <hr className="eoc-rule"/>
+      <div className="eoc-sec-lbl">Committee &amp; governance hierarchy — with working groups &amp; task forces</div>
+
+      <div className="eoc-org">
+        <div className="eoc-node eoc-node--puct">
+          <div className="eoc-abbr">PUCT</div>
+          <div className="eoc-name">Public Utility Commission of Texas</div>
+          <div className="eoc-role">Ultimate Regulatory Authority</div>
+        </div>
+        <div className="eoc-vline"></div>
+
+        <div className="eoc-tier">
+          <div className="eoc-node eoc-node--board">
+            <div className="eoc-abbr">Board of Directors</div>
+            <div className="eoc-name">ERCOT Board of Directors</div>
+            <div className="eoc-role">Final Vote on Market Rule Changes</div>
+          </div>
+          <div className="eoc-hline"></div>
+          <div className="eoc-satellite">
+            <div className="eoc-sat-eye">Board Committees</div>
+            <EocWgRows items={EOC_BOARD_COMMITTEES} />
+          </div>
+        </div>
+        <div className="eoc-vline"></div>
+
+        <div className="eoc-tier">
+          <div className="eoc-node eoc-node--tac">
+            <div className="eoc-abbr">TAC</div>
+            <div className="eoc-name">Technical Advisory Committee</div>
+            <div className="eoc-role">Reviews Proposals &amp; Recommends to Board</div>
+          </div>
+          <div className="eoc-hline"></div>
+          <div className="eoc-satellite">
+            <div className="eoc-sat-eye">TAC Working Groups &amp; Task Forces</div>
+            <EocWgRows items={EOC_TAC_GROUPS} />
+          </div>
+        </div>
+        <div className="eoc-vline"></div>
+
+        <div className="eoc-hbranch">
+          {EOC_SUBS.map(sub => (
+            <div key={sub.abbr} className="eoc-col">
+              <div className="eoc-vline"></div>
+              <div className="eoc-node eoc-node--sub">
+                <div className="eoc-abbr">{sub.abbr}</div>
+                <div className="eoc-name">{sub.name}</div>
+              </div>
+              <div className="eoc-vline"></div>
+              {sub.groups.length > 0
+                ? <div className="eoc-wg-stack">
+                    <div className="eoc-sat-eye">{sub.label}</div>
+                    <EocWgRows items={sub.groups} />
+                  </div>
+                : <div className="eoc-wg-stack eoc-wg-stack--empty">{sub.emptyNote}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="eoc-note">
+        <div className="eoc-note-eye">How revision requests flow</div>
+        Revision requests — NPRRs, NOGRRs, PGRRs, RMGRRs, SCRs, COPMGRRs, and others — are
+        submitted by market participants, ERCOT staff, or the PUCT to the relevant
+        subcommittee: protocols to PRS, operating and planning guides to ROS, the retail
+        market guide to RMS, and the commercial operations market guide to WMS. Working
+        groups and task forces analyze issues and report to their parent subcommittee,
+        which advances recommendations to TAC. TAC forwards approved revisions to the
+        Board for a final vote, supported by its standing Board committees. The PUCT
+        holds ultimate authority and may direct or override Board decisions on
+        significant market design matters.
+      </div>
+    </div>
+  );
+}
+
+window.ErcotOrgChart = ErcotOrgChart;

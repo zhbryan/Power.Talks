@@ -2,569 +2,195 @@
 // as an array; newer ones store a single string. Normalize to an array.
 function asList(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
 
-function NprrProfileCard({ nprr }) {
+// Shared card CSS — used by both the per-issue RuleProfileCard and the
+// category-level CategoryIntroCard so the two follow the same formatting.
+const NP_CARD_CSS = `
+  .np-status-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .np-badge { padding:2px 10px; border-radius:99px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; }
+  .np-num { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent-2); }
+  .np-title { font-family:var(--serif); font-size:16px; font-weight:400; color:var(--ink); line-height:1.3; margin-bottom:14px; }
+  .np-divider { border:0; border-top:1px dashed var(--rule-2); margin:12px 0; }
+  .np-sec-lbl { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .np-body { font-size:12.5px; color:var(--ink-2); line-height:1.55; }
+  .np-proto-tag { font-family:var(--mono); font-size:10.5px; color:var(--accent-2); padding:3px 8px; border-radius:5px; background:var(--accent-soft); border:1px solid var(--rule-2); display:block; margin-bottom:4px; }
+  .np-reason-chip { font-size:11px; color:var(--ink-2); padding:3px 8px; border-radius:99px; border:1px solid var(--rule-2); background:var(--bg); display:inline-block; margin:0 4px 4px 0; }
+  .np-tl { display:flex; flex-direction:column; position:relative; }
+  .np-tl::before { content:""; position:absolute; left:6px; top:6px; bottom:6px; width:1px; background:var(--rule-2); }
+  .np-tl-row { display:flex; align-items:flex-start; gap:10px; padding:4px 0; }
+  .np-tl-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; border:2px solid var(--accent); background:var(--bg); z-index:1; margin-top:1px; }
+  .np-tl-dot.last { background:var(--accent); }
+  .np-tl-date { font-family:var(--mono); font-size:9.5px; color:var(--muted); white-space:nowrap; min-width:68px; margin-top:2px; }
+  .np-tl-ev { font-size:11.5px; color:var(--ink-2); }
+  .np-tl-ev b { color:var(--ink); font-weight:600; }
+`;
+
+// One Quick runs card for all market rules categories. Fetches the issue's
+// Profile.json (unified skill schema) and renders the standard field set:
+// Sponsor (name, email, phone), Market Segment, Requested Resolution,
+// Date Posted, governing-document sections, Reason for Revision, Timeline.
+// Every field label is always shown; missing values render as an em dash.
+const RULE_CARD_CFG = {
+  NPRR:    { sectionsLabel: "Protocol Sections" },
+  COPMGRR: { sectionsLabel: "Agreement Sections", pad: 3 },
+  PGRR:    { sectionsLabel: "Planning Guide Sections" },
+  SCR:     { sectionsLabel: "System Sections" },
+  NOGRR:   { sectionsLabel: "Operating Guide Sections" },
+  RMGRR:   { sectionsLabel: "Retail Market Guide Sections" },
+};
+
+function RuleProfileCard({ cat, num }) {
+  const cfg = RULE_CARD_CFG[cat] || {};
+  const idStr = cfg.pad ? String(num).padStart(cfg.pad, "0") : String(num);
+  const issueId = `${cat}${idStr}`;
+
   const [profile, setProfile] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
 
   React.useEffect(() => {
     setLoading(true); setError(null); setProfile(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NPRR/NPRR${nprr}/Quick%20runs/NPRR${nprr}%20Profile.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${cat}/${issueId}/Quick%20runs/${issueId}%20Profile.json`)
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setProfile(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
-  }, [nprr]);
-
-  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Pending: "var(--warn)" };
-  const sc = profile ? (STATUS_COLOR[profile.status] || "var(--muted)") : "var(--muted)";
-
-  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading profile…</div>;
-  if (error) {
-    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
-    return (
-      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
-        {isNetwork
-          ? <>No profile loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
-          : error.includes("404")
-            ? <>Profile not yet generated for NPRR{nprr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>NPRR Profile</span> skill to create it.</>
-            : <>Could not load profile. ({error})</>
-        }
-      </div>
-    );
-  }
-  if (!profile) return null;
-
-  const Field = ({ label, value }) => value ? (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
-    </div>
-  ) : null;
-
-  return (
-    <div>
-      <style>{`
-        .np-status-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-        .np-badge { padding:2px 10px; border-radius:99px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; }
-        .np-num { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent-2); }
-        .np-title { font-family:var(--serif); font-size:16px; font-weight:400; color:var(--ink); line-height:1.3; margin-bottom:14px; }
-        .np-divider { border:0; border-top:1px dashed var(--rule-2); margin:12px 0; }
-        .np-sec-lbl { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
-        .np-proto-tag { font-family:var(--mono); font-size:10.5px; color:var(--accent-2); padding:3px 8px; border-radius:5px; background:var(--accent-soft); border:1px solid var(--rule-2); display:block; margin-bottom:4px; }
-        .np-reason-chip { font-size:11px; color:var(--ink-2); padding:3px 8px; border-radius:99px; border:1px solid var(--rule-2); background:var(--bg); display:inline-block; margin:0 4px 4px 0; }
-        .np-tl { display:flex; flex-direction:column; position:relative; }
-        .np-tl::before { content:""; position:absolute; left:6px; top:6px; bottom:6px; width:1px; background:var(--rule-2); }
-        .np-tl-row { display:flex; align-items:flex-start; gap:10px; padding:4px 0; }
-        .np-tl-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; border:2px solid var(--accent); background:var(--bg); z-index:1; margin-top:1px; }
-        .np-tl-dot.last { background:var(--accent); }
-        .np-tl-date { font-family:var(--mono); font-size:9.5px; color:var(--muted); white-space:nowrap; min-width:68px; margin-top:2px; }
-        .np-tl-ev { font-size:11.5px; color:var(--ink-2); }
-        .np-tl-ev b { color:var(--ink); font-weight:600; }
-      `}</style>
-
-      <div className="np-status-row">
-        <span className="np-num">NPRR{profile.issue_number ?? profile.nprr_number ?? nprr}</span>
-        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status}</span>
-      </div>
-      <div className="np-title">{profile.title}</div>
-
-      <Field label="Date Posted"           value={profile.date_posted_decision} />
-      <Field label="Requested Resolution"  value={profile.timeline_requested_resolution} />
-      <Field label="Effective Date"        value={profile.effective_date} />
-      <Field label="Market Segment"        value={profile.market_segment} />
-
-      <hr className="np-divider" />
-      <Field label="Sponsor"   value={profile.sponsor_name && `${profile.sponsor_name} · ${profile.sponsor_company}`} />
-      <Field label="Email"     value={profile.sponsor_email} />
-      <Field label="Phone"     value={profile.sponsor_phone} />
-
-      {asList(profile.governing_document_sections || profile.protocol_sections_requiring_revision).length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Protocol Sections</div>
-        {asList(profile.governing_document_sections || profile.protocol_sections_requiring_revision).map((s, i) =>
-          <span key={i} className="np-proto-tag">{s}</span>
-        )}
-      </>}
-
-      {asList(profile.reason_for_revision).length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Reason for Revision</div>
-        <div>{asList(profile.reason_for_revision).map((r, i) =>
-          <span key={i} className="np-reason-chip">{r}</span>
-        )}</div>
-      </>}
-
-      {profile.timeline?.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Timeline</div>
-        <div className="np-tl">
-          {profile.timeline.map((t, i) => (
-            <div key={i} className="np-tl-row">
-              <div className={`np-tl-dot ${i === profile.timeline.length - 1 ? "last" : ""}`} />
-              <span className="np-tl-date">{t.date}</span>
-              <span className="np-tl-ev"><b>{t.event}</b></span>
-            </div>
-          ))}
-        </div>
-      </>}
-    </div>
-  );
-}
-
-function CopmgrrProfileCard({ copmgrr }) {
-  const [profile, setProfile] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
-
-  React.useEffect(() => {
-    setLoading(true); setError(null); setProfile(null);
-    const n = String(copmgrr).padStart(3, "0");
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/COPMGRR/COPMGRR${n}/Quick%20runs/COPMGRR${n}%20Profile.json`)
-      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then(d => { setProfile(d); setLoading(false); })
-      .catch(e => { setError(String(e)); setLoading(false); });
-  }, [copmgrr]);
-
-  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Pending: "var(--warn)" };
-  const sc = profile ? (STATUS_COLOR[profile.status] || "var(--muted)") : "var(--muted)";
-  const numStr = String(copmgrr).padStart(3, "0");
-
-  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading profile…</div>;
-  if (error) {
-    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
-    return (
-      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
-        {isNetwork
-          ? <>No profile loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
-          : error.includes("404")
-            ? <>Profile not yet generated for COPMGRR{numStr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>COPMGRR Profile</span> skill to create it.</>
-            : <>Could not load profile. ({error})</>
-        }
-      </div>
-    );
-  }
-  if (!profile) return null;
-
-  const Field = ({ label, value }) => value ? (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
-    </div>
-  ) : null;
-
-  return (
-    <div>
-      <style>{`
-        .np-status-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-        .np-badge { padding:2px 10px; border-radius:99px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; }
-        .np-num { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent-2); }
-        .np-title { font-family:var(--serif); font-size:16px; font-weight:400; color:var(--ink); line-height:1.3; margin-bottom:14px; }
-        .np-divider { border:0; border-top:1px dashed var(--rule-2); margin:12px 0; }
-        .np-sec-lbl { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
-        .np-proto-tag { font-family:var(--mono); font-size:10.5px; color:var(--accent-2); padding:3px 8px; border-radius:5px; background:var(--accent-soft); border:1px solid var(--rule-2); display:block; margin-bottom:4px; }
-        .np-reason-chip { font-size:11px; color:var(--ink-2); padding:3px 8px; border-radius:99px; border:1px solid var(--rule-2); background:var(--bg); display:inline-block; margin:0 4px 4px 0; }
-        .np-tl { display:flex; flex-direction:column; position:relative; }
-        .np-tl::before { content:""; position:absolute; left:6px; top:6px; bottom:6px; width:1px; background:var(--rule-2); }
-        .np-tl-row { display:flex; align-items:flex-start; gap:10px; padding:4px 0; }
-        .np-tl-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; border:2px solid var(--accent); background:var(--bg); z-index:1; margin-top:1px; }
-        .np-tl-dot.last { background:var(--accent); }
-        .np-tl-date { font-family:var(--mono); font-size:9.5px; color:var(--muted); white-space:nowrap; min-width:68px; margin-top:2px; }
-        .np-tl-ev { font-size:11.5px; color:var(--ink-2); }
-        .np-tl-ev b { color:var(--ink); font-weight:600; }
-      `}</style>
-      <div className="np-status-row">
-        <span className="np-num">COPMGRR{numStr}</span>
-        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status}</span>
-      </div>
-      <div className="np-title">{profile.title}</div>
-
-      <Field label="Date Posted"           value={profile.date_posted_decision} />
-      <Field label="Requested Resolution"  value={profile.timeline_requested_resolution} />
-      <Field label="Effective Date"        value={profile.effective_date} />
-      <Field label="Market Segment"        value={profile.market_segment} />
-
-      <hr className="np-divider" />
-      <Field label="Sponsor"  value={profile.sponsor_name && `${profile.sponsor_name} · ${profile.sponsor_company}`} />
-      <Field label="Email"    value={profile.sponsor_email} />
-      <Field label="Phone"    value={profile.sponsor_phone} />
-
-      {asList(profile.governing_document_sections || profile.agreement_sections_requiring_revision).length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Agreement Sections</div>
-        {asList(profile.governing_document_sections || profile.agreement_sections_requiring_revision).map((s, i) =>
-          <span key={i} className="np-proto-tag">{s}</span>
-        )}
-      </>}
-
-      {asList(profile.reason_for_revision).length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Reason for Revision</div>
-        <div>{asList(profile.reason_for_revision).map((r, i) =>
-          <span key={i} className="np-reason-chip">{r}</span>
-        )}</div>
-      </>}
-
-      {profile.timeline?.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Timeline</div>
-        <div className="np-tl">
-          {profile.timeline.map((t, i) => (
-            <div key={i} className="np-tl-row">
-              <div className={`np-tl-dot ${i === profile.timeline.length - 1 ? "last" : ""}`} />
-              <span className="np-tl-date">{t.date}</span>
-              <span className="np-tl-ev"><b>{t.event}</b></span>
-            </div>
-          ))}
-        </div>
-      </>}
-    </div>
-  );
-}
-
-function PgrrProfileCard({ pgrr }) {
-  const [profile, setProfile] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
-
-  React.useEffect(() => {
-    setLoading(true); setError(null); setProfile(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/PGRR/PGRR${pgrr}/Quick%20runs/PGRR${pgrr}%20Profile.json`)
-      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then(d => { setProfile(d); setLoading(false); })
-      .catch(e => { setError(String(e)); setLoading(false); });
-  }, [pgrr]);
-
-  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Pending: "var(--warn)" };
-  const sc = profile ? (STATUS_COLOR[profile.status] || "var(--muted)") : "var(--muted)";
-
-  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading profile…</div>;
-  if (error) {
-    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
-    return (
-      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
-        {isNetwork
-          ? <>No profile loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
-          : error.includes("404")
-            ? <>Profile not yet generated for PGRR{pgrr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>PGRR Profile</span> skill to create it.</>
-            : <>Could not load profile. ({error})</>
-        }
-      </div>
-    );
-  }
-  if (!profile) return null;
-
-  const Field = ({ label, value }) => value ? (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
-    </div>
-  ) : null;
-
-  return (
-    <div>
-      <style>{`
-        .np-status-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-        .np-badge { padding:2px 10px; border-radius:99px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; }
-        .np-num { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent-2); }
-        .np-title { font-family:var(--serif); font-size:16px; font-weight:400; color:var(--ink); line-height:1.3; margin-bottom:14px; }
-        .np-divider { border:0; border-top:1px dashed var(--rule-2); margin:12px 0; }
-        .np-sec-lbl { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
-        .np-proto-tag { font-family:var(--mono); font-size:10.5px; color:var(--accent-2); padding:3px 8px; border-radius:5px; background:var(--accent-soft); border:1px solid var(--rule-2); display:block; margin-bottom:4px; }
-        .np-reason-chip { font-size:11px; color:var(--ink-2); padding:3px 8px; border-radius:99px; border:1px solid var(--rule-2); background:var(--bg); display:inline-block; margin:0 4px 4px 0; }
-        .np-tl { display:flex; flex-direction:column; position:relative; }
-        .np-tl::before { content:""; position:absolute; left:6px; top:6px; bottom:6px; width:1px; background:var(--rule-2); }
-        .np-tl-row { display:flex; align-items:flex-start; gap:10px; padding:4px 0; }
-        .np-tl-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; border:2px solid var(--accent); background:var(--bg); z-index:1; margin-top:1px; }
-        .np-tl-dot.last { background:var(--accent); }
-        .np-tl-date { font-family:var(--mono); font-size:9.5px; color:var(--muted); white-space:nowrap; min-width:68px; margin-top:2px; }
-        .np-tl-ev { font-size:11.5px; color:var(--ink-2); }
-        .np-tl-ev b { color:var(--ink); font-weight:600; }
-      `}</style>
-      <div className="np-status-row">
-        <span className="np-num">PGRR{profile.issue_number}</span>
-        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status}</span>
-      </div>
-      <div className="np-title">{profile.title}</div>
-
-      <Field label="Date Posted"           value={profile.date_posted_decision} />
-      <Field label="Requested Resolution"  value={profile.timeline_requested_resolution} />
-      <Field label="Effective Date"        value={profile.effective_date} />
-      <Field label="Market Segment"        value={profile.market_segment} />
-
-      <hr className="np-divider" />
-      <Field label="Sponsor"  value={profile.sponsor_name && `${profile.sponsor_name} · ${profile.sponsor_company}`} />
-      <Field label="Email"    value={profile.sponsor_email} />
-      <Field label="Phone"    value={profile.sponsor_phone} />
-
-      {profile.governing_document_sections?.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Planning Guide Sections</div>
-        {profile.governing_document_sections.map((s, i) =>
-          <span key={i} className="np-proto-tag">{s}</span>
-        )}
-      </>}
-
-      {asList(profile.reason_for_revision).length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Reason for Revision</div>
-        <div>{asList(profile.reason_for_revision).map((r, i) =>
-          <span key={i} className="np-reason-chip">{r}</span>
-        )}</div>
-      </>}
-
-      {profile.timeline?.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Timeline</div>
-        <div className="np-tl">
-          {profile.timeline.map((t, i) => (
-            <div key={i} className="np-tl-row">
-              <div className={`np-tl-dot ${i === profile.timeline.length - 1 ? "last" : ""}`} />
-              <span className="np-tl-date">{t.date}</span>
-              <span className="np-tl-ev"><b>{t.event}</b></span>
-            </div>
-          ))}
-        </div>
-      </>}
-    </div>
-  );
-}
-
-function ScrSummaryCard({ scr }) {
-  const [summary, setSummary] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
-
-  React.useEffect(() => {
-    setLoading(true); setError(null); setSummary(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/SCR/SCR${scr}/Quick%20runs/SCR${scr}%20Summary.json`)
-      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then(d => { setSummary(d); setLoading(false); })
-      .catch(e => { setError(String(e)); setLoading(false); });
-  }, [scr]);
+  }, [cat, num]);
 
   const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Rejected: "var(--warn)", Pending: "var(--warn)" };
-  const sc = summary ? (STATUS_COLOR[summary.status] || "var(--muted)") : "var(--muted)";
+  const sc = profile ? (STATUS_COLOR[profile.status] || "var(--muted)") : "var(--muted)";
 
-  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading summary…</div>;
+  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading profile…</div>;
   if (error) {
     const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
     return (
       <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
         {isNetwork
-          ? <>No summary loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
+          ? <>No profile loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
           : error.includes("404")
-            ? <>Summary not yet generated for SCR{scr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>SCR Summarization</span> skill to create it.</>
-            : <>Could not load summary. ({error})</>
+            ? <>Profile not yet generated for {issueId}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>ERCOT Market Rules Profile</span> skill to create it.</>
+            : <>Could not load profile. ({error})</>
         }
       </div>
     );
   }
-  if (!summary) return null;
+  if (!profile) return null;
 
-  const Field = ({ label, value }) => value ? (
+  // Always render the label; show an em dash when the value was not extracted.
+  const Field = ({ label, value }) => (
     <div style={{ marginBottom: 10 }}>
       <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value || "—"}</div>
     </div>
-  ) : null;
+  );
 
-  const tl = summary.timeline || [];
-  const tlSlice = tl.length > 6 ? tl.slice(-6) : tl;
+  const sections = asList(profile.governing_document_sections
+    || profile.protocol_sections_requiring_revision
+    || profile.agreement_sections_requiring_revision);
+  const reasons = asList(profile.reason_for_revision);
+  const timeline = profile.timeline || [];
 
   return (
     <div>
+      <style>{NP_CARD_CSS}</style>
+
       <div className="np-status-row">
-        <span className="np-num">SCR{summary.scr_number}</span>
-        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{summary.status}</span>
+        <span className="np-num">{issueId}</span>
+        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{profile.status || "—"}</span>
       </div>
-      <div className="np-title">{summary.title}</div>
-      <Field label="Date Posted"    value={summary.date_posted} />
-      <Field label="Effective Date" value={summary.effective_date} />
-      <Field label="Sponsor"        value={summary.sponsor} />
-      {summary.systems_affected?.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Systems Affected</div>
-        {summary.systems_affected.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)}
-      </>}
-      {summary.executive_summary && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Executive Summary</div>
-        <div style={{ fontSize: "12px", color: "var(--ink-2)", lineHeight: 1.6 }}>{summary.executive_summary}</div>
-      </>}
-      {tlSlice.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Recent Activity</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-          <tbody>
-            {tlSlice.map((t, i) => (
-              <tr key={i}>
-                <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", whiteSpace: "nowrap", paddingRight: 8, paddingBottom: 4, verticalAlign: "top" }}>{t.date}</td>
-                <td style={{ color: "var(--ink-2)", paddingBottom: 4, verticalAlign: "top" }}>{t.action || t.event}</td>
-              </tr>
+      <div className="np-title">{profile.title || issueId}</div>
+
+      <Field label="Sponsor" value={profile.sponsor_name && (profile.sponsor_company ? `${profile.sponsor_name} · ${profile.sponsor_company}` : profile.sponsor_name)} />
+      <Field label="Email"   value={profile.sponsor_email} />
+      <Field label="Phone"   value={profile.sponsor_phone} />
+
+      <hr className="np-divider" />
+      <Field label="Market Segment"       value={profile.market_segment} />
+      <Field label="Requested Resolution" value={profile.timeline_requested_resolution} />
+      <Field label="Date Posted"          value={profile.date_posted_decision} />
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">{cfg.sectionsLabel || "Sections"}</div>
+      {sections.length > 0
+        ? sections.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)
+        : <div style={{ fontSize: "12.5px", color: "var(--ink-2)", marginBottom: 10 }}>—</div>}
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Reason for Revision</div>
+      {reasons.length > 0
+        ? <div>{reasons.map((r, i) => <span key={i} className="np-reason-chip">{r}</span>)}</div>
+        : <div style={{ fontSize: "12.5px", color: "var(--ink-2)", marginBottom: 10 }}>—</div>}
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Timeline</div>
+      {timeline.length > 0
+        ? <div className="np-tl">
+            {timeline.map((t, i) => (
+              <div key={i} className="np-tl-row">
+                <div className={`np-tl-dot ${i === timeline.length - 1 ? "last" : ""}`} />
+                <span className="np-tl-date">{t.date || "—"}</span>
+                <span className="np-tl-ev"><b>{t.event}</b></span>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </>}
+          </div>
+        : <div style={{ fontSize: "12.5px", color: "var(--ink-2)" }}>—</div>}
     </div>
   );
 }
 
-function NogrSummaryCard({ nogrr }) {
-  const [summary, setSummary] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+// Shown under "For the talk" when a Paper Trails category homepage is open
+// and no issue is selected. Content comes from window.DATA.CATEGORY_INTROS.
+// Formatting mirrors RuleProfileCard (shared NP_CARD_CSS): status row with
+// badge, serif title, mono section labels, dashed dividers, always-shown
+// labels with em-dash fallbacks, and the dotted timeline for meetings.
+function CategoryIntroCard({ code }) {
+  const intro = (window.DATA.CATEGORY_INTROS || {})[code];
+  if (!intro) return <p className="pt-runs-note">No introduction available for {code}.</p>;
 
-  React.useEffect(() => {
-    setLoading(true); setError(null); setSummary(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NOGRR/NOGRR${nogrr}/Quick%20runs/NOGRR${nogrr}%20Summary.json`)
-      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then(d => { setSummary(d); setLoading(false); })
-      .catch(e => { setError(String(e)); setLoading(false); });
-  }, [nogrr]);
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = (intro.upcomingMeetings || []).filter(m => m.date > today).slice(0, 4);
 
-  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Rejected: "var(--warn)", Pending: "var(--warn)" };
-  const sc = summary ? (STATUS_COLOR[summary.status] || "var(--muted)") : "var(--muted)";
-
-  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading summary…</div>;
-  if (error) {
-    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
-    return (
-      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
-        {isNetwork
-          ? <>No summary loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
-          : error.includes("404")
-            ? <>Summary not yet generated for NOGRR{nogrr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>NOGRR Summarization</span> skill to create it.</>
-            : <>Could not load summary. ({error})</>
-        }
-      </div>
-    );
-  }
-  if (!summary) return null;
-
-  const Field = ({ label, value }) => value ? (
+  const Field = ({ label, value }) => (
     <div style={{ marginBottom: 10 }}>
       <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
-    </div>
-  ) : null;
-
-  const tl = summary.timeline || [];
-  const tlSlice = tl.length > 6 ? tl.slice(-6) : tl;
-
-  return (
-    <div>
-      <div className="np-status-row">
-        <span className="np-num">NOGRR{summary.nogrr_number}</span>
-        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{summary.status}</span>
-      </div>
-      <div className="np-title">{summary.title}</div>
-      <Field label="Date Posted"    value={summary.date_posted} />
-      <Field label="Effective Date" value={summary.effective_date} />
-      <Field label="Sponsor"        value={summary.sponsor} />
-      {summary.guide_sections?.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Guide Sections</div>
-        {summary.guide_sections.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)}
-      </>}
-      {summary.executive_summary && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Executive Summary</div>
-        <div style={{ fontSize: "12px", color: "var(--ink-2)", lineHeight: 1.6 }}>{summary.executive_summary}</div>
-      </>}
-      {tlSlice.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Recent Activity</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-          <tbody>
-            {tlSlice.map((t, i) => (
-              <tr key={i}>
-                <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", whiteSpace: "nowrap", paddingRight: 8, paddingBottom: 4, verticalAlign: "top" }}>{t.date}</td>
-                <td style={{ color: "var(--ink-2)", paddingBottom: 4, verticalAlign: "top" }}>{t.action || t.event}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </>}
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value || "—"}</div>
     </div>
   );
-}
-
-function RmgrSummaryCard({ rmgrr }) {
-  const [summary, setSummary] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
-
-  React.useEffect(() => {
-    setLoading(true); setError(null); setSummary(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/RMGRR/RMGRR${rmgrr}/Quick%20runs/RMGRR${rmgrr}%20Summary.json`)
-      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then(d => { setSummary(d); setLoading(false); })
-      .catch(e => { setError(String(e)); setLoading(false); });
-  }, [rmgrr]);
-
-  const STATUS_COLOR = { Approved: "var(--ok)", Withdrawn: "var(--muted)", Pending: "var(--warn)" };
-  const sc = summary ? (STATUS_COLOR[summary.status] || "var(--muted)") : "var(--muted)";
-
-  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading summary…</div>;
-  if (error) {
-    const isNetwork = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
-    return (
-      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
-        {isNetwork
-          ? <>No summary loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
-          : error.includes("404")
-            ? <>Summary not yet generated for RMGRR{rmgrr}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>RMGRR Summarization</span> skill to create it.</>
-            : <>Could not load summary. ({error})</>
-        }
-      </div>
-    );
-  }
-  if (!summary) return null;
-
-  const Field = ({ label, value }) => value ? (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value}</div>
-    </div>
-  ) : null;
-
-  const tl = summary.timeline || [];
-  const tlSlice = tl.length > 6 ? tl.slice(-6) : tl;
 
   return (
     <div>
+      <style>{NP_CARD_CSS}</style>
+
       <div className="np-status-row">
-        <span className="np-num">RMGRR{summary.rmgrr_number}</span>
-        <span className="np-badge" style={{ background: sc + "22", color: sc }}>{summary.status}</span>
+        <span className="np-num">{code}</span>
+        <span className="np-badge" style={{ background: "var(--accent-soft)", color: "var(--accent-2)" }}>{intro.reviewBody || "—"}</span>
       </div>
-      <div className="np-title">{summary.title}</div>
-      <Field label="Date Posted"    value={summary.date_posted} />
-      <Field label="Effective Date" value={summary.effective_date} />
-      <Field label="Sponsor"        value={summary.sponsor} />
-      {summary.guide_sections?.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Guide Sections</div>
-        {summary.guide_sections.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)}
-      </>}
-      {summary.executive_summary && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Executive Summary</div>
-        <div style={{ fontSize: "12px", color: "var(--ink-2)", lineHeight: 1.6 }}>{summary.executive_summary}</div>
-      </>}
-      {tlSlice.length > 0 && <>
-        <hr className="np-divider" />
-        <div className="np-sec-lbl">Recent Activity</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-          <tbody>
-            {tlSlice.map((t, i) => (
-              <tr key={i}>
-                <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", whiteSpace: "nowrap", paddingRight: 8, paddingBottom: 4, verticalAlign: "top" }}>{t.date}</td>
-                <td style={{ color: "var(--ink-2)", paddingBottom: 4, verticalAlign: "top" }}>{t.action || t.event}</td>
-              </tr>
+      <div className="np-title">{intro.fullName || code}</div>
+
+      <div className="np-sec-lbl">History</div>
+      <div className="np-body">{intro.history || "—"}</div>
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Function &amp; Purpose</div>
+      <div className="np-body">{intro.purpose || "—"}</div>
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Current Leadership</div>
+      {asList(intro.leadership).length > 0
+        ? asList(intro.leadership).map((l, i) => <Field key={i} label={l.role} value={l.name} />)
+        : <div className="np-body" style={{ marginBottom: 10 }}>—</div>}
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Upcoming Meetings</div>
+      {upcoming.length > 0
+        ? <div className="np-tl">
+            {upcoming.map((m, i) => (
+              <div key={i} className="np-tl-row">
+                <div className={`np-tl-dot ${i === 0 ? "last" : ""}`} />
+                <span className="np-tl-date">{m.date}</span>
+                <span className="np-tl-ev"><b>{m.name}</b></span>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </>}
+          </div>
+        : <div className="np-body">No scheduled {intro.reviewBody} meetings on file — check ercot.com/committees.</div>}
     </div>
   );
 }
@@ -760,17 +386,19 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
       <div className="pt-right-scroll">
         {tab === "runs" && !isErcotHome && (
           hasNprr
-            ? <NprrProfileCard nprr={ctx.nprr} />
+            ? <RuleProfileCard cat="NPRR" num={ctx.nprr} />
             : hasCopmgrr
-            ? <CopmgrrProfileCard copmgrr={ctx.copmgrr} />
+            ? <RuleProfileCard cat="COPMGRR" num={ctx.copmgrr} />
             : hasPgrr
-            ? <PgrrProfileCard pgrr={ctx.pgrr} />
+            ? <RuleProfileCard cat="PGRR" num={ctx.pgrr} />
             : hasScr
-            ? <ScrSummaryCard scr={ctx.scr} />
+            ? <RuleProfileCard cat="SCR" num={ctx.scr} />
             : hasNogrr
-            ? <NogrSummaryCard nogrr={ctx.nogrr} />
+            ? <RuleProfileCard cat="NOGRR" num={ctx.nogrr} />
             : hasRmgrr
-            ? <RmgrSummaryCard rmgrr={ctx.rmgrr} />
+            ? <RuleProfileCard cat="RMGRR" num={ctx.rmgrr} />
+            : ctx.section === "paper-trails" && ctx.code
+            ? <CategoryIntroCard code={ctx.code} />
             : <>
                 <p className="pt-runs-note">Suggested study runs</p>
                 {(SUGGESTED_RUNS || []).map(r => (

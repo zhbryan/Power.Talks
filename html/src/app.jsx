@@ -122,15 +122,31 @@ function App() {
   const scrollRef = React.useRef(null);
   const lastPanelRef = React.useRef(null);
 
+  // Artifact pages rendered in the content window (injected iframe panels).
   const ARTIFACT_SRCS = {
     "ercot-a1": "/Power.Talks/html/ERCOT%20Major%20Milestones.html",
-    "ercot-a2": "/Power.Talks/html/ERCOT%20Stakeholder%20Org%20Chart.html",
+  };
+  // Artifacts rendered as native React panels in the content window
+  // (component name looked up on window at render time).
+  const ARTIFACT_COMPONENTS = {
+    "ercot-a2": "ErcotOrgChart",
   };
 
   const onArtifactClick = (a) => {
+    const comp = ARTIFACT_COMPONENTS[a.id];
+    if (comp) {
+      setInjectedPanels(prev => prev.some(p => p.comp === comp)
+        ? prev
+        : [...prev, { key: Date.now(), comp, title: a.title }]);
+      return;
+    }
     const src = ARTIFACT_SRCS[a.id];
     if (src) {
-      setInjectedPanels(prev => [...prev, { key: Date.now(), src, title: a.title }]);
+      // Inject each artifact panel at most once per session — repeat clicks
+      // produce no additional output.
+      setInjectedPanels(prev => prev.some(p => p.src === src)
+        ? prev
+        : [...prev, { key: Date.now(), src, title: a.title }]);
     } else {
       onRunPrompt(a);
     }
@@ -229,14 +245,32 @@ function App() {
           />
           {injectedPanels.map((p, i) => (
             <div key={p.key} ref={i === injectedPanels.length - 1 ? lastPanelRef : null} style={{ borderTop: "1px solid var(--rule)" }}>
-              <iframe
+              {p.comp
+                ? (window[p.comp] ? React.createElement(window[p.comp]) : null)
+                : <iframe
                 src={p.src}
                 title={p.title}
                 style={{ width: "100%", border: "none", display: "block" }}
                 onLoad={(e) => {
-                  try { e.target.style.height = e.target.contentDocument.documentElement.scrollHeight + "px"; } catch(_) {}
+                  // Fit the iframe to its full content height, and keep
+                  // refitting — web fonts and late reflows change the height
+                  // after load, which used to clip the bottom of tall pages.
+                  const frame = e.target;
+                  const fit = () => {
+                    try { frame.style.height = frame.contentDocument.documentElement.scrollHeight + "px"; } catch(_) {}
+                  };
+                  fit();
+                  try {
+                    const doc = frame.contentDocument;
+                    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(fit);
+                    if (frame.contentWindow.ResizeObserver) {
+                      new frame.contentWindow.ResizeObserver(fit).observe(doc.documentElement);
+                    }
+                  } catch(_) {}
+                  setTimeout(fit, 600);
+                  setTimeout(fit, 2000);
                 }}
-              />
+              />}
             </div>
           ))}
         </div>
