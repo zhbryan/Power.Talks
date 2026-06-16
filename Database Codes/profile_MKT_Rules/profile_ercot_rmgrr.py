@@ -51,11 +51,28 @@ def tables_from_docx(path):
     return [[[c.text.strip() for c in row.cells] for row in tbl.rows]
             for tbl in doc.tables]
 
+_word_app = None
+
+def get_word():
+    global _word_app
+    if _word_app is None:
+        _word_app = win32com.client.Dispatch("Word.Application")
+        _word_app.Visible = False
+    return _word_app
+
+def quit_word():
+    global _word_app
+    if _word_app is not None:
+        try:
+            _word_app.Quit()
+        except Exception:
+            pass
+        _word_app = None
+
 def tables_from_doc(path):
-    word = win32com.client.Dispatch("Word.Application")
-    word.Visible = False
+    word = get_word()
+    d = word.Documents.Open(os.path.abspath(path), ReadOnly=True)
     try:
-        d = word.Documents.Open(os.path.abspath(path), ReadOnly=True)
         result = []
         for ti in range(1, d.Tables.Count + 1):
             tbl = d.Tables(ti)
@@ -70,10 +87,9 @@ def tables_from_doc(path):
                         cells.append('')
                 rows.append(cells)
             result.append(rows)
-        d.Close(False)
         return result
     finally:
-        word.Quit()
+        d.Close(False)
 
 # ─── DATE NORMALIZER ─────────────────────────────────────────────────────────
 _MONTH_FMTS = ['%B %d, %Y', '%B %d %Y', '%b %d, %Y', '%b %d %Y',
@@ -177,7 +193,7 @@ def extract_fields_from_tables(tables):
     if not tables:
         return fields
 
-    for row in tables[0]:
+    for row in [r for tbl in tables for r in tbl]:
         for i, cell in enumerate(row):
             cl = cell.strip().lower()
             if not cl:
@@ -185,9 +201,9 @@ def extract_fields_from_tables(tables):
             v = first_nonempty_sibling(row, i)
             if not v:
                 continue
-            if 'rmgrr title' in cl or cl == 'title':
+            if 'rmgrr title' in cl or cl.endswith('title'):
                 fields['title'] = fields['title'] or v
-            elif cl.startswith('date posted') or 'decision' in cl:
+            elif cl.startswith('date posted') or cl.startswith('date received') or 'decision' in cl:
                 fields['date_posted_decision'] = fields['date_posted_decision'] or normalize_date(v)
             elif 'requested resolution' in cl:
                 fields['timeline_requested_resolution'] = fields['timeline_requested_resolution'] or v
@@ -203,14 +219,14 @@ def extract_fields_from_tables(tables):
                     fields['related_documents_requiring_revision'] = items
             elif 'revision description' in cl:
                 fields['revision_description'] = fields['revision_description'] or v
-            elif 'reason for revision' in cl:
+            elif cl.startswith('reason for'):
                 if not fields['reason_for_revision']:
                     fields['reason_for_revision'] = parse_reason_list(v)
             elif 'business case' in cl or 'justification' in cl or 'market impacts' in cl:
                 fields['business_case'] = fields['business_case'] or v
 
-    if len(tables) > 1:
-        for row in tables[1]:
+    if len(tables) > 0:
+        for row in [r for tbl in tables for r in tbl]:
             for i, cell in enumerate(row):
                 cl = cell.strip().lower()
                 if not cl:
@@ -232,12 +248,34 @@ def extract_fields_from_tables(tables):
     return fields
 
 # ─── PROFILE BUILDER ─────────────────────────────────────────────────────────
+_TL_ALL_PATS = (_TL_BALLOT_PAT, _TL_REPORT_PAT, _TL_BOARD_PAT,
+                _TL_PUCT_PAT, _TL_ERCOT_PAT, _TL_IMPACT_PAT)
+
 def find_main_doc(folder):
-    for fname in sorted(os.listdir(folder)):
-        if re.search(r'-0*1[\b\s\-_]', fname) or re.search(r'-01\.', fname):
-            ext = os.path.splitext(fname)[1].lower()
-            if ext in ('.docx', '.doc'):
-                return os.path.join(folder, fname), ext
+    docs = [f for f in sorted(os.listdir(folder))
+            if os.path.splitext(f)[1].lower() in ('.docx', '.doc')]
+
+    # Modern naming (2017+): 1000NPRR-01_Title_date.doc
+    for fname in docs:
+        if re.search(r'-0*1[\s\-_]', fname) or re.search(r'-01\.', fname):
+            return os.path.join(folder, fname), os.path.splitext(fname)[1].lower()
+
+    # Legacy numbered naming (pre-2017): 100nprr_01_title_date.doc
+    # (some COPMGRRs have an extra underscore: 003_copmgrr_01_...)
+    for fname in docs:
+        if re.search(r'^\d+_?[a-z]+[_\-]0*1[_\-]', fname, re.IGNORECASE):
+            return os.path.join(folder, fname), os.path.splitext(fname)[1].lower()
+
+    # Legacy unnumbered submission: first doc that is neither a numbered
+    # supporting doc nor a committee report/comments/ballot/impact file.
+    for fname in docs:
+        fl = fname.lower()
+        if re.search(r'^\d+_?[a-z]+[_\-]\d{2}[_\-]', fl):
+            continue
+        if any(p.search(fl) for p in _TL_ALL_PATS):
+            continue
+        return os.path.join(folder, fname), os.path.splitext(fname)[1].lower()
+
     return None, None
 
 def build_profile(folder, issue_num, status):
@@ -298,8 +336,15 @@ def main():
             quick = os.path.join(folder, "Quick runs")
             os.makedirs(quick, exist_ok=True)
             out = os.path.join(quick, f"RMGRR{n} Profile.json")
+            new_json = json.dumps(profile, indent=2, ensure_ascii=False)
+            # Skip identical rewrites so the summarizers' ONLY_STALE mode
+            # doesn't see every profile as refreshed.
+            if os.path.exists(out):
+                with open(out, 'r', encoding='utf-8') as f:
+                    if f.read() == new_json:
+                        continue
             with open(out, 'w', encoding='utf-8') as f:
-                json.dump(profile, f, indent=2, ensure_ascii=False)
+                f.write(new_json)
             title = profile['title'] or '(title not found)'
             print(f"[OK] RMGRR{n:>4}  {status:<10}  {title[:65]}")
             ok += 1
@@ -307,7 +352,8 @@ def main():
             print(f"[ERR] RMGRR{n}: {e}")
             err += 1
 
-    print(f"\nDone: {ok} profiles created, {err} errors.")
+    quit_word()
+    print(f"\nDone: {ok} profiles created/updated, {err} errors.")
 
 if __name__ == "__main__":
     main()

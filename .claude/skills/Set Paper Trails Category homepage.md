@@ -63,13 +63,25 @@ refresh the arrays.
 
 ## Right Panel — Artifacts Tab
 
-`ARTIFACTS` in `data.jsx` currently ships: Make a podcast, Draw a timeline,
-Write a briefing note, Draft a press release, Create a slide outline,
-Summarise as a tweet thread, Generate a glossary.
+The Artifacts tab is **context-dependent** (logic in `rightpanel.jsx`):
 
-**"Build a comparison table" was removed deliberately (2026-06-11) — do not
-re-add it when touching this list.** The ERCOT home section uses its own
-separate `ERCOT_HOME_ARTIFACTS` list in `rightpanel.jsx`.
+- **Category homepage** (this skill — category selected, no issue) shows a
+  **trimmed** set of 3: Make a podcast, Write a briefing note, Create a slide
+  outline.
+- **Item-rule homepage** (an issue selected — see
+  `Set-Paper-Trails-Item-Rule-Homepage`) and every other non-ERCOT section show
+  the **full** `ARTIFACTS` list (7 items).
+
+The full list lives in `ARTIFACTS` in `data.jsx`. The category homepage hides a
+fixed id set via `CATEGORY_HIDDEN_ARTIFACT_IDS = ["a2","a5","a7","a8"]` in
+`rightpanel.jsx` (Draw a timeline, Draft a press release, Summarise as a tweet
+thread, Generate a glossary — hidden 2026-06-16). To change what the category
+homepage hides, edit that id list — do **not** delete entries from `ARTIFACTS`
+(that would also strip them from the item-rule homepage).
+
+**"Build a comparison table" was removed from `ARTIFACTS` entirely (2026-06-11)
+— do not re-add it.** The ERCOT home section uses its own separate
+`ERCOT_HOME_ARTIFACTS` list in `rightpanel.jsx`.
 
 ## Refresh Procedure (run after downloader / profile / summary updates)
 
@@ -101,7 +113,10 @@ Every `regen_paper_trails_data.py` run appends its main changes to
 2. Open each changed category: list panels show the new issues/statuses.
 3. With no issue selected, the right panel "For the talk" tab shows the
    category introduction with all five blocks and only future meetings.
-4. Artifacts tab shows 7 items, no comparison table.
+4. On a category homepage (no issue) the Artifacts tab shows 3 items (Make a
+   podcast, Write a briefing note, Create a slide outline). Select an issue and
+   the Artifacts tab shows the full 7-item list (timeline, press release, tweet
+   thread, glossary restored) — never the comparison table.
 5. `html/paper_trails_run_log.txt` has a new dated entry.
 
 ## Common Mistakes
@@ -113,4 +128,5 @@ Every `regen_paper_trails_data.py` run appends its main changes to
 | Hard-coding "next meetings" as text | Keep `upcomingMeetings` as dated entries; the card filters `date > today` at render time |
 | Pointing COPMGRR at COPS | COPS no longer exists — COPMGRRs are reviewed by WMS |
 | Forgetting the run log | List regeneration goes through `regen_paper_trails_data.py`, which appends it automatically — don't hand-edit `data.jsx` arrays |
-| Re-adding "Build a comparison table" | Removed by design from `ARTIFACTS` |
+| Deleting timeline/press-release/tweet/glossary from `ARTIFACTS` to hide them on the category homepage | They must stay in `ARTIFACTS` (the item-rule homepage shows them) — hide them on the category homepage via `CATEGORY_HIDDEN_ARTIFACT_IDS` in `rightpanel.jsx` instead |
+| Re-adding "Build a comparison table" | Removed from `ARTIFACTS` entirely by design |

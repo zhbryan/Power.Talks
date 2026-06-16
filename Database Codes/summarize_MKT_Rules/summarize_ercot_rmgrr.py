@@ -28,6 +28,13 @@ BASE_DIR      = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.MKT.RULES\R
 AI_MODEL      = "claude-haiku-4-5-20251001"
 AI_MAX_TOKENS = 600
 
+# Haiku 4.5 pricing (USD per million tokens) — used only for the cost report.
+AI_PRICE_IN   = 1.00
+AI_PRICE_OUT  = 5.00
+
+# Cumulative API token usage for the run, reported at the end of main().
+_ai_usage = {"input_tokens": 0, "output_tokens": 0, "calls": 0}
+
 # Only rebuild summaries whose issue folder gained documents since the last
 # run, or whose Profile.json was refreshed after the summary was written.
 # Set False to force a full rebuild of every issue.
@@ -203,7 +210,8 @@ _ai_client = None
 def get_ai():
     global _ai_client
     if _ai_client is None:
-        _ai_client = anthropic.Anthropic()
+        from anthropic_key import get_anthropic_key
+        _ai_client = anthropic.Anthropic(api_key=get_anthropic_key())
     return _ai_client
 
 def ai_executive_summary(issue_id, title, revision_desc, reason, business_case, sections, status):
@@ -230,6 +238,9 @@ Write 3–5 sentences covering: (1) what retail market rule or guide section is 
             model=AI_MODEL, max_tokens=AI_MAX_TOKENS,
             messages=[{"role": "user", "content": prompt}]
         )
+        _ai_usage["input_tokens"]  += msg.usage.input_tokens
+        _ai_usage["output_tokens"] += msg.usage.output_tokens
+        _ai_usage["calls"]         += 1
         return msg.content[0].text.strip()
     except Exception:
         return (f"This Retail Market Guide Revision Request ({issue_id}) proposes changes to "
@@ -238,7 +249,7 @@ Write 3–5 sentences covering: (1) what retail market rule or guide section is 
 
 # ─── DOCX REPORT WRITER ──────────────────────────────────────────────────────
 def write_summary_docx(out_path, issue_id, title, exec_summary, issue_details,
-                        impact_text, timeline, current_status):
+                        impact_items, timeline, current_status):
     doc = DocxDoc()
     h = doc.add_heading(f"{issue_id} — {title or 'Retail Market Guide Revision Request'}", level=1)
     h.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -258,7 +269,11 @@ def write_summary_docx(out_path, issue_id, title, exec_summary, issue_details,
         row.cells[0].paragraphs[0].runs[0].bold = True
 
     doc.add_heading("3. Impact Analysis", level=2)
-    doc.add_paragraph(sanitize(impact_text) or "Impact analysis document not available for this issue.")
+    if impact_items:
+        for _lbl, _val in impact_items:
+            doc.add_paragraph(f"{sanitize(_lbl)}: {sanitize(_val)}", style="List Bullet")
+    else:
+        doc.add_paragraph("Impact analysis document not available for this issue.")
 
     doc.add_heading("4. Stakeholder Discussion Timeline", level=2)
     if timeline:
@@ -291,13 +306,74 @@ def load_profile(folder, issue_id):
             return json.load(f)
     return {}
 
-def extract_impact_text(folder):
-    for fname in sorted(os.listdir(folder)):
-        if _IMPACT_PAT.search(fname.lower()):
-            path = os.path.join(folder, fname)
-            if os.path.splitext(fname)[1].lower() in ('.docx', '.doc'):
-                return extract_text(path)[:2000].strip()
-    return None
+def extract_impact_items(folder):
+    """Parse the most recent impact analysis document into (label, value)
+    bullet items. Table rows become labeled bullets; plain text becomes
+    Note bullets as a fallback."""
+    ia_files = [f for f in sorted(os.listdir(folder))
+                if _IMPACT_PAT.search(f.lower())
+                and os.path.splitext(f)[1].lower() in ('.docx', '.doc')]
+    if not ia_files:
+        return []
+    path = os.path.join(folder, ia_files[-1])  # most recent revision
+    items = []
+    seen = set()
+
+    def add(label, value):
+        label = ' '.join(label.split())
+        value = ' '.join(value.split())
+        if not label or not value or len(label) > 90 or label.lower() == value.lower():
+            return
+        key = label.lower()
+        if re.fullmatch(r"(nprr|nogrr|pgrr|rmgrr|scr|copmgrr)\s*(number|title)", key):
+            return
+        if key in seen:
+            return
+        seen.add(key)
+        items.append((label, value[:400]))
+
+    try:
+        if path.lower().endswith('.docx'):
+            d = DocxDoc(path)
+            for tbl in d.tables:
+                for row in tbl.rows:
+                    cells = [c.text.strip() for c in row.cells]
+                    uniq = list(dict.fromkeys(c for c in cells if c))
+                    if len(uniq) >= 2:
+                        add(uniq[0], uniq[1])
+        else:
+            word = get_word()
+            wd = word.Documents.Open(os.path.abspath(path), ReadOnly=True)
+            try:
+                for tbl in wd.Tables:
+                    try:
+                        n_rows, n_cols = tbl.Rows.Count, tbl.Columns.Count
+                    except Exception:
+                        continue
+                    for r in range(1, n_rows + 1):
+                        cells = []
+                        for c in range(1, min(n_cols, 3) + 1):
+                            try:
+                                cells.append(tbl.Cell(r, c).Range.Text.replace('\r', ' ').replace('\x07', '').strip())
+                            except Exception:
+                                continue
+                        uniq = list(dict.fromkeys(c for c in cells if c))
+                        if len(uniq) >= 2:
+                            add(uniq[0], uniq[1])
+            finally:
+                wd.Close(False)
+    except Exception:
+        pass
+
+    if not items:
+        text = extract_text(path)[:2000].strip()
+        for line in re.split(r'[\r\n]+', text):
+            line = line.strip(' \t-')
+            if 15 <= len(line) <= 300:
+                items.append(('Note', line))
+            if len(items) >= 8:
+                break
+    return items[:12]
 
 def status_sentence(issue_id, inferred):
     if inferred == "Approved":
@@ -341,13 +417,13 @@ def process_issue(folder, n):
         ("Market Segment",                       mkt_seg or '—'),
     ]
 
-    impact_text    = extract_impact_text(folder)
+    impact_items    = extract_impact_items(folder)
     timeline       = build_timeline(folder)
     inferred       = infer_status(folder)
     current_status = status_sentence(issue_id, inferred)
 
     write_summary_docx(out_path, issue_id, title, exec_summary, issue_details,
-                        impact_text, timeline, current_status)
+                        impact_items, timeline, current_status)
 
     sponsor_str = f"{sponsor} · {company}" if sponsor and company else (sponsor or '')
     summary_json = {
@@ -364,7 +440,7 @@ def process_issue(folder, n):
         "background":        reason,
         "key_change":        rev_desc or "",
         "impacts":           [{"category": "Business Case / Justification", "text": biz_case[:500]}] if biz_case else [],
-        "impact_analysis":   [{"label": "Impact Analysis Summary", "rows": [["Summary", impact_text[:600]]]}] if impact_text else [],
+        "impact_analysis":   [{"label": "Impact Analysis", "rows": [[l, v] for l, v in impact_items]}] if impact_items else [],
         "timeline":          [{"date": ev["date"], "body": ev["body"], "action": ev["action"], "notes": ev["outcome"]} for ev in timeline],
         "current_status":    [current_status],
     }
@@ -401,6 +477,15 @@ def main():
     finally:
         quit_word()
     print(f"\nDone: {ok} summaries created, {err} errors.")
+
+    in_tok  = _ai_usage["input_tokens"]
+    out_tok = _ai_usage["output_tokens"]
+    cost_in  = in_tok  / 1_000_000 * AI_PRICE_IN
+    cost_out = out_tok / 1_000_000 * AI_PRICE_OUT
+    print(f"\nAI usage ({_ai_usage['calls']} calls, {AI_MODEL}):")
+    print(f"  input : {in_tok:>8,} tok  ->  ${cost_in:.4f}")
+    print(f"  output: {out_tok:>8,} tok  ->  ${cost_out:.4f}")
+    print(f"  TOTAL : ${cost_in + cost_out:.4f}")
 
 if __name__ == "__main__":
     main()

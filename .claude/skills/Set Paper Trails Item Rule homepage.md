@@ -37,25 +37,22 @@ switch (`hasNprr ? <RuleProfileCard cat="NPRR" num={ctx.nprr} /> : ...`).
 | 6 | Market Segment | `market_segment` | |
 | 7 | Requested Resolution | `timeline_requested_resolution` | |
 | 8 | Date Posted | `date_posted_decision` | |
-| 9 | Sections | `governing_document_sections` (legacy fallbacks: `protocol_sections_requiring_revision`, `agreement_sections_requiring_revision`) | Label from `RULE_CARD_CFG[cat].sectionsLabel` |
-| 10 | Reason for Revision | `reason_for_revision` | String **or** array — always wrap in `asList()` |
-| 11 | Timeline | `timeline` (`[{date, event, doc}]`) | NPRR-style dotted vertical timeline (see below) |
+| 9 | Reason for Revision | `reason_for_revision` | String **or** array — always wrap in `asList()` |
+| 10 | Timeline | `timeline` (`[{date, event, doc}]`) | NPRR-style dotted vertical timeline (see below) |
+
+> **Governing-document sections are intentionally NOT on this card** (removed
+> 2026-06-12 by request) — do not re-add a "Protocol Sections" block. The
+> sections remain available in `Profile.json` and on the center detail view.
 
 **Empty-value rule:** every label above is always rendered. A field whose
 value was not extracted shows an em dash (`—`) — never hide the row. The
-`Field` helper inside `RuleProfileCard` implements this; sections, reasons,
-and timeline render a literal `—` line when empty.
+`Field` helper inside `RuleProfileCard` implements this; reasons and
+timeline render a literal `—` line when empty.
 
-## Section Labels per Category (`RULE_CARD_CFG`)
+## `RULE_CARD_CFG`
 
-| Category | `sectionsLabel` | Extra config |
-|---|---|---|
-| NPRR | Protocol Sections | |
-| COPMGRR | Agreement Sections | `pad: 3` (URLs/IDs use `COPMGRR015`) |
-| PGRR | Planning Guide Sections | |
-| SCR | System Sections | |
-| NOGRR | Operating Guide Sections | |
-| RMGRR | Retail Market Guide Sections | |
+Per-category config now only carries COPMGRR's zero padding:
+`COPMGRR: { pad: 3 }` (URLs/IDs use `COPMGRR015`).
 
 ## Timeline Format (the NPRR format — mandatory for all categories)
 
@@ -100,7 +97,7 @@ the Profile skill.
 4. Rebundle: `python "html/rebuild_standalone.py"` (the served page is a
    frozen bundle — source edits are invisible until this runs).
 5. Verify on `http://localhost` (never `file://`) with a hard refresh:
-   select one issue in each category; confirm all 11 blocks render and
+   select one issue in each category; confirm all 10 blocks render and
    missing values show `—`.
 
 ## Common Mistakes
@@ -111,5 +108,4 @@ the Profile skill.
 | Calling `.map` on `reason_for_revision` directly | It may be a string — use `asList()` |
 | Fetching `Summary.json` for the Quick runs card | The card reads `Profile.json` for every category (Summary.json feeds the center detail view) |
 | Forgetting COPMGRR zero-padding | `RULE_CARD_CFG.COPMGRR.pad = 3` drives both the URL and the displayed ID |
-| Reading legacy keys only (`nprr_number`, `protocol_sections_requiring_revision`) | Unified keys first, legacy as fallback |
 | Editing src without rebundling | Run `html/rebuild_standalone.py` after every change |

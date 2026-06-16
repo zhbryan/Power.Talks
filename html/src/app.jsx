@@ -40,7 +40,7 @@ function App() {
 
   const [activeId, setActiveId] = React.useState("s1");
   const [activeMarket, setActiveMarket] = React.useState("ERCOT");
-  const [activeSection, setActiveSection] = React.useState("paper-trails");
+  const [activeSection, setActiveSection] = React.useState("market-home");
   const [activePaperCode, setActivePaperCode] = React.useState("NPRR");
   const [activeMeetingNode, setActiveMeetingNode] = React.useState("BOD");
   const [activeNprr, setActiveNprr] = React.useState(null);
@@ -243,7 +243,7 @@ function App() {
                 : <TalkIllustration title={CURRENT_TALK_TITLE} meta={CURRENT_TALK_META}/>
             }
           />
-          {injectedPanels.map((p, i) => (
+          {activeSection === "market-home" && injectedPanels.map((p, i) => (
             <div key={p.key} ref={i === injectedPanels.length - 1 ? lastPanelRef : null} style={{ borderTop: "1px solid var(--rule)" }}>
               {p.comp
                 ? (window[p.comp] ? React.createElement(window[p.comp]) : null)
@@ -278,7 +278,6 @@ function App() {
           value={draft}
           onChange={setDraft}
           onSend={onSend}
-          onSuggest={() => setRightOpen(true)}
         />
       </div>
 

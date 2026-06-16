@@ -1,4 +1,4 @@
-function Composer({ value, onChange, onSend, onSuggest }) {
+function Composer({ value, onChange, onSend }) {
   const [recording, setRecording] = React.useState(false);
   const taRef = React.useRef(null);
   const autoResize = () => {
@@ -99,7 +99,7 @@ function Composer({ value, onChange, onSend, onSuggest }) {
           value={value}
           onChange={e => onChange(e.target.value)}
           onKeyDown={onKey}
-          placeholder="Paste a draft, describe the moment, or just say what you're trying to land…"
+          placeholder="Ask me anything about ERCOT power grid, wholesale market operations, rules, and regulatory policies..."
           rows={1}
         />
         <div className="pt-comp-row">
@@ -124,9 +124,6 @@ function Composer({ value, onChange, onSend, onSuggest }) {
       </div>
       <div className="pt-comp-foot">
         <span>⏎ to send · ⇧⏎ newline · / for commands</span>
-        <span>
-          <a href="#" onClick={(e)=>{e.preventDefault(); onSuggest && onSuggest();}}>suggest a run →</a>
-        </span>
       </div>
     </div>
   );

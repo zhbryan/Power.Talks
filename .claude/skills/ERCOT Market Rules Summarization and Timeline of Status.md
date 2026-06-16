@@ -144,13 +144,23 @@ If a `<ISSUE_ID> Profile.json` already exists in `Quick runs/`, load it instead 
 
 ### Step 3 — Extract impact analysis
 
-Read the `-02` document (and any revised impact analysis, e.g. `-10`). Extract:
-- Estimated cost / budgetary impact
-- Estimated time and project requirements
-- ERCOT system and staffing impacts
-- Notable comments
+Read the `-02` document (and any revised impact analysis, e.g. `-10`).
+**Always use the most recent impact analysis when multiple versions exist.**
 
-Use the most recent impact analysis if multiple versions exist.
+Extract the impact analysis as **bullet points, not a prose summary**: parse
+the document's form table into `(label, value)` items — e.g. Cost/Budgetary
+Impact, Estimated Time/Project Requirements, ERCOT Staffing Impacts,
+ERCOT Computer Systems, Business Functions, Credit Implications. Skip the
+redundant form-header rows (issue number, title); cap values at ~400 chars
+and the list at 12 items. If the document has no parsable table, fall back
+to splitting the text into short `Note` bullets (max 8).
+
+In `Summary.json` this becomes:
+```json
+"impact_analysis": [{ "label": "Impact Analysis", "rows": [["<label>", "<value>"], ...] }]
+```
+(the web detail view renders `rows` as a Category/Detail table). Do NOT emit
+the old single-blob form `[["Summary", "<2000-char text>"]]`.
 
 ### Step 4 — Build the stakeholder timeline
 
@@ -198,9 +208,11 @@ Summary Report
    - Sponsor
 
 3. Impact Analysis
-   - Budgetary / cost impact
-   - System / staffing impacts
-   - Implementation timeline
+   • <Label>: <value>      ← one "List Bullet" paragraph per extracted item
+   • Cost/Budgetary Impact: …
+   • ERCOT Staffing Impacts: …
+   (never a flat text blob; "Impact analysis document not available for
+    this issue." when no impact analysis document exists)
 
 4. Stakeholder Discussion Timeline
    [Date]  [Body]  [Action]  [Outcome / Notes]

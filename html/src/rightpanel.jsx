@@ -27,15 +27,11 @@ const NP_CARD_CSS = `
 // One Quick runs card for all market rules categories. Fetches the issue's
 // Profile.json (unified skill schema) and renders the standard field set:
 // Sponsor (name, email, phone), Market Segment, Requested Resolution,
-// Date Posted, governing-document sections, Reason for Revision, Timeline.
+// Date Posted, Reason for Revision, Timeline. (Governing-document sections
+// were removed from this card by request, 2026-06-12.)
 // Every field label is always shown; missing values render as an em dash.
 const RULE_CARD_CFG = {
-  NPRR:    { sectionsLabel: "Protocol Sections" },
-  COPMGRR: { sectionsLabel: "Agreement Sections", pad: 3 },
-  PGRR:    { sectionsLabel: "Planning Guide Sections" },
-  SCR:     { sectionsLabel: "System Sections" },
-  NOGRR:   { sectionsLabel: "Operating Guide Sections" },
-  RMGRR:   { sectionsLabel: "Retail Market Guide Sections" },
+  COPMGRR: { pad: 3 },
 };
 
 function RuleProfileCard({ cat, num }) {
@@ -82,9 +78,6 @@ function RuleProfileCard({ cat, num }) {
     </div>
   );
 
-  const sections = asList(profile.governing_document_sections
-    || profile.protocol_sections_requiring_revision
-    || profile.agreement_sections_requiring_revision);
   const reasons = asList(profile.reason_for_revision);
   const timeline = profile.timeline || [];
 
@@ -106,12 +99,6 @@ function RuleProfileCard({ cat, num }) {
       <Field label="Market Segment"       value={profile.market_segment} />
       <Field label="Requested Resolution" value={profile.timeline_requested_resolution} />
       <Field label="Date Posted"          value={profile.date_posted_decision} />
-
-      <hr className="np-divider" />
-      <div className="np-sec-lbl">{cfg.sectionsLabel || "Sections"}</div>
-      {sections.length > 0
-        ? sections.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)
-        : <div style={{ fontSize: "12.5px", color: "var(--ink-2)", marginBottom: 10 }}>—</div>}
 
       <hr className="np-divider" />
       <div className="np-sec-lbl">Reason for Revision</div>
@@ -212,6 +199,11 @@ const ERCOT_HOME_ARTIFACTS = [
   },
 ];
 
+// Artifacts hidden on Paper Trails *category* homepages only. The item-rule
+// homepage (an issue is selected) and every other section keep the full
+// ARTIFACTS list from window.DATA.
+const CATEGORY_HIDDEN_ARTIFACT_IDS = ["a2", "a5", "a7", "a8"];
+
 function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const { SUGGESTED_RUNS, ARTIFACTS } = window.DATA;
   const [tab, setTab] = React.useState("runs"); // runs | artifacts | profile
@@ -224,15 +216,32 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const hasNogrr = Boolean(ctx.nogrr);
   const hasRmgrr = Boolean(ctx.rmgrr);
   const isErcotHome = ctx.section === "market-home";
-  const activeArtifacts = isErcotHome ? ERCOT_HOME_ARTIFACTS : (ARTIFACTS || []);
+
+  const hasIssue = hasNprr || hasCopmgrr || hasPgrr || hasScr || hasNogrr || hasRmgrr;
+  const isCategoryHome = ctx.section === "paper-trails" && Boolean(ctx.code) && !hasIssue;
+
+  // Category homepage shows a trimmed artifact set; the item-rule homepage
+  // (issue selected) and all other sections show the full ARTIFACTS list.
+  const allArtifacts = ARTIFACTS || [];
+  const activeArtifacts = isErcotHome
+    ? ERCOT_HOME_ARTIFACTS
+    : isCategoryHome
+    ? allArtifacts.filter(a => !CATEGORY_HIDDEN_ARTIFACT_IDS.includes(a.id))
+    : allArtifacts;
 
   React.useEffect(() => {
-    if (hasNprr || hasCopmgrr || hasPgrr || hasScr || hasNogrr || hasRmgrr) setTab("runs");
+    if (hasIssue) setTab("runs");
   }, [ctx.nprr, ctx.copmgrr, ctx.pgrr, ctx.scr, ctx.nogrr, ctx.rmgrr]);
 
   React.useEffect(() => {
     if (isErcotHome) setTab("artifacts");
   }, [isErcotHome]);
+
+  // Default back to "For the talk" whenever a category homepage becomes the
+  // active context (navigating between categories or back from an issue).
+  React.useEffect(() => {
+    if (isCategoryHome) setTab("runs");
+  }, [isCategoryHome, ctx.code]);
 
   return (
     <aside className={`pt-right ${open ? "is-open" : ""}`} aria-hidden={!open}>

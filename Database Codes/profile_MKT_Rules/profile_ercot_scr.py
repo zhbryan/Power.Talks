@@ -52,11 +52,28 @@ def tables_from_docx(path):
     return [[[c.text.strip() for c in row.cells] for row in tbl.rows]
             for tbl in doc.tables]
 
+_word_app = None
+
+def get_word():
+    global _word_app
+    if _word_app is None:
+        _word_app = win32com.client.Dispatch("Word.Application")
+        _word_app.Visible = False
+    return _word_app
+
+def quit_word():
+    global _word_app
+    if _word_app is not None:
+        try:
+            _word_app.Quit()
+        except Exception:
+            pass
+        _word_app = None
+
 def tables_from_doc(path):
-    word = win32com.client.Dispatch("Word.Application")
-    word.Visible = False
+    word = get_word()
+    d = word.Documents.Open(os.path.abspath(path), ReadOnly=True)
     try:
-        d = word.Documents.Open(os.path.abspath(path), ReadOnly=True)
         result = []
         for ti in range(1, d.Tables.Count + 1):
             tbl = d.Tables(ti)
@@ -71,10 +88,9 @@ def tables_from_doc(path):
                         cells.append('')
                 rows.append(cells)
             result.append(rows)
-        d.Close(False)
         return result
     finally:
-        word.Quit()
+        d.Close(False)
 
 # ─── DATE NORMALIZER ─────────────────────────────────────────────────────────
 _MONTH_FMTS = ['%B %d, %Y', '%B %d %Y', '%b %d, %Y', '%b %d %Y',
@@ -178,41 +194,11 @@ def extract_fields_from_tables(tables):
     if not tables:
         return fields
 
-    for row in tables[0]:
-        for i, cell in enumerate(row):
-            cl = cell.strip().lower()
-            if not cl:
-                continue
-            v = first_nonempty_sibling(row, i)
-            if not v:
-                continue
-            if 'scr title' in cl or cl == 'title':
-                fields['title'] = fields['title'] or v
-            elif cl.startswith('date posted') or 'decision' in cl:
-                fields['date_posted_decision'] = fields['date_posted_decision'] or normalize_date(v)
-            elif 'requested resolution' in cl:
-                fields['timeline_requested_resolution'] = fields['timeline_requested_resolution'] or v
-            # SCR uses functional/system areas instead of document sections
-            elif ('systems' in cl and 'affected' in cl) or 'functional area' in cl or 'ercot systems' in cl:
-                if not fields['governing_document_sections']:
-                    fields['governing_document_sections'] = [
-                        s.strip() for s in re.split(r'[;,\n]', v) if s.strip()
-                    ]
-            elif 'related documents' in cl or 'related revision' in cl or 'related scr' in cl:
-                if not fields['related_documents_requiring_revision']:
-                    items = [s.strip() for s in re.split(r'[;,\n]', v)
-                             if s.strip() and s.strip().lower() not in ('none', 'n/a')]
-                    fields['related_documents_requiring_revision'] = items
-            elif 'revision description' in cl or 'description' in cl:
-                fields['revision_description'] = fields['revision_description'] or v
-            elif 'reason for revision' in cl or 'reason for change' in cl:
-                if not fields['reason_for_revision']:
-                    fields['reason_for_revision'] = parse_reason_list(v)
-            elif 'business case' in cl or 'justification' in cl or 'market impacts' in cl:
-                fields['business_case'] = fields['business_case'] or v
-
-    if len(tables) > 1:
-        for row in tables[1]:
+    # Scan every table: legacy submission forms (pre-2017) spread fields
+    # across several tables, and some put the sponsor block in table 3+.
+    # First non-empty match wins, so earlier tables take precedence.
+    for tbl in tables:
+        for row in tbl:
             for i, cell in enumerate(row):
                 cl = cell.strip().lower()
                 if not cl:
@@ -220,7 +206,38 @@ def extract_fields_from_tables(tables):
                 v = first_nonempty_sibling(row, i)
                 if not v:
                     continue
-                if cl == 'name':
+                if 'scr title' in cl or cl == 'title':
+                    fields['title'] = fields['title'] or v
+                # Legacy forms (2002 era) often have an empty "Date Posted"
+                # but a filled "Date Received".
+                elif cl.startswith('date posted') or cl.startswith('date received') or 'decision' in cl:
+                    fields['date_posted_decision'] = fields['date_posted_decision'] or normalize_date(v)
+                elif 'requested resolution' in cl:
+                    fields['timeline_requested_resolution'] = fields['timeline_requested_resolution'] or v
+                # SCR uses functional/system areas instead of document sections;
+                # legacy forms cite "Supporting Protocol or Guide Section".
+                elif (('systems' in cl and 'affected' in cl) or 'functional area' in cl
+                      or 'ercot systems' in cl or 'supporting protocol' in cl or 'guide section' in cl):
+                    if not fields['governing_document_sections']:
+                        fields['governing_document_sections'] = [
+                            s.strip() for s in re.split(r'[;,\n]', v) if s.strip()
+                        ]
+                elif ('related documents' in cl or 'related revision' in cl or 'related scr' in cl
+                      or 'transaction to be revised' in cl):
+                    if not fields['related_documents_requiring_revision']:
+                        items = [s.strip() for s in re.split(r'[;,\n]', v)
+                                 if s.strip() and s.strip().lower() not in ('none', 'n/a')]
+                        fields['related_documents_requiring_revision'] = items
+                elif 'revision description' in cl or 'description' in cl:
+                    fields['revision_description'] = fields['revision_description'] or v
+                # Covers "Reason for Revision", "Reason for Change", and the
+                # legacy "Reason for System Change".
+                elif cl.startswith('reason for'):
+                    if not fields['reason_for_revision']:
+                        fields['reason_for_revision'] = parse_reason_list(v)
+                elif 'business case' in cl or 'justification' in cl or 'market impacts' in cl:
+                    fields['business_case'] = fields['business_case'] or v
+                elif cl == 'name':
                     fields['sponsor_name'] = fields['sponsor_name'] or v
                 elif 'e-mail' in cl or 'email' in cl:
                     fields['sponsor_email'] = fields['sponsor_email'] or v
@@ -234,12 +251,34 @@ def extract_fields_from_tables(tables):
     return fields
 
 # ─── PROFILE BUILDER ─────────────────────────────────────────────────────────
+_TL_ALL_PATS = (_TL_BALLOT_PAT, _TL_REPORT_PAT, _TL_BOARD_PAT,
+                _TL_PUCT_PAT, _TL_ERCOT_PAT, _TL_IMPACT_PAT)
+
 def find_main_doc(folder):
-    for fname in sorted(os.listdir(folder)):
-        if re.search(r'-0*1[\b\s\-_]', fname) or re.search(r'-01\.', fname):
-            ext = os.path.splitext(fname)[1].lower()
-            if ext in ('.docx', '.doc'):
-                return os.path.join(folder, fname), ext
+    docs = [f for f in sorted(os.listdir(folder))
+            if os.path.splitext(f)[1].lower() in ('.docx', '.doc')]
+
+    # Modern naming (2017+): 791SCR-01_Title_date.doc
+    for fname in docs:
+        if re.search(r'-0*1[\s\-_]', fname) or re.search(r'-01\.', fname):
+            return os.path.join(folder, fname), os.path.splitext(fname)[1].lower()
+
+    # Legacy numbered naming (~2008-2016): 770scr_01_title_date.doc
+    for fname in docs:
+        if re.search(r'^\d+scr[_\-]0*1[_\-]', fname, re.IGNORECASE):
+            return os.path.join(folder, fname), os.path.splitext(fname)[1].lower()
+
+    # Legacy unnumbered submission (2002 era): 700scr_title.doc — take the
+    # first doc that is neither a numbered supporting doc nor a committee
+    # report/comments/ballot/impact-analysis file.
+    for fname in docs:
+        fl = fname.lower()
+        if re.search(r'^\d+scr[_\-]\d{2}[_\-]', fl):
+            continue
+        if any(p.search(fl) for p in _TL_ALL_PATS):
+            continue
+        return os.path.join(folder, fname), os.path.splitext(fname)[1].lower()
+
     return None, None
 
 def build_profile(folder, issue_num, status):
@@ -288,28 +327,39 @@ def main():
     ], key=lambda x: int(re.search(r'\d+', x).group()))
 
     print(f"Processing {len(folders)} SCR folders...\n")
-    ok = err = 0
+    ok = err = unchanged = 0
 
-    for folder_name in folders:
-        n = int(re.search(r'\d+', folder_name).group())
-        folder = os.path.join(BASE_DIR, folder_name)
-        status = status_map.get(n, "Unknown")
+    try:
+        for folder_name in folders:
+            n = int(re.search(r'\d+', folder_name).group())
+            folder = os.path.join(BASE_DIR, folder_name)
+            status = status_map.get(n, "Unknown")
 
-        try:
-            profile = build_profile(folder, n, status)
-            quick = os.path.join(folder, "Quick runs")
-            os.makedirs(quick, exist_ok=True)
-            out = os.path.join(quick, f"SCR{n} Profile.json")
-            with open(out, 'w', encoding='utf-8') as f:
-                json.dump(profile, f, indent=2, ensure_ascii=False)
-            title = profile['title'] or '(title not found)'
-            print(f"[OK] SCR{n:>5}  {status:<10}  {title[:65]}")
-            ok += 1
-        except Exception as e:
-            print(f"[ERR] SCR{n}: {e}")
-            err += 1
+            try:
+                profile = build_profile(folder, n, status)
+                quick = os.path.join(folder, "Quick runs")
+                os.makedirs(quick, exist_ok=True)
+                out = os.path.join(quick, f"SCR{n} Profile.json")
+                new_json = json.dumps(profile, indent=2, ensure_ascii=False)
+                # Skip identical rewrites so the summarizers' ONLY_STALE mode
+                # doesn't see every profile as refreshed.
+                if os.path.exists(out):
+                    with open(out, 'r', encoding='utf-8') as f:
+                        if f.read() == new_json:
+                            unchanged += 1
+                            continue
+                with open(out, 'w', encoding='utf-8') as f:
+                    f.write(new_json)
+                title = profile['title'] or '(title not found)'
+                print(f"[OK] SCR{n:>5}  {status:<10}  {title[:65]}")
+                ok += 1
+            except Exception as e:
+                print(f"[ERR] SCR{n}: {e}")
+                err += 1
+    finally:
+        quit_word()
 
-    print(f"\nDone: {ok} profiles created, {err} errors.")
+    print(f"\nDone: {ok} profiles written, {unchanged} unchanged, {err} errors.")
 
 if __name__ == "__main__":
     main()
