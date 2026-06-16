@@ -9,6 +9,7 @@ __pycache__/
 
 # Logs
 Database Codes/*.log
+download_log.txt
 
 # Processed files index (local state)
 Database Codes/processed_files.json
