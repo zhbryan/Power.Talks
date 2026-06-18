@@ -19,16 +19,29 @@ Documents Database/ERCOT.STKHDR.MEETS/<COMMITTEE>/
 
 One sub-folder per meeting date. Files are never overwritten — only new files are added.
 
-The script covers 31 committees across four groups:
+The script covers 34 committees across these groups:
 
 | Group | Committees |
 |-------|-----------|
 | Board | BOARD, FA, HRG, TS |
 | TAC | TAC, LLWG, CFSG, RTCBTF |
-| Subcommittees | PRS, RMS, TDTMS, RMTTF, ROS, WMS |
+| Subcommittees | PRS, RMS, TDTMS, TXSETLP, RMTTF, ROS, WMS |
 | ROS working groups | BSWG, DWG, IBRWG, MWG, NDSWG, OWG, OTWG, PDCWG, PLWG, SPWG, SSWG, VPWG |
 | WMS working groups | CMWG, DSWG, SAWG, WMWG |
-| Inactive | IBRTF |
+| Inactive | IBRTF, BESTF, TXSET |
+
+Added 2026-06-17/18 (all `no_year_pages`): `BESTF` (Battery Energy Storage Task
+Force, `/committees/inactive/bestf`, slug `-BESTF-Meeting`), `TXSET` (Texas SET
+WG, `/committees/inactive/txset`, slug `Texas-SET`), and `TXSETLP` (the **active**
+Texas SET/Load Profiling WG, `/committees/rms/txsetlp`, slug `Texas-SET_LP`).
+`TXSETLP` is the successor that absorbed the old Load Profiling (LPWG) and Texas
+SET work; it has no `/YEAR` archive, so it's tracked via `no_year_pages`.
+
+**Folders that cannot be auto-filled** (confirmed against live ercot.com,
+2026-06-17): `MSWG`, `PWG`, `RCWG` have inactive pages but expose **no
+`/calendar/` meeting links**, so the downloader finds nothing — their empty
+folders remain. The phantom folders `LPWG`, `PDVWG`, `TDTMSTF`, `TXSETWG` (no
+ercot.com page anywhere) were **deleted 2026-06-18**.
 
 ---
 
@@ -62,11 +75,33 @@ pip install requests beautifulsoup4
 3. For each non-cancelled meeting calendar URL:
    - Fetches `ercot.com/calendar/MMDDYYYY-<SLUG>`.
    - Extracts all `<a href>` links whose extension is in `DOWNLOAD_EXTS`.
-4. For each document URL found:
-   - Derives the target path: `BASE_ROOT/<COMMITTEE>/YYYY-MM-DD/<filename>`.
-   - Skips if the file already exists.
-   - Downloads via streaming (64 KB chunks), writing to a `.tmp` file first, then renaming on success.
-5. Prints a per-committee and grand total summary: Downloaded | Skipped | Errors.
+4. For each meeting, **pre-computes new vs already-saved files** (the
+   market-rules accounting pattern) and prints `N file(s) already up to date` /
+   `M new file(s) (out of T total)`, then downloads only the new ones via
+   streaming (64 KB chunks), `.tmp` → rename on success.
+5. Prints a per-committee and grand total summary: Downloaded (new files across
+   N meetings) | Skipped | Errors.
+6. **Emits a coverage report** over the whole database (see below).
+
+The default scope is **incremental** (`SINCE_YEAR` = current year). For a full
+backfill, set `SINCE_YEAR = None`.
+
+## Coverage Report
+
+After the download pass, `coverage_report(BASE_ROOT, COMMITTEES)` scans the
+database on disk and prints — and writes to
+`BASE_ROOT/coverage_report_YYYYMMDD.txt` — a manifest of what's actually present
+(the stakeholder-meetings analog of the market-rules Excel tracker):
+
+- **Populated** committee folders (meeting count + file count), flagging any
+  `[NOT IN REGISTRY]`.
+- **Empty / non-filled** committee folders, noting whether each is in the
+  registry or has no downloader config.
+- **Registry committees with no folder on disk.**
+- **Meeting folders that exist but hold no files.**
+
+Run it standalone without downloading via:
+`python -c "import download_ercot_stkhdr as d; d.coverage_report(d.BASE_ROOT, d.COMMITTEES)"`
 
 ---
 
@@ -77,6 +112,7 @@ pip install requests beautifulsoup4
 | `COMMITTEES_TO_RUN` | `None` | `None` = all; or list like `["TAC", "WMS"]` to run a subset |
 | `YEAR_END` | `date.today().year` | Last year to fetch (inclusive); each committee defines its own `year_start` |
 | `MEETING_DATES` | `None` | Override: list of ISO dates to process, e.g. `["2025-01-09"]` |
+| `SINCE_YEAR` | `date.today().year` | **Incremental mode** (learned from the market-rules downloaders). Only crawl meetings from this year onward, so routine runs pick up just new meetings instead of re-walking ~20 years of year pages. Set to `None` for a full backfill from each committee's `year_start`. |
 | `BASE_ROOT` | `...ERCOT.STKHDR.MEETS` | Root folder; each committee gets `BASE_ROOT/<ABBREV>/YYYY-MM-DD/` |
 | `REQUEST_DELAY` | `1.0` | Seconds between HTTP requests |
 | `DOWNLOAD_EXTS` | `.pdf .doc .docx .xls .xlsx .pptx .ppt .zip` | Extensions to download |
@@ -91,8 +127,9 @@ pip install requests beautifulsoup4
 | `get_meeting_urls(year, cfg)` | Fetches one year page, scrapes `<a href>` for calendar links matching the committee's `slug` regex, skips cancelled entries, returns `[(date_iso, url)]` |
 | `get_document_links(calendar_url)` | Fetches one calendar page, returns all downloadable document URLs |
 | `download_file(url, dest_path)` | Downloads a single file with `.tmp` safety. Returns `'ok'`, `'skip'`, or `'err'` |
-| `process_meetings(meetings, base_dir)` | Iterates meeting list, calls `get_document_links` + `download_file` for each. Returns `(ok, skip, err)` |
-| `run_committee(abbrev, cfg)` | Full year-loop + meeting-download sequence for one committee |
+| `process_meetings(meetings, base_dir)` | Iterates meeting list; pre-counts new vs already-saved files per meeting, downloads only new ones. Returns `(ok, skip, err, meetings_updated)` |
+| `run_committee(abbrev, cfg)` | Full year-loop + meeting-download for one committee; clamps `year_start` to `SINCE_YEAR` when set. Returns `(ok, skip, err, meetings_updated)` |
+| `coverage_report(root, registry)` | Scans the DB on disk; reports populated vs empty folders and registry/disk mismatches; writes `coverage_report_YYYYMMDD.txt` |
 | `sanitize(name)` | Strips Windows-illegal characters from filenames |
 | `safe_fname(fname, dest_dir)` | Truncates filenames so the full path stays under 240 characters |
 

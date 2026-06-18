@@ -38,6 +38,13 @@ YEAR_END = date.today().year
 # Example: MEETING_DATES = ["2025-01-09", "2025-03-06"]
 MEETING_DATES = None
 
+# Incremental mode (learned from the market-rules downloaders, which only
+# process issues not already tracked). Only crawl meetings from this year
+# onward, so routine runs pick up just the new meetings instead of re-walking
+# two decades of year pages. Set to None for a full backfill from each
+# committee's year_start.
+SINCE_YEAR = date.today().year
+
 # Root folder; each committee gets BASE_ROOT/<ABBREV>/YYYY-MM-DD/<files>
 BASE_ROOT = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.STKHDR.MEETS"
 
@@ -68,6 +75,7 @@ COMMITTEES = {
     "PRS":     {"url": f"{BASE_URL}/committees/prs",                    "slug": r"-PRS-Meeting",                          "year_start": 2010},
     "RMS":     {"url": f"{BASE_URL}/committees/rms",                    "slug": r"-RMS-Meeting",                          "year_start": 2010},
     "TDTMS":   {"url": f"{BASE_URL}/committees/rms/tdtms",              "slug": r"-TDTMS-Meeting",                        "year_start": 2015},
+    "TXSETLP": {"url": f"{BASE_URL}/committees/rms/txsetlp",            "slug": r"Texas-SET_LP",                          "year_start": 2024, "no_year_pages": True},
     "RMTTF":   {"url": f"{BASE_URL}/committees/rms/rmttf",              "slug": r"-RMTTF-Meeting",                        "year_start": 2015},
     "ROS":     {"url": f"{BASE_URL}/committees/ros",                    "slug": r"-ROS-Meeting",                          "year_start": 2010},
     "WMS":     {"url": f"{BASE_URL}/committees/wms",                    "slug": r"-WMS-Meeting",                          "year_start": 2010},
@@ -91,6 +99,8 @@ COMMITTEES = {
     "WMWG":    {"url": f"{BASE_URL}/committees/wms/wmwg",               "slug": r"-WMWG-Meeting",                         "year_start": 2019},
     # ── Inactive ───────────────────────────────────────────────────────────────
     "IBRTF":   {"url": f"{BASE_URL}/committees/inactive/ibrtf",         "slug": r"-IBRTF-Meeting",                        "year_start": 2022, "no_year_pages": True},
+    "BESTF":   {"url": f"{BASE_URL}/committees/inactive/bestf",         "slug": r"-BESTF-Meeting",                        "year_start": 2019, "no_year_pages": True},
+    "TXSET":   {"url": f"{BASE_URL}/committees/inactive/txset",         "slug": r"Texas-SET",                             "year_start": 2025, "no_year_pages": True},
 }
 
 HEADERS = {
@@ -214,8 +224,11 @@ def download_file(url: str, dest_path: str) -> str:
         return "err"
 
 
-def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[int, int, int]:
-    total_ok = total_skip = total_err = 0
+def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[int, int, int, int]:
+    """Download new documents for each meeting. Mirrors the market-rules
+    downloaders: pre-computes new vs already-saved files per meeting and only
+    fetches the new ones. Returns (downloaded, skipped, errors, meetings_updated)."""
+    total_ok = total_skip = total_err = meetings_updated = 0
     for date_iso, cal_url in meetings:
         folder = os.path.join(base_dir, date_iso)
         print(f"  [{date_iso}]  {cal_url}")
@@ -224,27 +237,42 @@ def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[in
         if not doc_links:
             print("    (no downloadable documents found)")
             continue
-        print(f"    {len(doc_links)} document(s)  ->  {folder}")
-        os.makedirs(folder, exist_ok=True)
+
+        new_items = []
         for url in doc_links:
-            fname = sanitize(unquote(os.path.basename(urlparse(url).path)))
-            if not fname:
-                fname = "document.bin"
+            fname = sanitize(unquote(os.path.basename(urlparse(url).path))) or "document.bin"
             fname = safe_fname(fname, folder)
-            result = download_file(url, os.path.join(folder, fname))
+            dest = os.path.join(folder, fname)
+            if os.path.exists(dest):
+                total_skip += 1
+            else:
+                new_items.append((url, dest))
+
+        already = len(doc_links) - len(new_items)
+        if already:
+            print(f"    {already} file(s) already up to date.")
+        if not new_items:
+            print("    Nothing new to download.")
+            continue
+
+        print(f"    {len(new_items)} new file(s) (out of {len(doc_links)} total)  ->  {folder}")
+        os.makedirs(folder, exist_ok=True)
+        meetings_updated += 1
+        for url, dest in new_items:
+            result = download_file(url, dest)
             if result == "ok":
                 total_ok += 1
-            elif result == "skip":
-                total_skip += 1
             else:
                 total_err += 1
             time.sleep(REQUEST_DELAY)
-    return total_ok, total_skip, total_err
+    return total_ok, total_skip, total_err, meetings_updated
 
 
-def run_committee(abbrev: str, cfg: dict) -> tuple[int, int, int]:
+def run_committee(abbrev: str, cfg: dict) -> tuple[int, int, int, int]:
     base_dir = os.path.join(BASE_ROOT, abbrev)
     year_start = cfg["year_start"]
+    if SINCE_YEAR is not None:
+        year_start = max(year_start, SINCE_YEAR)
     no_year = cfg.get("no_year_pages", False)
 
     print(f"\n{'='*60}")
@@ -284,24 +312,121 @@ def run_committee(abbrev: str, cfg: dict) -> tuple[int, int, int]:
     return process_meetings(all_meetings, base_dir)
 
 
+def coverage_report(root: str, registry: dict, write_file: bool = True) -> str:
+    """Scan BASE_ROOT and summarize which committee folders are populated vs
+    empty, list date folders that exist but hold no files, and reconcile the
+    on-disk folders against the committee registry. Returns the report text and
+    (optionally) writes it to a timestamped file under BASE_ROOT.
+
+    This is the stakeholder-meetings analog of the market-rules Excel tracker:
+    a manifest of what is actually present on disk."""
+    lines = []
+    def out(s=""):
+        lines.append(s)
+
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    out(f"ERCOT Stakeholder Meetings — Coverage Report  ({ts})")
+    out(f"Root: {root}")
+    out("=" * 70)
+
+    if not os.path.isdir(root):
+        out("[ERR] Root folder does not exist.")
+        report = "\n".join(lines)
+        print(report)
+        return report
+
+    disk_dirs = sorted(d for d in os.listdir(root)
+                       if os.path.isdir(os.path.join(root, d)))
+    registry_keys = set(registry.keys())
+
+    populated, empty = [], []
+    partial_dates = {}  # committee -> [date folders with no files]
+    file_total = 0
+
+    for abbrev in disk_dirs:
+        cdir = os.path.join(root, abbrev)
+        date_dirs = [d for d in os.listdir(cdir)
+                     if os.path.isdir(os.path.join(cdir, d))]
+        empties = []
+        cfiles = 0
+        for d in date_dirs:
+            ddir = os.path.join(cdir, d)
+            n = sum(1 for f in os.listdir(ddir)
+                    if os.path.isfile(os.path.join(ddir, f)) and not f.endswith(".tmp"))
+            cfiles += n
+            if n == 0:
+                empties.append(d)
+        file_total += cfiles
+        if date_dirs and cfiles > 0:
+            populated.append((abbrev, len(date_dirs), cfiles))
+        else:
+            empty.append((abbrev, len(date_dirs)))
+        if empties:
+            partial_dates[abbrev] = sorted(empties)
+
+    out(f"\nPOPULATED committee folders ({len(populated)}):")
+    for abbrev, nmeet, nfiles in populated:
+        reg = "" if abbrev in registry_keys else "   [NOT IN REGISTRY]"
+        out(f"  {abbrev:<10} {nmeet:>4} meeting(s)  {nfiles:>6} file(s){reg}")
+
+    out(f"\nEMPTY / NON-FILLED committee folders ({len(empty)}):")
+    if empty:
+        for abbrev, nmeet in empty:
+            reg = "in registry" if abbrev in registry_keys else "NOT in registry — no downloader config"
+            detail = f"{nmeet} meeting folder(s), 0 files" if nmeet else "no meeting folders"
+            out(f"  {abbrev:<10} {detail}  ({reg})")
+    else:
+        out("  (none)")
+
+    missing = sorted(registry_keys - set(disk_dirs))
+    out(f"\nRegistry committees with NO folder on disk ({len(missing)}):")
+    out("  " + (", ".join(missing) if missing else "(none)"))
+
+    if partial_dates:
+        out(f"\nMeeting folders that exist but contain NO files:")
+        for abbrev in sorted(partial_dates):
+            out(f"  {abbrev}: {', '.join(partial_dates[abbrev])}")
+
+    out("\n" + "=" * 70)
+    out(f"Totals: {len(disk_dirs)} committee folder(s), "
+        f"{len(populated)} populated, {len(empty)} empty, {file_total} file(s).")
+
+    report = "\n".join(lines)
+    print("\n" + report)
+    if write_file:
+        path = os.path.join(root, f"coverage_report_{datetime.now().strftime('%Y%m%d')}.txt")
+        try:
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(report + "\n")
+            print(f"\n[report] written to {path}")
+        except OSError as exc:
+            print(f"\n[report] could not write file: {exc}")
+    return report
+
+
 def main():
     target = list(COMMITTEES.keys()) if COMMITTEES_TO_RUN is None else COMMITTEES_TO_RUN
-    grand_ok = grand_skip = grand_err = 0
+    grand_ok = grand_skip = grand_err = grand_meet = 0
 
     print(f"ERCOT Stakeholder Meeting Downloader — {len(target)} committee(s)")
-    print(f"Year range: up to {YEAR_END}")
+    print(f"Year range: {SINCE_YEAR if SINCE_YEAR is not None else 'full history'} .. {YEAR_END}")
 
     for abbrev in target:
         if abbrev not in COMMITTEES:
             print(f"\n[WARN] Unknown committee '{abbrev}' — skipping.")
             continue
-        ok, skip, err = run_committee(abbrev, COMMITTEES[abbrev])
+        ok, skip, err, meet = run_committee(abbrev, COMMITTEES[abbrev])
         grand_ok += ok
         grand_skip += skip
         grand_err += err
+        grand_meet += meet
 
     print(f"\n{'='*60}")
-    print(f"All done.  Downloaded: {grand_ok}  |  Skipped: {grand_skip}  |  Errors: {grand_err}")
+    print(f"All done.  Downloaded: {grand_ok} new file(s) across {grand_meet} meeting(s)  "
+          f"|  Skipped: {grand_skip}  |  Errors: {grand_err}")
+
+    # Coverage report over the full database (not just this run's scope).
+    coverage_report(BASE_ROOT, COMMITTEES)
 
 
 if __name__ == "__main__":
