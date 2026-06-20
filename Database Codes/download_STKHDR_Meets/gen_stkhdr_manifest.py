@@ -13,6 +13,10 @@ import re
 import json
 from datetime import datetime
 
+# Reuse the per-group leadership/voting metadata from the profile generator so
+# the group homepage can show a group summary before any meeting is selected.
+from gen_stkhdr_profiles import group_summary
+
 BASE = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.STKHDR.MEETS"
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -27,6 +31,7 @@ def committee_meetings(cdir):
             f for f in os.listdir(ddir)
             if os.path.isfile(os.path.join(ddir, f))
             and not f.endswith(".tmp")
+            and not f.lower().endswith(".zip")
             and f != "_manifest.json"
         )
         meetings.append({"date": d, "doc_count": len(docs), "docs": docs})
@@ -45,8 +50,13 @@ def main():
         if not os.path.isdir(cdir):
             continue
         meetings = committee_meetings(cdir)
+        full, chair, vc, gsum = group_summary(abbrev)
         manifest = {
             "committee": abbrev,
+            "committee_full_name": full,
+            "chair": chair,
+            "vice_chair": vc,
+            "group_summary": gsum,
             "generated": ts,
             "meeting_count": len(meetings),
             "meetings": meetings,

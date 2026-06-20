@@ -187,88 +187,117 @@ function CategoryIntroCard({ code }) {
 // it; falls back gracefully when the profile has not been generated yet — the
 // same pattern as RuleProfileCard.
 function MeetingProfileCard({ committee, date }) {
-  const [profile, setProfile] = React.useState(null);
+  const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
+  // "group" → group summary (default, from the manifest); "meeting" → a profile.
+  const mode = date ? "meeting" : "group";
 
   React.useEffect(() => {
-    if (!committee || !date) { setProfile(null); setError(null); setLoading(false); return; }
-    setLoading(true); setError(null); setProfile(null);
+    if (!committee) { setData(null); setError(null); setLoading(false); return; }
+    setLoading(true); setError(null); setData(null);
     const base = "/Power.Talks/Documents%20Database/ERCOT.STKHDR.MEETS";
-    const url = `${base}/${encodeURIComponent(committee)}/${encodeURIComponent(date)}/Quick%20runs/${encodeURIComponent(committee + "-" + date)}%20Profile.json`;
+    const url = date
+      ? `${base}/${encodeURIComponent(committee)}/${encodeURIComponent(date)}/Quick%20runs/${encodeURIComponent(committee + "-" + date)}%20Profile.json`
+      : `${base}/${encodeURIComponent(committee)}/_manifest.json`;
     fetch(url)
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then(d => { setProfile(d); setLoading(false); })
+      .then(d => { setData(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
   }, [committee, date]);
 
+  const monoLabel = { fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 };
   const Field = ({ label, value }) => (
     <div style={{ marginBottom: 10 }}>
-      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={monoLabel}>{label}</div>
       <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value || "—"}</div>
     </div>
   );
+  const Bullets = ({ items }) => (
+    <ul style={{ margin: "2px 0 10px", paddingLeft: 18, fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.5 }}>
+      {items.map((it, i) => <li key={i} style={{ marginBottom: 3 }}>{it}</li>)}
+    </ul>
+  );
 
-  if (!date) return <p className="pt-runs-note" style={{ color: "var(--muted)" }}>Select a meeting or document to see its profile.</p>;
-  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading profile…</div>;
+  if (!committee) return <p className="pt-runs-note" style={{ color: "var(--muted)" }}>Select a group to see its summary.</p>;
+  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading…</div>;
   if (error) {
     const net = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
     return (
       <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
         {net
-          ? <>No profile loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
-          : <>Profile not yet generated for {committee} {date}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>ERCOT Stakeholder Meeting Profile</span> skill to create it.</>}
+          ? <>Not loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
+          : mode === "meeting"
+          ? <>Profile not yet generated for {committee} {date}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>ERCOT Stakeholder Meeting Profile</span> skill to create it.</>
+          : <>No group summary on file for {committee}.</>}
       </div>
     );
   }
-  if (!profile) return null;
+  if (!data) return null;
 
-  const agenda = profile.agenda_items || [];
-  const ballots = profile.ballot_results || [];
-  const wgs = profile.working_group_reports || [];
-  const docs = profile.documents || [];
+  const group = data.group_summary || {};
+  const votingParties = group.voting_parties || [];
+
+  // Shared group summary block (leadership + voting parties + structure).
+  const GroupBlock = (
+    <>
+      <Field label="Chair" value={data.chair} />
+      <Field label="Vice Chair" value={data.vice_chair} />
+      {(group.overview || group.leadership || votingParties.length || group.voting_structure) && (
+        <>
+          <hr className="np-divider" />
+          <div className="np-sec-lbl">Group Summary</div>
+          {group.overview && <div className="np-body" style={{ marginBottom: 8 }}>{group.overview}</div>}
+          {group.leadership && <Field label="Leadership" value={group.leadership} />}
+          {votingParties.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={monoLabel}>Voting Parties</div>
+              <Bullets items={votingParties} />
+            </div>
+          )}
+          {group.voting_structure && <Field label="Voting Structure" value={group.voting_structure} />}
+        </>
+      )}
+    </>
+  );
+
+  // Default view: the group summary, shown as soon as a group is opened.
+  if (mode === "group") {
+    return (
+      <div>
+        <style>{NP_CARD_CSS}</style>
+        <div className="np-title">{data.committee_full_name || committee}</div>
+        {GroupBlock}
+        <hr className="np-divider" />
+        <p className="np-body" style={{ color: "var(--muted)" }}>Select a meeting to see its agenda and documents.</p>
+      </div>
+    );
+  }
+
+  // Meeting view: group summary + this meeting's agenda and documents.
+  const agenda = data.agenda_items || [];
+  // Defensive: never surface a .zip link even if an older profile listed one.
+  const docs = (data.documents || []).filter(d => !/\.zip$/i.test(String(d)));
 
   return (
     <div>
       <style>{NP_CARD_CSS}</style>
       <div className="np-status-row">
         <span className="np-num">{committee} · {date}</span>
-        {profile.meeting_type && <span className="np-badge" style={{ background: "var(--accent-soft)", color: "var(--accent-2)" }}>{profile.meeting_type}</span>}
+        {data.meeting_type && <span className="np-badge" style={{ background: "var(--accent-soft)", color: "var(--accent-2)" }}>{data.meeting_type}</span>}
       </div>
-      <div className="np-title">{profile.committee_full_name || committee}</div>
+      <div className="np-title">{data.committee_full_name || committee}</div>
 
-      <Field label="Chair" value={profile.chair} />
-      <Field label="Vice Chair" value={profile.vice_chair} />
+      {GroupBlock}
 
       <hr className="np-divider" />
       <div className="np-sec-lbl">Agenda Items</div>
       {agenda.length
-        ? <div className="np-body">{agenda.length} item(s): {agenda.slice(0, 6).join("; ")}{agenda.length > 6 ? "…" : ""}</div>
-        : <div className="np-body">—</div>}
-
-      <hr className="np-divider" />
-      <div className="np-sec-lbl">Working Group Reports</div>
-      {wgs.length
-        ? <div>{wgs.map((w, i) => <span key={i} className="np-reason-chip">{w}</span>)}</div>
-        : <div className="np-body">—</div>}
-
-      <hr className="np-divider" />
-      <div className="np-sec-lbl">Ballot Results</div>
-      {ballots.length
-        ? <div className="np-tl">
-            {ballots.slice(0, 8).map((b, i) => (
-              <div key={i} className="np-tl-row">
-                <div className="np-tl-dot" />
-                <span className="np-tl-date">{b.item || "—"}</span>
-                <span className="np-tl-ev"><b>{b.result || ""}</b>{b.for != null ? ` (${b.for}-${b.against}-${b.abstain || 0})` : ""}</span>
-              </div>
-            ))}
-          </div>
+        ? <Bullets items={agenda} />
         : <div className="np-body">—</div>}
 
       <hr className="np-divider" />
       <Field label="Documents on file" value={docs.length ? String(docs.length) : "—"} />
-      <Field label="Next meeting" value={profile.next_meeting_date} />
     </div>
   );
 }

@@ -50,8 +50,13 @@ Identify each file's role by keywords in the filename. Read all documents presen
 | `combined-ballot` / `ballot` / `Ballot` | Combined ballot (`.xls`) | Ballot items (NPRR/NOGRR/etc. numbers), vote counts, results |
 | `segment_representative` / `segment-rep` | Segment representatives | Chair name, Vice Chair name |
 | `_report_to_` / `Report-to-` / `report-to-ros` | Working group report (`.pptx`/`.docx`) | Reporting WG abbreviation |
-| `meeting-materials` / `Meeting-Materials` | Materials bundle (`.zip`) | Note presence only |
-| `Revision-Request` / `revision-request` | Revision request bundle (`.zip`) | Note presence only |
+| `meeting-materials` / `Meeting-Materials` | Materials bundle (`.zip`) | **Excluded** — `.zip` archives never appear in `documents` |
+| `Revision-Request` / `revision-request` | Revision request bundle (`.zip`) | **Excluded** — `.zip` archives never appear in `documents` |
+
+> **No ZIP links in the content window.** Any `.zip` file (case-insensitive) is
+> excluded from the `documents` array — matching the meeting manifest and the
+> group homepage, which never surface a zip link. Read inside a zip only if you
+> need its contents for another field; never list the zip itself.
 
 ---
 
@@ -100,12 +105,13 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
 | 5 | `calendar_url` | `https://www.ercot.com/calendar/MMDDYYYY-<SLUG>` |
 | 6 | `chair` | From segment reps doc or agenda opening |
 | 7 | `vice_chair` | From segment reps doc or agenda opening |
+| 7a | `group_summary` | Object summarizing the meeting **group** — leadership, voting parties, and mandate (see below). Independent of the individual meeting. |
 | 8 | `agenda_items` | Array of agenda item title strings, in order |
 | 9 | `ballot_results` | Array of `{item, motion, for, against, abstain, result}` objects from ballot `.xls` |
 | 10 | `working_group_reports` | Array of WG abbreviations that submitted a report (e.g. `["NDSWG", "PLWG", "DWG"]`) |
 | 11 | `key_discussion_topics` | Array of plain-text topic summaries from minutes |
 | 12 | `action_items` | Array of action items from minutes |
-| 13 | `documents` | Array of all filenames present in the meeting folder |
+| 13 | `documents` | Array of filenames in the meeting folder, **excluding `.zip` archives** (case-insensitive), `.tmp` files, and the manifest |
 | 14 | `next_meeting_date` | ISO 8601 if mentioned in minutes or agenda; otherwise `null` |
 
 ## JSON Template
@@ -119,6 +125,12 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
   "calendar_url": null,
   "chair": null,
   "vice_chair": null,
+  "group_summary": {
+    "overview": null,
+    "leadership": null,
+    "voting_parties": [],
+    "voting_structure": null
+  },
   "agenda_items": [],
   "ballot_results": [],
   "working_group_reports": [],
@@ -142,19 +154,60 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
 }
 ```
 
+## group_summary — the meeting group profile
+
+`group_summary` describes the **committee/group itself**, not the single meeting.
+It is the same across every meeting of a group, so it can be reused; refresh it
+from the live group page only when leadership changes.
+
+| Key | Content | Source |
+|-----|---------|--------|
+| `overview` | 1–2 sentences on the group's mandate and where it sits in the stakeholder hierarchy | `ERCOT Introduction.md` / `ERCOT Stakeholder Org Chart.md`; group's `ercot.com/committees/<path>` page |
+| `leadership` | Plain-text summary of current leadership, e.g. `Chair: Sandeep Borkar; Vice Chair: Shane Thomas` plus any notes (newly promoted, co-chairs, vacancy) | "Latest … Chair/VC" table in `ERCOT Stakeholder Meetings Links.md` §1; segment-rep doc if present |
+| `voting_parties` | Array of the voting blocs/members that hold a vote in this group | Segment-rep doc; ERCOT market-segment model (see below) |
+| `voting_structure` | How votes are cast and tallied (segment-weighted voting, simple/​two-thirds majority, advisory-only) | Group charter / `ERCOT Introduction.md` |
+
+**ERCOT market-segment voting model.** TAC and its subordinate subcommittees
+(PRS, ROS, RMS, WMS) and most working groups vote by **market segment**, not by
+headcount. The standard voting segments are:
+
+```
+Consumer · Cooperative · Independent Generator · Independent Power Marketer ·
+Independent Retail Electric Provider · Investor Owned Utility · Municipal
+```
+
+When a segment-representative document is present, list the actual member
+companies/representatives per segment in `voting_parties`. Otherwise populate
+`voting_parties` with the standard segments above and note in `voting_structure`
+that the group uses ERCOT market-segment voting. Working groups that are advisory
+(report up rather than ballot) should say so in `voting_structure` and may leave
+`voting_parties` as `[]`.
+
+**Example (`group_summary` for ROS):**
+
+```json
+{
+  "overview": "The Reliability and Operations Subcommittee (ROS) reports to TAC and oversees ERCOT system reliability, operations, planning, and protocol revisions in its domain, coordinating a dozen technical working groups.",
+  "leadership": "Chair: Sandeep Borkar (promoted from Vice Chair); Vice Chair: Shane Thomas",
+  "voting_parties": ["Consumer", "Cooperative", "Independent Generator", "Independent Power Marketer", "Independent Retail Electric Provider", "Investor Owned Utility", "Municipal"],
+  "voting_structure": "ERCOT market-segment voting; revision requests and recommendations carried to TAC by majority of segments present."
+}
+```
+
 ---
 
 ## Steps
 
 1. Identify committee abbreviation and meeting date from the user's request.
 2. List all files in `Documents Database/ERCOT.STKHDR.MEETS/<COMMITTEE>/YYYY-MM-DD/`.
-3. Populate the `documents` field with all filenames found.
+3. Populate the `documents` field with the filenames found, **excluding any `.zip` archive (case-insensitive), `.tmp` files, and the manifest** — no zip link ever appears in the content window.
 4. Read each document in order of priority: segment reps → agenda → ballot → minutes → WG reports.
-5. Extract all fields. For `ballot_results`, parse the combined ballot `.xls`; for individual separate ballots, add one entry per file.
-6. Infer `meeting_type` from the calendar URL slug if the agenda does not state it explicitly (see `ERCOT Stakeholder Meetings Links.md` §2.3).
-7. Ensure `Quick runs/` exists under the meeting date folder.
-8. Write the JSON file with 2-space indentation.
-9. Report the saved path and list any fields that could not be populated.
+5. Build `group_summary` (leadership, voting parties, voting structure, overview) from the group's leadership table in `ERCOT Stakeholder Meetings Links.md` §1 and the ERCOT market-segment model; reuse an existing group profile if leadership is unchanged.
+6. Extract all remaining fields. For `ballot_results`, parse the combined ballot `.xls`; for individual separate ballots, add one entry per file.
+7. Infer `meeting_type` from the calendar URL slug if the agenda does not state it explicitly (see `ERCOT Stakeholder Meetings Links.md` §2.3).
+8. Ensure `Quick runs/` exists under the meeting date folder.
+9. Write the JSON file with 2-space indentation.
+10. Report the saved path and list any fields that could not be populated.
 
 ---
 
@@ -166,5 +219,6 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
 | Wrong file name | Must be `<COMMITTEE>-YYYY-MM-DD Profile.json` — e.g. `ROS-2025-01-09 Profile.json` |
 | Skipping `.doc` files | Use win32com for all `.doc` files; python-docx only handles `.docx` |
 | Treating a draft ballot as the final ballot | Use the `APPROVED-Minutes` doc to verify vote outcomes if a draft ballot differs |
-| Omitting the `documents` field | Always list all files present, even ZIPs and files you could not read |
+| Listing `.zip` archives in `documents` | Exclude every `.zip` (case-insensitive) — they never appear in the content window; still list non-zip files you could not read |
+| Leaving `group_summary` empty | Always populate leadership + voting parties from the §1 leadership table and the ERCOT market-segment model |
 | Leaving `[]` fields as `null` | Array fields must be `[]` when empty, never `null` |

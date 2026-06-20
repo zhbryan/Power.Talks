@@ -54,7 +54,9 @@ Shape:
   "meetings": [ { "date": "2026-05-19", "doc_count": 12, "docs": ["…", "…"] }, … ] }
 ```
 
-Meetings are newest-first; `docs` excludes `.tmp` files and the manifest itself.
+Meetings are newest-first; `docs` excludes `.tmp` files, **`.zip` archives**
+(case-insensitive — no zip link ever shows in the document list, and `doc_count`
+does not count them), and the manifest itself.
 Fetched at `/Power.Talks/Documents%20Database/ERCOT.STKHDR.MEETS/<COMMITTEE>/_manifest.json`.
 
 **Regenerate after every download run:**
@@ -103,8 +105,9 @@ needed) add an alias.
 2. Hard-refresh, open Meeting Tracks, click a group name (e.g. *Technical
    Advisory Committee*).
 3. Confirm: year sections (current expanded, past collapsed) with meeting/doc
-   counts; expanding a meeting lists its documents; the right panel shows
-   "For the talk" + "Artifacts" (full 7); a document opens its Item homepage.
+   counts; expanding a meeting lists its documents (**no `.zip` files appear**);
+   the right panel shows "For the talk" + "Artifacts" (full 7); a document opens
+   its Item homepage.
 
 ## Common Mistakes
 
