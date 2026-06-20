@@ -759,28 +759,74 @@ function SunsetGroupsPanel() {
   );
 }
 
-function MeetingTracksOrgChart({ selected, onSelect }) {
-  const [expanded, setExpanded] = React.useState({ TAC: true });
+// Map tree node ids to the document-database committee folder when they differ
+// (the org tree predates the downloader's committee abbreviations).
+const GROUP_ALIAS = {
+  BOD: "BOARD",     // root: ERCOT Board of Directors
+  PLWG: "PRS",      // the tree's PRS node carries id "PLWG"
+  SAWG: "SPWG",     // tree's ROS "System Protection WG" → DB SPWG
+  SAWG2: "SAWG",    // tree's WMS "Supply Analysis WG" → DB SAWG
+  TDTWG: "TDTMS",   // tree's "Texas Data Transport WG" → DB TDTMS
+};
+
+// Resolve a tree node to a committee folder, or null for non-committee folders
+// (the Sunsetted root and its per-parent grouping nodes).
+function resolveCommittee(node) {
+  if (node.id === "SUNSET" || node.id.startsWith("sunset-grp-")) return null;
+  if (node.id.startsWith("sunset-")) return node.tag;
+  return GROUP_ALIAS[node.id] || node.tag;
+}
+
+function MeetingTracksOrgChart({ onGroupClick }) {
+  // Full ERCOT stakeholder process: the active committee tree plus a
+  // collapsible "Sunsetted / Inactive Groups" branch grouped by parent.
+  const roots = React.useMemo(() => {
+    const byParent = {};
+    SUNSET_GROUPS.forEach(g => { (byParent[g.parent] = byParent[g.parent] || []).push(g); });
+    const sunsetFolder = {
+      id: "SUNSET", tag: "Inactive", name: "Sunsetted / Inactive Groups",
+      children: SUNSET_PARENTS.filter(p => p !== "All" && byParent[p]).map(p => ({
+        id: "sunset-grp-" + p, tag: p, name: p + " — sunsetted groups",
+        children: byParent[p].map(g => ({ id: "sunset-" + g.tag, tag: g.tag, name: g.name })),
+      })),
+    };
+    return [ERCOT_ORG, sunsetFolder];
+  }, []);
+
+  // Active hierarchy starts fully expanded so the whole structure is visible;
+  // the Sunsetted branch starts collapsed.
+  const [expanded, setExpanded] = React.useState(() => {
+    const exp = {};
+    const walk = (n) => { if ((n.children || []).length) { exp[n.id] = true; n.children.forEach(walk); } };
+    walk(ERCOT_ORG);
+    return exp;
+  });
   const toggle = (id) => setExpanded(e => ({ ...e, [id]: !e[id] }));
 
-  const selectedNode = React.useMemo(() => {
-    const findNode = (n, id) => {
-      if (n.id === id) return n;
-      for (const c of n.children || []) { const f = findNode(c, id); if (f) return f; }
-      return null;
-    };
-    return findNode(ERCOT_ORG, selected) || ERCOT_ORG;
-  }, [selected]);
-
-  const records = MEETING_RECORDS[selectedNode.id] || DEFAULT_RECORDS;
+  const FolderIcon = ({ open }) => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      {open
+        ? <path d="M3 8h5l2-2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+        : <path d="M3 7a1 1 0 0 1 1-1h4l2 2h9a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>}
+    </svg>
+  );
+  const FileIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>
+    </svg>
+  );
 
   const renderNode = (node, depth = 0) => {
-    const isOpen = expanded[node.id];
+    const isOpen = !!expanded[node.id];
     const hasKids = (node.children || []).length > 0;
-    const isSel = node.id === selectedNode.id;
     return (
       <div key={node.id} className="mt-row-wrap">
-        <div className={`mt-node depth-${depth} ${isSel ? "is-sel" : ""}`} onClick={() => onSelect(node.id)}>
+        <div className={`mt-node depth-${depth}`}
+          onClick={() => {
+            const committee = resolveCommittee(node);
+            if (committee && onGroupClick) onGroupClick(committee, node.name);
+            else if (hasKids) toggle(node.id);
+          }}>
           {hasKids ? (
             <button className="mt-chev" onClick={(e) => { e.stopPropagation(); toggle(node.id); }}
               aria-label={isOpen ? "Collapse" : "Expand"}>
@@ -789,6 +835,7 @@ function MeetingTracksOrgChart({ selected, onSelect }) {
               </svg>
             </button>
           ) : <span className="mt-chev-spacer"/>}
+          <span className="mt-ficon">{hasKids ? <FolderIcon open={isOpen}/> : <FileIcon/>}</span>
           <span className="mt-tag">{node.tag}</span>
           <span className="mt-name">{node.name}</span>
           {hasKids && <span className="mt-count">{node.children.length}</span>}
@@ -800,9 +847,6 @@ function MeetingTracksOrgChart({ selected, onSelect }) {
     );
   };
 
-  const kidCount = (selectedNode.children || []).length;
-  const parentLabel = selectedNode.id === "BOD" ? "" : selectedNode.id === "TAC" ? "Board" : "TAC";
-
   return (
     <React.Fragment>
       <div className="pt-orgchart">
@@ -812,11 +856,10 @@ function MeetingTracksOrgChart({ selected, onSelect }) {
             background:
               radial-gradient(120% 80% at 0% 0%, var(--accent-soft) 0%, transparent 55%),
               linear-gradient(180deg, var(--panel), var(--bg-2));
-            border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-1);
-            display: grid; grid-template-columns: 1.3fr 1fr; gap: 22px;
+            border-radius: var(--radius); padding: 22px 24px 26px; box-shadow: var(--shadow-1);
+            display: block;
             position: relative; overflow: hidden; margin-bottom: 16px;
           }
-          @media (max-width: 820px) { .pt-orgchart { grid-template-columns: 1fr; } }
           .pt-orgchart::before {
             content: ""; position: absolute; inset: 0;
             background-image: repeating-linear-gradient(90deg, rgba(27,26,23,.03) 0 1px, transparent 1px 28px);
@@ -837,6 +880,8 @@ function MeetingTracksOrgChart({ selected, onSelect }) {
           .mt-chev { width: 18px; height: 18px; border-radius: 4px; display: grid; place-items: center; color: inherit; background: transparent; }
           .mt-chev:hover { background: color-mix(in oklab, currentColor, transparent 85%); }
           .mt-chev-spacer { width: 18px; height: 18px; display: inline-block; }
+          .mt-ficon { display: grid; place-items: center; color: var(--accent-2); flex: 0 0 auto; }
+          .mt-node.depth-0 .mt-ficon { color: var(--accent); }
           .mt-tag { font-family: var(--mono); font-size: 10.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: var(--bg-2); color: var(--ink-2); letter-spacing: .02em; flex: 0 0 auto; }
           .mt-name { flex: 1; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .mt-count { font-family: var(--mono); font-size: 10.5px; color: var(--muted); padding: 0 6px; border-radius: 999px; border: 1px solid var(--rule-2); }
@@ -850,28 +895,195 @@ function MeetingTracksOrgChart({ selected, onSelect }) {
 
         <div>
           <div className="mt-head-eye">Meeting Tracks</div>
-          <h2 className="mt-head-title">ERCOT stakeholder process</h2>
-          <div className="mt-head-sub">Click any node to inspect its meeting records.</div>
-          <div className="mt-tree">{renderNode(ERCOT_ORG)}</div>
-        </div>
-
-        <div className="mt-detail">
-          <span className="mt-detail-tag">{selectedNode.tag}</span>
-          <div className="mt-detail-name">{selectedNode.name}</div>
-          <div className="mt-detail-sub">
-            {kidCount > 0 ? `${kidCount} subgroup${kidCount === 1 ? "" : "s"}` : "Working group"}
-            {parentLabel ? ` · reports to ${parentLabel}` : ""}
-          </div>
-          <NodeInfoPanel node={selectedNode} />
+          <h2 className="mt-head-title">ERCOT Stakeholder Process</h2>
+          <div className="mt-head-sub">Click a group name to open its meetings; use the chevron to expand or collapse.</div>
+          <div className="mt-tree">{roots.map(r => renderNode(r))}</div>
         </div>
       </div>
-
-      <SunsetGroupsPanel/>
     </React.Fragment>
   );
 }
 
 window.MeetingTracksOrgChart = MeetingTracksOrgChart;
+
+// ─── Meeting Tracks — Group homepage ─────────────────────────────────────────
+// Shown when a group name is clicked in the tree. Lists the group's meetings,
+// grouped by year (current year expanded, past years collapsed); each meeting
+// shows its date and document count, expandable to a document list (collapsed
+// by default). Each document opens its Item homepage via onDocClick.
+const STK_BASE = "/Power.Talks/Documents%20Database/ERCOT.STKHDR.MEETS";
+
+function docExt(name) {
+  const m = /\.([a-z0-9]+)$/i.exec(name || "");
+  return m ? m[1].toLowerCase() : "";
+}
+
+function MeetingTracksGroupHome({ committee, groupName, onBack, onDocClick, onMeetingFocus }) {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [openYears, setOpenYears] = React.useState({});
+  const [openMeetings, setOpenMeetings] = React.useState({});
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setData(null);
+    fetch(`${STK_BASE}/${encodeURIComponent(committee)}/_manifest.json`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => {
+        setData(d); setLoading(false);
+        const cur = String(new Date().getFullYear());
+        const years = {};
+        (d.meetings || []).forEach(m => { years[m.date.slice(0, 4)] = m.date.slice(0, 4) === cur; });
+        setOpenYears(years);
+      })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [committee]);
+
+  const byYear = React.useMemo(() => {
+    const groups = {};
+    (data && data.meetings ? data.meetings : []).forEach(m => {
+      (groups[m.date.slice(0, 4)] = groups[m.date.slice(0, 4)] || []).push(m);
+    });
+    return Object.keys(groups).sort((a, b) => b.localeCompare(a)).map(y => [y, groups[y]]);
+  }, [data]);
+
+  const toggleYear = (y) => setOpenYears(s => ({ ...s, [y]: !s[y] }));
+  const toggleMeeting = (date) => {
+    setOpenMeetings(s => ({ ...s, [date]: !s[date] }));
+    if (onMeetingFocus) onMeetingFocus(date);
+  };
+
+  return (
+    <div className="mt-group">
+      <style>{`
+        .mt-group { border: 1px solid var(--rule); background: linear-gradient(180deg, var(--panel), var(--bg-2)); border-radius: var(--radius); padding: 18px 22px 24px; box-shadow: var(--shadow-1); margin-bottom: 16px; }
+        .mt-group-back { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--accent-2); cursor: pointer; background: none; border: 0; padding: 4px 0; margin-bottom: 10px; }
+        .mt-group-back:hover { color: var(--accent); }
+        .mt-group-eye { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+        .mt-group-title { font-family: var(--serif); font-size: 26px; line-height: 1.1; margin: 2px 0 4px; font-weight: 400; color: var(--ink); }
+        .mt-group-sub { color: var(--ink-2); font-size: 13px; margin-bottom: 16px; }
+        .mt-year { border-top: 1px solid var(--rule); }
+        .mt-year-hd { display: flex; align-items: center; gap: 9px; padding: 11px 4px; cursor: pointer; }
+        .mt-year-hd:hover { background: var(--bg-2); }
+        .mt-year-chev { width: 16px; transition: transform .15s; color: var(--muted); flex: 0 0 auto; }
+        .mt-year-name { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--ink); }
+        .mt-year-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+        .mt-mtg { margin: 1px 0 1px 26px; }
+        .mt-mtg-hd { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+        .mt-mtg-hd:hover { background: var(--accent-soft); border-color: var(--rule-2); }
+        .mt-mtg-chev { width: 14px; color: var(--muted); transition: transform .15s; flex: 0 0 auto; }
+        .mt-mtg-date { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--accent-2); min-width: 104px; flex: 0 0 auto; }
+        .mt-mtg-count { font-size: 12px; color: var(--ink-2); }
+        .mt-docs { margin: 2px 0 6px 40px; border-left: 1px dashed var(--rule-2); padding-left: 12px; }
+        .mt-doc { display: flex; align-items: center; gap: 9px; padding: 5px 8px; border-radius: 6px; cursor: pointer; color: var(--ink-2); }
+        .mt-doc:hover { background: var(--bg-2); color: var(--ink); }
+        .mt-doc-ext { font-family: var(--mono); font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 5px; border-radius: 4px; background: var(--accent-soft); color: var(--accent-2); min-width: 34px; text-align: center; flex: 0 0 auto; }
+        .mt-doc-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mt-group-note { font-size: 12.5px; color: var(--muted); font-family: var(--mono); padding: 24px 4px; }
+      `}</style>
+
+      <button className="mt-group-back" onClick={onBack}>← ERCOT Stakeholder Process</button>
+      <div className="mt-group-eye">Meeting Tracks · {committee}</div>
+      <h2 className="mt-group-title">{groupName || committee}</h2>
+
+      {loading && <div className="mt-group-note">Loading meetings…</div>}
+      {error && (
+        <div className="mt-group-note">
+          {error.includes("404")
+            ? `No downloaded meetings on file for ${committee} yet.`
+            : error.toLowerCase().includes("failed to fetch")
+            ? "Open via http://localhost, not file://."
+            : `Could not load meetings. (${error})`}
+        </div>
+      )}
+      {data && (
+        <>
+          <div className="mt-group-sub">{data.meeting_count} meeting(s) on file.</div>
+          {byYear.map(([year, meetings]) => {
+            const yOpen = !!openYears[year];
+            const yDocs = meetings.reduce((s, m) => s + m.doc_count, 0);
+            return (
+              <div className="mt-year" key={year}>
+                <div className="mt-year-hd" onClick={() => toggleYear(year)}>
+                  <svg className="mt-year-chev" width="14" height="14" viewBox="0 0 24 24" style={{ transform: yOpen ? "rotate(90deg)" : "none" }}>
+                    <path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="mt-year-name">{year}</span>
+                  <span className="mt-year-meta">{meetings.length} meeting(s) · {yDocs} doc(s)</span>
+                </div>
+                {yOpen && meetings.map(m => {
+                  const mOpen = !!openMeetings[m.date];
+                  return (
+                    <div className="mt-mtg" key={m.date}>
+                      <div className="mt-mtg-hd" onClick={() => toggleMeeting(m.date)}>
+                        <svg className="mt-mtg-chev" width="12" height="12" viewBox="0 0 24 24" style={{ transform: mOpen ? "rotate(90deg)" : "none" }}>
+                          <path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span className="mt-mtg-date">{m.date}</span>
+                        <span className="mt-mtg-count">{m.doc_count} document{m.doc_count === 1 ? "" : "s"}</span>
+                      </div>
+                      {mOpen && (
+                        <div className="mt-docs">
+                          {m.docs.map(f => (
+                            <div className="mt-doc" key={f} title={f}
+                              onClick={() => onDocClick && onDocClick(committee, m.date, f)}>
+                              <span className="mt-doc-ext">{docExt(f) || "?"}</span>
+                              <span className="mt-doc-name">{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </>
+      )}
+    </div>
+  );
+}
+
+window.MeetingTracksGroupHome = MeetingTracksGroupHome;
+
+// ─── Meeting Tracks — Item (document) homepage ───────────────────────────────
+// Shown when a document is clicked in a group homepage. Displays the document's
+// metadata and a link to open the actual file served from WAMP.
+function MeetingTracksItemHome({ committee, date, file, groupName, onBack }) {
+  const url = `${STK_BASE}/${encodeURIComponent(committee)}/${encodeURIComponent(date)}/${encodeURIComponent(file)}`;
+  const ext = docExt(file);
+  const TYPE = {
+    pdf: "PDF document", doc: "Word document", docx: "Word document",
+    xls: "Excel workbook", xlsx: "Excel workbook", ppt: "PowerPoint", pptx: "PowerPoint",
+    zip: "Document bundle (ZIP)",
+  };
+  return (
+    <div className="mt-item">
+      <style>{`
+        .mt-item { border: 1px solid var(--rule); background: linear-gradient(180deg, var(--panel), var(--bg-2)); border-radius: var(--radius); padding: 18px 22px 26px; box-shadow: var(--shadow-1); margin-bottom: 16px; max-width: 760px; }
+        .mt-item-back { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--accent-2); cursor: pointer; background: none; border: 0; padding: 4px 0; margin-bottom: 12px; }
+        .mt-item-back:hover { color: var(--accent); }
+        .mt-item-eye { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+        .mt-item-name { font-family: var(--serif); font-size: 22px; line-height: 1.25; margin: 4px 0 14px; font-weight: 400; color: var(--ink); word-break: break-word; }
+        .mt-item-field { margin-bottom: 11px; }
+        .mt-item-lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+        .mt-item-val { font-size: 13px; color: var(--ink-2); }
+        .mt-item-open { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; padding: 9px 16px; border-radius: 9px; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600; text-decoration: none; }
+        .mt-item-open:hover { background: var(--accent); }
+      `}</style>
+      <button className="mt-item-back" onClick={onBack}>← {groupName || committee} meetings</button>
+      <div className="mt-item-eye">{committee} · {date}</div>
+      <div className="mt-item-name">{file}</div>
+      <div className="mt-item-field"><div className="mt-item-lbl">Committee</div><div className="mt-item-val">{committee}</div></div>
+      <div className="mt-item-field"><div className="mt-item-lbl">Meeting date</div><div className="mt-item-val">{date}</div></div>
+      <div className="mt-item-field"><div className="mt-item-lbl">Document type</div><div className="mt-item-val">{TYPE[ext] || (ext ? ext.toUpperCase() + " file" : "Document")}</div></div>
+      <a className="mt-item-open" href={url} target="_blank" rel="noopener noreferrer"><I.Globe size={15}/> Open document</a>
+    </div>
+  );
+}
+
+window.MeetingTracksItemHome = MeetingTracksItemHome;
 
 // ─── ERCOT Stakeholder Org Chart (in-app panel) ──────────────────────────────
 // Native React version of the chart defined by the "ERCOT Stakeholder Org

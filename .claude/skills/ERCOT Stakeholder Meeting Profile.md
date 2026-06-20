@@ -11,7 +11,7 @@ Creates a structured JSON profile file for a specific ERCOT stakeholder committe
 
 ## Scope — Active Committees
 
-This skill applies to all in-scope committees listed in `ERCOT_Stakeholder_Meetings_Links.md`. Use the exact abbreviations from that file:
+This skill applies to all in-scope committees listed in `ERCOT Stakeholder Meetings Links.md`. Use the exact abbreviations from that file:
 
 `Board` · `FA` · `HRG` · `TS` · `TAC` · `LLWG` · `CFSG` · `RTCBTF` · `PRS` · `RMS` · `TDTMS` · `RMTTF` · `ROS` · `IBRWG` · `BSWG` · `DWG` · `MWG` · `NDSWG` · `OWG` · `OTWG` · `PDCWG` · `PLWG` · `SPWG` · `SSWG` · `VPWG` · `WMS` · `CMWG` · `DSWG` · `SAWG` · `WMWG` · `IBRTF`
 
@@ -94,7 +94,7 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
 | # | JSON Key | Source |
 |---|----------|--------|
 | 1 | `committee` | Committee abbreviation (from user input) |
-| 2 | `committee_full_name` | Full name from `ERCOT_Stakeholder_Meetings_Links.md` |
+| 2 | `committee_full_name` | Full name from `ERCOT Stakeholder Meetings Links.md` |
 | 3 | `meeting_date` | ISO 8601 date (YYYY-MM-DD) |
 | 4 | `meeting_type` | `Regular` / `WebEx` / `Email Vote` / `Special` / `Joint` / `Info Session` — infer from calendar URL slug or agenda text |
 | 5 | `calendar_url` | `https://www.ercot.com/calendar/MMDDYYYY-<SLUG>` |
@@ -151,7 +151,7 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
 3. Populate the `documents` field with all filenames found.
 4. Read each document in order of priority: segment reps → agenda → ballot → minutes → WG reports.
 5. Extract all fields. For `ballot_results`, parse the combined ballot `.xls`; for individual separate ballots, add one entry per file.
-6. Infer `meeting_type` from the calendar URL slug if the agenda does not state it explicitly (see `ERCOT_Stakeholder_Meetings_Links.md` §2.3).
+6. Infer `meeting_type` from the calendar URL slug if the agenda does not state it explicitly (see `ERCOT Stakeholder Meetings Links.md` §2.3).
 7. Ensure `Quick runs/` exists under the meeting date folder.
 8. Write the JSON file with 2-space indentation.
 9. Report the saved path and list any fields that could not be populated.

@@ -182,6 +182,97 @@ function CategoryIntroCard({ code }) {
   );
 }
 
+// Quick runs "For the talk" card for a Meeting Tracks meeting. Fetches the
+// meeting's Profile.json (ERCOT Stakeholder Meeting Profile skill) and renders
+// it; falls back gracefully when the profile has not been generated yet — the
+// same pattern as RuleProfileCard.
+function MeetingProfileCard({ committee, date }) {
+  const [profile, setProfile] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!committee || !date) { setProfile(null); setError(null); setLoading(false); return; }
+    setLoading(true); setError(null); setProfile(null);
+    const base = "/Power.Talks/Documents%20Database/ERCOT.STKHDR.MEETS";
+    const url = `${base}/${encodeURIComponent(committee)}/${encodeURIComponent(date)}/Quick%20runs/${encodeURIComponent(committee + "-" + date)}%20Profile.json`;
+    fetch(url)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setProfile(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, [committee, date]);
+
+  const Field = ({ label, value }) => (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value || "—"}</div>
+    </div>
+  );
+
+  if (!date) return <p className="pt-runs-note" style={{ color: "var(--muted)" }}>Select a meeting or document to see its profile.</p>;
+  if (loading) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11 }}>Loading profile…</div>;
+  if (error) {
+    const net = error.toLowerCase().includes("failed to fetch") || error.toLowerCase().includes("networkerror");
+    return (
+      <div style={{ padding: "12px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>
+        {net
+          ? <>No profile loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</>
+          : <>Profile not yet generated for {committee} {date}.<br/>Run the <span style={{ color: "var(--accent-2)" }}>ERCOT Stakeholder Meeting Profile</span> skill to create it.</>}
+      </div>
+    );
+  }
+  if (!profile) return null;
+
+  const agenda = profile.agenda_items || [];
+  const ballots = profile.ballot_results || [];
+  const wgs = profile.working_group_reports || [];
+  const docs = profile.documents || [];
+
+  return (
+    <div>
+      <style>{NP_CARD_CSS}</style>
+      <div className="np-status-row">
+        <span className="np-num">{committee} · {date}</span>
+        {profile.meeting_type && <span className="np-badge" style={{ background: "var(--accent-soft)", color: "var(--accent-2)" }}>{profile.meeting_type}</span>}
+      </div>
+      <div className="np-title">{profile.committee_full_name || committee}</div>
+
+      <Field label="Chair" value={profile.chair} />
+      <Field label="Vice Chair" value={profile.vice_chair} />
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Agenda Items</div>
+      {agenda.length
+        ? <div className="np-body">{agenda.length} item(s): {agenda.slice(0, 6).join("; ")}{agenda.length > 6 ? "…" : ""}</div>
+        : <div className="np-body">—</div>}
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Working Group Reports</div>
+      {wgs.length
+        ? <div>{wgs.map((w, i) => <span key={i} className="np-reason-chip">{w}</span>)}</div>
+        : <div className="np-body">—</div>}
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Ballot Results</div>
+      {ballots.length
+        ? <div className="np-tl">
+            {ballots.slice(0, 8).map((b, i) => (
+              <div key={i} className="np-tl-row">
+                <div className="np-tl-dot" />
+                <span className="np-tl-date">{b.item || "—"}</span>
+                <span className="np-tl-ev"><b>{b.result || ""}</b>{b.for != null ? ` (${b.for}-${b.against}-${b.abstain || 0})` : ""}</span>
+              </div>
+            ))}
+          </div>
+        : <div className="np-body">—</div>}
+
+      <hr className="np-divider" />
+      <Field label="Documents on file" value={docs.length ? String(docs.length) : "—"} />
+      <Field label="Next meeting" value={profile.next_meeting_date} />
+    </div>
+  );
+}
+
 const ERCOT_HOME_ARTIFACTS = [
   {
     id: "ercot-a1",
@@ -216,16 +307,23 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const hasNogrr = Boolean(ctx.nogrr);
   const hasRmgrr = Boolean(ctx.rmgrr);
   const isErcotHome = ctx.section === "market-home";
+  const isMeetingTracks = ctx.section === "meeting-tracks";
+  // A Meeting Tracks group/item homepage is open (vs the tree landing view).
+  const isMeetingGroup = isMeetingTracks && Boolean(ctx.meetingGroup || ctx.meetingDoc);
+  // The Meeting Tracks tree landing (no group selected) — behaves like ERCOT home.
+  const onMeetingTree = isMeetingTracks && !isMeetingGroup;
 
   const hasIssue = hasNprr || hasCopmgrr || hasPgrr || hasScr || hasNogrr || hasRmgrr;
   const isCategoryHome = ctx.section === "paper-trails" && Boolean(ctx.code) && !hasIssue;
 
-  // Category homepage shows a trimmed artifact set; the item-rule homepage
-  // (issue selected) and all other sections show the full ARTIFACTS list.
+  // Trimmed artifact set on: the Paper Trails category homepage and the Meeting
+  // Tracks tree landing. Full ARTIFACTS (the Market Rules setting) on the
+  // item-rule homepage, the Meeting Tracks group/item homepage, and elsewhere.
+  // ERCOT home has its own list.
   const allArtifacts = ARTIFACTS || [];
   const activeArtifacts = isErcotHome
     ? ERCOT_HOME_ARTIFACTS
-    : isCategoryHome
+    : (isCategoryHome || onMeetingTree)
     ? allArtifacts.filter(a => !CATEGORY_HIDDEN_ARTIFACT_IDS.includes(a.id))
     : allArtifacts;
 
@@ -233,9 +331,15 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
     if (hasIssue) setTab("runs");
   }, [ctx.nprr, ctx.copmgrr, ctx.pgrr, ctx.scr, ctx.nogrr, ctx.rmgrr]);
 
+  // ERCOT home and the Meeting Tracks tree landing have no "For the talk" tab —
+  // force Artifacts. A Meeting Tracks group/item opens to "For the talk".
   React.useEffect(() => {
-    if (isErcotHome) setTab("artifacts");
-  }, [isErcotHome]);
+    if (isErcotHome || onMeetingTree) setTab("artifacts");
+  }, [isErcotHome, onMeetingTree]);
+
+  React.useEffect(() => {
+    if (isMeetingGroup) setTab("runs");
+  }, [isMeetingGroup, ctx.meetingGroup, ctx.meetingDate, ctx.meetingDoc]);
 
   // Default back to "For the talk" whenever a category homepage becomes the
   // active context (navigating between categories or back from an issue).
@@ -380,7 +484,7 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
       </div>
 
       <div className="pt-right-tabs">
-        {!isErcotHome && (
+        {!isErcotHome && !onMeetingTree && (
           <button
             className={`pt-right-tab ${tab === "runs" ? "is-on" : ""}`}
             onClick={() => setTab("runs")}
@@ -393,8 +497,10 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
       </div>
 
       <div className="pt-right-scroll">
-        {tab === "runs" && !isErcotHome && (
-          hasNprr
+        {tab === "runs" && !isErcotHome && !onMeetingTree && (
+          isMeetingGroup
+            ? <MeetingProfileCard committee={ctx.meetingGroup || (ctx.meetingDoc && ctx.meetingDoc.committee)} date={ctx.meetingDate} />
+            : hasNprr
             ? <RuleProfileCard cat="NPRR" num={ctx.nprr} />
             : hasCopmgrr
             ? <RuleProfileCard cat="COPMGRR" num={ctx.copmgrr} />

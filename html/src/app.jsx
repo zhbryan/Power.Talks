@@ -42,7 +42,11 @@ function App() {
   const [activeMarket, setActiveMarket] = React.useState("ERCOT");
   const [activeSection, setActiveSection] = React.useState("market-home");
   const [activePaperCode, setActivePaperCode] = React.useState("NPRR");
-  const [activeMeetingNode, setActiveMeetingNode] = React.useState("BOD");
+  // Meeting Tracks navigation: tree → group homepage → item (document) homepage.
+  const [activeMeetingGroup, setActiveMeetingGroup] = React.useState(null);   // committee folder
+  const [activeMeetingGroupName, setActiveMeetingGroupName] = React.useState("");
+  const [activeMeetingDate, setActiveMeetingDate] = React.useState(null);     // focused meeting
+  const [activeMeetingDoc, setActiveMeetingDoc] = React.useState(null);       // { committee, date, file }
   const [activeNprr, setActiveNprr] = React.useState(null);
   const [activeCopmgrr, setActiveCopmgrr] = React.useState(null);
   const [activePgrr, setActivePgrr] = React.useState(null);
@@ -57,6 +61,22 @@ function App() {
   React.useEffect(() => { setActiveScr(null); }, [activeSection, activePaperCode]);
   React.useEffect(() => { setActiveNogrr(null); }, [activeSection, activePaperCode]);
   React.useEffect(() => { setActiveRmgrr(null); }, [activeSection, activePaperCode]);
+
+  // Leaving (or re-entering) Meeting Tracks resets to the tree landing view.
+  React.useEffect(() => {
+    setActiveMeetingGroup(null); setActiveMeetingGroupName("");
+    setActiveMeetingDate(null); setActiveMeetingDoc(null);
+  }, [activeSection]);
+
+  const onMeetingGroupClick = (committee, name) => {
+    setActiveMeetingGroup(committee); setActiveMeetingGroupName(name || committee);
+    setActiveMeetingDoc(null); setActiveMeetingDate(null);
+    setRightOpen(true);
+  };
+  const onMeetingDocClick = (committee, date, file) => {
+    setActiveMeetingDoc({ committee, date, file }); setActiveMeetingDate(date);
+    setRightOpen(true);
+  };
 
   const SECTION_LABELS = {
     "paper-trails":      "Paper Trails",
@@ -77,7 +97,8 @@ function App() {
     const item = (window.PAPER_TRAIL_CODES || []).find(c => c.code === activePaperCode);
     detailLabel = item ? `${item.code} · ${item.name}` : activePaperCode;
   } else if (activeSection === "meeting-tracks") {
-    detailLabel = activeMeetingNode;
+    detailLabel = activeMeetingDoc ? activeMeetingDoc.file
+      : activeMeetingGroupName || "";
   }
 
   const onPaperCodeClick = (code) => {
@@ -108,10 +129,6 @@ function App() {
   const onRmgrClick = (n) => {
     setActiveRmgrr(n);
     if (n !== null) setRightOpen(true);
-  };
-  const onMeetingNodeClick = (id) => {
-    setActiveMeetingNode(id);
-    setRightOpen(true);
   };
 
   const onRunPrompt = (r) => {
@@ -239,7 +256,11 @@ function App() {
                 : activeSection === "paper-trails"
                 ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick} onPgrrClick={onPgrrClick} onScrClick={onScrClick} onNogrClick={onNogrClick} onRmgrClick={onRmgrClick}/>
                 : activeSection === "meeting-tracks"
-                ? <MeetingTracksOrgChart selected={activeMeetingNode} onSelect={onMeetingNodeClick}/>
+                ? (activeMeetingDoc
+                    ? <MeetingTracksItemHome {...activeMeetingDoc} groupName={activeMeetingGroupName} onBack={() => setActiveMeetingDoc(null)}/>
+                    : activeMeetingGroup
+                    ? <MeetingTracksGroupHome committee={activeMeetingGroup} groupName={activeMeetingGroupName} onBack={() => { setActiveMeetingGroup(null); setActiveMeetingDate(null); }} onDocClick={onMeetingDocClick} onMeetingFocus={setActiveMeetingDate}/>
+                    : <MeetingTracksOrgChart onGroupClick={onMeetingGroupClick}/>)
                 : <TalkIllustration title={CURRENT_TALK_TITLE} meta={CURRENT_TALK_META}/>
             }
           />
@@ -286,7 +307,7 @@ function App() {
         onClose={() => setRightOpen(false)}
         onRunPrompt={onRunPrompt}
         onArtifactClick={onArtifactClick}
-        context={{ section: activeSection, code: activePaperCode, node: activeMeetingNode, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr }}
+        context={{ section: activeSection, code: activePaperCode, meetingGroup: activeMeetingGroup, meetingGroupName: activeMeetingGroupName, meetingDate: activeMeetingDate, meetingDoc: activeMeetingDoc, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr }}
       />
 
       <TweaksPanel

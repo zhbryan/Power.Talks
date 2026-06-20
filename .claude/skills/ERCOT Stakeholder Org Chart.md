@@ -58,7 +58,7 @@ TAC  (Technical Advisory Committee — Reviews & Recommends)
 
 > COPS no longer exists — it was absorbed into WMS. Do not re-add it.
 > Parent assignments mirror ercot.com URL paths (e.g. `/committees/ros/dwg`);
-> the authoritative list with chairs lives in `ERCOT_Stakeholder_Meetings_Links.md`.
+> the authoritative list with chairs lives in `ERCOT Stakeholder Meetings Links.md`.
 
 ### Sub-Tier Full Names
 
@@ -345,4 +345,4 @@ Include a dashed-border note at the bottom explaining the revision request flow:
 | Satellite overlaps the spine node | `.hline` starts at `calc(50% + 122px)` (half of the 230–240px node width); `.satellite` at `calc(50% + 152px)` — adjust both if node `min-width` changes |
 | Working groups rendered as a horizontal branch row | ROS has 12 WGs — always render sub-tiers as vertical `.wg-stack` cards, never as another `.hbranch` |
 | Page too narrow for 4 columns + stacks | `.page` uses `max-width: 980px` for this chart |
-| Sub-tier list drifts from reality | Source of truth is the committee table in `ERCOT_Stakeholder_Meetings_Links.md` (URL paths give parentage) |
+| Sub-tier list drifts from reality | Source of truth is the committee table in `ERCOT Stakeholder Meetings Links.md` (URL paths give parentage) |

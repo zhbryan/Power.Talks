@@ -175,7 +175,7 @@ motion_lines = [s for s in strings if "motion" in s.lower() or category.lower() 
 
 ## Update Mode — Detecting New Documents and Refreshing Profiles
 
-Run this after any downloader run (see `ERCOT_Market_Rules_Downloader` skill) or whenever asked to "update/refresh profiles".
+Run this after any downloader run (see `ERCOT-Market-Rules-Downloader` skill) or whenever asked to "update/refresh profiles".
 
 ### Step 1 — Detect stale profiles
 

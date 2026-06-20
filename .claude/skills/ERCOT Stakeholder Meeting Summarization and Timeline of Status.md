@@ -11,7 +11,7 @@ Reads all documents in a committee's local meeting folders across a date range, 
 
 ## Scope — Active Committees
 
-Applies to all in-scope committees in `ERCOT_Stakeholder_Meetings_Links.md`:
+Applies to all in-scope committees in `ERCOT Stakeholder Meetings Links.md`:
 
 `Board` · `FA` · `HRG` · `TS` · `TAC` · `LLWG` · `CFSG` · `RTCBTF` · `PRS` · `RMS` · `TDTMS` · `RMTTF` · `ROS` · `IBRWG` · `BSWG` · `DWG` · `MWG` · `NDSWG` · `OWG` · `OTWG` · `PDCWG` · `PLWG` · `SPWG` · `SSWG` · `VPWG` · `WMS` · `CMWG` · `DSWG` · `SAWG` · `WMWG` · `IBRTF`
 
@@ -146,7 +146,7 @@ Use `python-docx`. Structure:
 Meeting Summary Report  YYYY–YYYY
 ────────────────────────────────────────────
 1. Executive Summary
-   - Committee purpose (1–2 sentences from ERCOT_Stakeholder_Meetings_Links.md)
+   - Committee purpose (1–2 sentences from ERCOT Stakeholder Meetings Links.md)
    - Date range covered
    - Total meetings included
    - Current chair / vice chair
@@ -212,7 +212,7 @@ doc.save(out_path)
 
 ## Report Writing Guidelines
 
-- **Executive Summary**: Write for a reader unfamiliar with the committee. State its role in the ERCOT governance process and which parent body it reports to (from `ERCOT_Stakeholder_Meetings_Links.md`).
+- **Executive Summary**: Write for a reader unfamiliar with the committee. State its role in the ERCOT governance process and which parent body it reports to (from `ERCOT Stakeholder Meetings Links.md`).
 - **Timeline narrative**: Each meeting entry should be factual and concise — date, what was voted on, which WGs reported, any notable agenda items.
 - **Ballot summary**: State the item identifier, a one-sentence description of what was being voted on, and whether it passed.
 - **Current status**: One clear sentence on where the committee stands today.

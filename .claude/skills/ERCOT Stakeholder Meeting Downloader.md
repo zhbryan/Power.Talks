@@ -1,5 +1,5 @@
 ---
-name: ERCOT_Stakeholder_Meeting_Downloader
+name: ERCOT-Stakeholder-Meeting-Downloader
 description: Skill for maintaining and running the ERCOT stakeholder committee meeting document downloader. Covers how the script works, how to run it, how to configure it, and how to add a new committee to the registry.
 trigger: When the user asks about downloading ERCOT stakeholder meeting documents, running a committee downloader, updating meeting files, or adding a new committee to the downloader.
 ---
@@ -154,7 +154,7 @@ Then create the corresponding folder under `Documents Database/ERCOT.STKHDR.MEET
 
 ## Committee URL and Slug Reference
 
-For the full in-scope committee list see `ERCOT_Stakeholder_Meetings_Links.md`. Key values for adding new entries:
+For the full in-scope committee list see `ERCOT Stakeholder Meetings Links.md`. Key values for adding new entries:
 
 ### Board and sub-committees
 

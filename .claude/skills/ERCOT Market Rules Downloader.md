@@ -1,5 +1,5 @@
 ---
-name: ERCOT_Market_Rules_Downloader
+name: ERCOT-Market-Rules-Downloader
 description: Skill for maintaining and running ERCOT market rules document downloaders. Covers how the scripts work, how to run them, how to configure them, and how to create a new downloader for any market rules category — NPRR, NOGRR, PGRR, RMGRR, SCR, COPMGRR.
 trigger: When the user asks about downloading ERCOT market rules documents, running any market rules downloader, updating rule files, or creating a new downloader script for a category.
 ---

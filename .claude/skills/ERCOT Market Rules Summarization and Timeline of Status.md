@@ -48,7 +48,7 @@ A companion `<ISSUE_ID> Summary.json` is written alongside the `.docx` with the 
 
 ## Update Mode — Detecting New Documents and Refreshing Summaries
 
-Run this after any downloader run (see `ERCOT_Market_Rules_Downloader` skill) and after profiles have been refreshed (see `ERCOT-Market-Rules-Profile` skill — summaries pull their metadata from `Profile.json`, so update profiles first).
+Run this after any downloader run (see `ERCOT-Market-Rules-Downloader` skill) and after profiles have been refreshed (see `ERCOT-Market-Rules-Profile` skill — summaries pull their metadata from `Profile.json`, so update profiles first).
 
 Each category has a batch script:
 
