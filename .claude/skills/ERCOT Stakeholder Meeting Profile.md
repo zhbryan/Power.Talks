@@ -293,20 +293,26 @@ results (carried/failed, opposing/abstaining counts), and substantive discussion
 paragraphs for `debates`. Legacy `.doc` minutes are read via Word (win32com);
 PDF minutes are de-wrapped into sentences.
 
-### No verified minutes — summarize from the other documents
+### No verified minutes — read that day's documents and summarize every section
 
 A meeting's own approved minutes are produced at the *following* meeting and
 back-posted later, so recent meetings frequently have **no verified (date-matched)
-minutes** on file. **Do not leave the meeting blank** — instead read through the
-other documents in the folder and summarize what went on:
+minutes** on file. **Never leave the meeting profile blank.** When there are no
+minutes to check, read through **that day's meeting documents** and build the
+whole `meeting_summary` from them — every section, not just debates:
 
-- **`debates`** ← read the readable reports/memos/updates/comments (`.docx`,
-  `.pdf`) for substantive discussion sentences, and add the titles of the
-  reports, updates, and presentations that were given (agendas, minutes, and
-  ballots excluded). The batch implementation is `summarize_from_documents()`.
-- **`voting_outcomes`** ← still read straight from the ballot spreadsheets
-  (real Passed/Failed + Yes/No/Abstain tallies); ballots don't depend on minutes.
-- **`topics`** ← still from the agenda.
+| Section | Read these documents | How |
+|---------|----------------------|-----|
+| `topics` | Agenda (`.docx`/`.pdf`) | The numbered agenda items, minus boilerplate (antitrust, agenda review, adjourn) |
+| `debates` | Reports, memos, updates, comments, presentations (`.docx`, `.pdf`, `.pptx`) | Pull substantive discussion sentences from readable reports/memos, and add the titles of the reports/updates/presentations given. Batch impl: `summarize_from_documents()` |
+| `voting_outcomes` | Ballot spreadsheets (`*ballot*.xls/.xlsx`) | Read straight from the ballots — real Passed/Failed result + Yes/No/Abstain tally; ballots don't depend on minutes (see Reading Strategy) |
+
+In other words, `topics` come from the agenda, `voting_outcomes` from the
+ballots, and `debates` from the remaining reports/presentations — all read from
+the meeting-date folder itself. Apply the same to any other field that would
+otherwise be empty (e.g. `working_group_reports` from report filenames). Skip the
+agenda, minutes, and ballots when harvesting `debates` titles (they feed the
+other sections).
 
 This is a best-effort "what happened" picture from the meeting materials, not the
 official record; it is automatically replaced by real debates/outcomes once the
@@ -334,7 +340,7 @@ approved minutes are posted and a regeneration runs.
 3. Populate the `documents` field with the filenames found, **excluding any `.zip` archive (case-insensitive), `.tmp` files, and the manifest** — no zip link ever appears in the content window.
 4. Read each document in order of priority: segment reps → agenda → ballot → minutes → WG reports.
 5. Build `group_summary` (leadership, voting parties, voting structure, overview) from the group's leadership table in `ERCOT Stakeholder Meetings Links.md` §1 and the ERCOT market-segment model; reuse an existing group profile if leadership is unchanged.
-6. Build `meeting_summary` (`topics`, `debates`, `voting_outcomes`) for **this** meeting from the agenda, minutes, and ballot — keep it distinct from `group_summary`.
+6. Build `meeting_summary` (`topics`, `debates`, `voting_outcomes`) for **this** meeting from the agenda, minutes, and ballot — keep it distinct from `group_summary`. **If there are no date-matched minutes, read that day's other documents and summarize every section from them** (see "No verified minutes" above).
 7. Extract all remaining fields. For `ballot_results`, parse the combined ballot `.xls`; for individual separate ballots, add one entry per file.
 8. Infer `meeting_type` from the calendar URL slug if the agenda does not state it explicitly (see `ERCOT Stakeholder Meetings Links.md` §2.3).
 9. Ensure `Quick runs/` exists under the meeting date folder.
@@ -354,4 +360,5 @@ approved minutes are posted and a regeneration runs.
 | Listing `.zip` archives in `documents` | Exclude every `.zip` (case-insensitive) — they never appear in the content window; still list non-zip files you could not read |
 | Leaving `group_summary` empty | Always populate leadership + voting parties from the §1 leadership table and the ERCOT market-segment model |
 | Mixing the two tiers | `group_summary` = group intro (leadership/voting); `meeting_summary` = this meeting's topics/debates/outcomes. The group view shows the former, the meeting view the latter — keep them distinct |
+| Blank meeting summary when there are no minutes | Don't stop at "no minutes." Read that day's documents and fill every section: `topics` from the agenda, `voting_outcomes` from the ballots, `debates` from the reports/presentations |
 | Leaving `[]` fields as `null` | Array fields must be `[]` when empty, never `null` |
