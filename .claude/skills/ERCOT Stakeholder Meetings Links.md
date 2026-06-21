@@ -240,7 +240,7 @@ The groups confirmed in-scope after Step 0 evaluation. **Treat this list as a sn
 | LLWG | `https://www.ercot.com/committees/tac/llwg` | Bob Wittmeyer | Patrick Gravois |
 | CFSG | `https://www.ercot.com/committees/tac/cfsg` | Jett Price | Loretto Martin |
 | RTCBTF | `https://www.ercot.com/committees/inactive/rtcbtf` | *(winding down)* | — |
-| PRS | `https://www.ercot.com/committees/prs` | — | — |
+| PRS | `https://www.ercot.com/committees/prs` | Diana Coleman | Eric Blakey |
 | RMS | `https://www.ercot.com/committees/rms` | John Schatz | Debbie McKeever |
 | TDTMS | `https://www.ercot.com/committees/rms/tdtms` | Sheri Wiegand | Rob Bevill / Monica Jones |
 | RMTTF | `https://www.ercot.com/committees/rms/rmttf` | Melinda Earnest / Tomas Fernandez / Deborah McKeever | — |
@@ -250,15 +250,15 @@ The groups confirmed in-scope after Step 0 evaluation. **Treat this list as a sn
 | DWG | `https://www.ercot.com/committees/ros/dwg` | Aditi Upadhyay | Xuan Wu |
 | MWG | `https://www.ercot.com/committees/ros/mwg` | Kyle Stuckly | Tony Davis |
 | NDSWG | `https://www.ercot.com/committees/ros/ndswg` | Teddi Flessner | Vincent Cutlip |
-| OWG | `https://www.ercot.com/committees/ros/owg` | — | — |
-| OTWG | `https://www.ercot.com/committees/ros/otwg` | — | — |
-| PDCWG | `https://www.ercot.com/committees/ros/pdcwg` | — | — |
+| OWG | `https://www.ercot.com/committees/ros/owg` | Rickey Floyd | Tyler Springer |
+| OTWG | `https://www.ercot.com/committees/ros/otwg` | Manuel Sanchez | Mike Flores |
+| PDCWG | `https://www.ercot.com/committees/ros/pdcwg` | Paul Messmann | Luis Hinojosa |
 | PLWG | `https://www.ercot.com/committees/ros/plwg` | Mina Turner | Kiran Kota |
-| SPWG | `https://www.ercot.com/committees/ros/spwg` | — | — |
-| SSWG | `https://www.ercot.com/committees/ros/sswg` | — | — |
-| VPWG | `https://www.ercot.com/committees/ros/vpwg` | — | — |
-| WMS | `https://www.ercot.com/committees/wms` | — | — |
-| CMWG | `https://www.ercot.com/committees/wms/cmwg` | — | — |
+| SPWG | `https://www.ercot.com/committees/ros/spwg` | Uchenna Ndusorouwa | Jourdan Watkins |
+| SSWG | `https://www.ercot.com/committees/ros/sswg` | Chris Ramirez | Weiwei Hu |
+| VPWG | `https://www.ercot.com/committees/ros/vpwg` | Charles Aleman | Alison Flint |
+| WMS | `https://www.ercot.com/committees/wms` | Blake Holt | Jim Lee |
+| CMWG | `https://www.ercot.com/committees/wms/cmwg` | Chenyan Guo | Shane Thomas |
 | DSWG | `https://www.ercot.com/committees/wms/dswg` | Nathaniel Mancha | *(open)* |
 | SAWG | `https://www.ercot.com/committees/wms/sawg` | Kevin Hanson | Pete Warnken / Greg Lackey |
 | WMWG | `https://www.ercot.com/committees/wms/wmwg` | Amanda Frazier | Trevor Safko |

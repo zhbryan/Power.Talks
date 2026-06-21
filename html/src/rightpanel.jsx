@@ -309,7 +309,11 @@ function MeetingProfileCard({ committee, date }) {
             {outcomes.map((o, i) => (
               <div key={i} className="np-tl-row">
                 <div className="np-tl-dot" />
-                <span className="np-tl-date">{o.item || "—"}</span>
+                <span className="np-tl-date">
+                  {(o.item || "—").split(" ").map((w, j, arr) => (
+                    <React.Fragment key={j}>{w}{j < arr.length - 1 ? <br/> : null}</React.Fragment>
+                  ))}
+                </span>
                 <span className="np-tl-ev">
                   {o.motion || ""}
                   {o.result ? <b> — {o.result}</b> : ""}
