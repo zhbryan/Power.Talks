@@ -17,7 +17,10 @@ Documents Database/ERCOT.STKHDR.MEETS/<COMMITTEE>/
         <document files>
 ```
 
-One sub-folder per meeting date. Files are never overwritten — only new files are added.
+One sub-folder per meeting date. Regular documents are never overwritten — only
+new files are added. **Bundled `.zip` files are unzipped into the same meeting
+date folder and then removed** (see "Unzipping bundled documents" below); files
+extracted from a zip *do* overwrite same-named duplicates.
 
 The script covers 34 committees across these groups:
 
@@ -79,9 +82,42 @@ pip install requests beautifulsoup4
    market-rules accounting pattern) and prints `N file(s) already up to date` /
    `M new file(s) (out of T total)`, then downloads only the new ones via
    streaming (64 KB chunks), `.tmp` → rename on success.
-5. Prints a per-committee and grand total summary: Downloaded (new files across
+5. **Unzips any bundled `.zip` documents** into the same meeting date folder via
+   `extract_zips(folder)` (see below).
+6. Prints a per-committee and grand total summary: Downloaded (new files across
    N meetings) | Skipped | Errors.
-6. **Emits a coverage report** over the whole database (see below).
+7. **Emits a coverage report** over the whole database (see below).
+
+## Unzipping bundled documents
+
+ERCOT often posts a `Meeting-Materials-*.zip` and `Revision-Requests-*.zip`
+bundle per meeting. After downloading a meeting's files, `extract_zips(folder)`
+runs for that meeting date folder and:
+
+1. **Unzips** every `.zip` into the **same meeting date folder**, *flattened* —
+   any internal sub-folders in the archive are dropped so all files land
+   directly under `YYYY-MM-DD/`.
+2. **Overwrites duplicates** — a file extracted from the zip replaces a
+   same-named file already in the folder (the zip is treated as authoritative).
+3. **Removes the zip** afterwards, leaving a tiny `<zip-name>.extracted` marker.
+
+The marker lets routine **incremental** runs skip the zip instead of
+re-downloading and re-extracting it every time (the new-vs-saved pre-check
+treats `dest` *or* `dest + ".extracted"` as already present). The marker is
+excluded from the meeting manifests and profiles, so it never appears in the
+document list. A corrupt archive is left in place and logged `[ZIP-ERR]`.
+
+> **One-time backfill of existing zips.** `extract_zips` only runs for meetings
+> the downloader processes (incremental = current year). To unzip zips already
+> on disk in older folders, run a full pass (`SINCE_YEAR = None`) or extract
+> directly, e.g.:
+> ```python
+> import os, download_ercot_stkhdr as d
+> for root, _, files in os.walk(d.BASE_ROOT):
+>     if any(f.lower().endswith(".zip") for f in files):
+>         d.extract_zips(root)
+> ```
+> Then regenerate manifests/profiles so the newly surfaced files appear.
 
 The default scope is **incremental** (`SINCE_YEAR` = current year). For a full
 backfill, set `SINCE_YEAR = None`.
@@ -127,6 +163,7 @@ Run it standalone without downloading via:
 | `get_meeting_urls(year, cfg)` | Fetches one year page, scrapes `<a href>` for calendar links matching the committee's `slug` regex, skips cancelled entries, returns `[(date_iso, url)]` |
 | `get_document_links(calendar_url)` | Fetches one calendar page, returns all downloadable document URLs |
 | `download_file(url, dest_path)` | Downloads a single file with `.tmp` safety. Returns `'ok'`, `'skip'`, or `'err'` |
+| `extract_zips(folder)` | Unzips every `.zip` in a meeting date folder (flattened) overwriting duplicates, removes the zip, and leaves a `.extracted` marker. Returns the count extracted |
 | `process_meetings(meetings, base_dir)` | Iterates meeting list; pre-counts new vs already-saved files per meeting, downloads only new ones. Returns `(ok, skip, err, meetings_updated)` |
 | `run_committee(abbrev, cfg)` | Full year-loop + meeting-download for one committee; clamps `year_start` to `SINCE_YEAR` when set. Returns `(ok, skip, err, meetings_updated)` |
 | `coverage_report(root, registry)` | Scans the DB on disk; reports populated vs empty folders and registry/disk mismatches; writes `coverage_report_YYYYMMDD.txt` |

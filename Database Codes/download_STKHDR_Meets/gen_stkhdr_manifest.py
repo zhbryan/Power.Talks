@@ -15,7 +15,7 @@ from datetime import datetime
 
 # Reuse the per-group leadership/voting metadata from the profile generator so
 # the group homepage can show a group summary before any meeting is selected.
-from gen_stkhdr_profiles import group_summary
+from gen_stkhdr_profiles import group_summary, doc_sort_key
 
 BASE = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.STKHDR.MEETS"
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -28,11 +28,12 @@ def committee_meetings(cdir):
         if not (os.path.isdir(ddir) and DATE_RE.match(d)):
             continue
         docs = sorted(
-            f for f in os.listdir(ddir)
-            if os.path.isfile(os.path.join(ddir, f))
-            and not f.endswith(".tmp")
-            and not f.lower().endswith(".zip")
-            and f != "_manifest.json"
+            (f for f in os.listdir(ddir)
+             if os.path.isfile(os.path.join(ddir, f))
+             and not f.endswith(".tmp")
+             and not f.lower().endswith((".zip", ".extracted"))
+             and f != "_manifest.json"),
+            key=doc_sort_key,
         )
         meetings.append({"date": d, "doc_count": len(docs), "docs": docs})
     return meetings

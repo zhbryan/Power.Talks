@@ -19,6 +19,7 @@ Edit the SETTINGS block below to limit to specific committees or meeting dates.
 import os
 import re
 import time
+import zipfile
 import requests
 from bs4 import BeautifulSoup
 from datetime import date, datetime
@@ -224,6 +225,47 @@ def download_file(url: str, dest_path: str) -> str:
         return "err"
 
 
+def extract_zips(folder: str) -> int:
+    """Unzip every .zip in `folder` into that same meeting-date folder, then
+    delete the zip. Behavior:
+      1) extract members (flattened — internal sub-folders are dropped) into the
+         meeting date folder;
+      2) overwrite any duplicate files already present;
+      3) remove the zip afterwards, leaving a small '<zip>.extracted' marker so
+         routine incremental runs don't re-download and re-extract it.
+    A corrupt zip is left in place. Returns the number of zips extracted.
+    """
+    if not os.path.isdir(folder):
+        return 0
+    extracted = 0
+    for fn in sorted(os.listdir(folder)):
+        if not fn.lower().endswith(".zip"):
+            continue
+        zpath = os.path.join(folder, fn)
+        try:
+            with zipfile.ZipFile(zpath) as zf:
+                for member in zf.infolist():
+                    if member.is_dir():
+                        continue
+                    base = sanitize(os.path.basename(member.filename))
+                    if not base:                      # skip empty/odd entries
+                        continue
+                    dest = os.path.join(folder, safe_fname(base, folder))
+                    with zf.open(member) as src, open(dest, "wb") as out:  # overwrite dupes
+                        while True:
+                            chunk = src.read(65536)
+                            if not chunk:
+                                break
+                            out.write(chunk)
+            open(zpath + ".extracted", "w").close()   # marker (excluded from manifests)
+            os.remove(zpath)
+            extracted += 1
+            print(f"    [UNZIP] {fn} -> extracted into folder and removed")
+        except (zipfile.BadZipFile, OSError) as exc:
+            print(f"    [ZIP-ERR] {fn} left in place — {exc}")
+    return extracted
+
+
 def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[int, int, int, int]:
     """Download new documents for each meeting. Mirrors the market-rules
     downloaders: pre-computes new vs already-saved files per meeting and only
@@ -236,6 +278,7 @@ def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[in
         time.sleep(REQUEST_DELAY)
         if not doc_links:
             print("    (no downloadable documents found)")
+            extract_zips(folder)          # clear any leftover zips
             continue
 
         new_items = []
@@ -243,7 +286,9 @@ def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[in
             fname = sanitize(unquote(os.path.basename(urlparse(url).path))) or "document.bin"
             fname = safe_fname(fname, folder)
             dest = os.path.join(folder, fname)
-            if os.path.exists(dest):
+            # A zip already extracted on a prior run leaves a '.extracted' marker;
+            # treat that (or the file itself) as already present.
+            if os.path.exists(dest) or os.path.exists(dest + ".extracted"):
                 total_skip += 1
             else:
                 new_items.append((url, dest))
@@ -251,20 +296,23 @@ def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[in
         already = len(doc_links) - len(new_items)
         if already:
             print(f"    {already} file(s) already up to date.")
-        if not new_items:
+        if new_items:
+            print(f"    {len(new_items)} new file(s) (out of {len(doc_links)} total)  ->  {folder}")
+            os.makedirs(folder, exist_ok=True)
+            meetings_updated += 1
+            for url, dest in new_items:
+                result = download_file(url, dest)
+                if result == "ok":
+                    total_ok += 1
+                else:
+                    total_err += 1
+                time.sleep(REQUEST_DELAY)
+        else:
             print("    Nothing new to download.")
-            continue
 
-        print(f"    {len(new_items)} new file(s) (out of {len(doc_links)} total)  ->  {folder}")
-        os.makedirs(folder, exist_ok=True)
-        meetings_updated += 1
-        for url, dest in new_items:
-            result = download_file(url, dest)
-            if result == "ok":
-                total_ok += 1
-            else:
-                total_err += 1
-            time.sleep(REQUEST_DELAY)
+        # Unzip any bundled documents (newly downloaded or left over) into the
+        # meeting-date folder, overwriting duplicates and removing the zip.
+        extract_zips(folder)
     return total_ok, total_skip, total_err, meetings_updated
 
 

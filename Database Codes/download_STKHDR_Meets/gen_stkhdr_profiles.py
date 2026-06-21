@@ -474,11 +474,24 @@ def meeting_type(files):
     return "Regular"
 
 
+def doc_sort_key(name):
+    """Order documents by the leading number before the first '-' (numeric
+    ascending, so 2 < 10), e.g. '02.-Agenda…' < '10.-…' < '11.-…'. Decimal
+    prefixes like '5.1-' sort within their group; files with no leading number
+    sort after the numbered ones, alphabetically."""
+    m = re.match(r"\s*(\d+(?:\.\d+)?)", name)
+    if m:
+        return (0, float(m.group(1)), name.lower())
+    return (1, 0.0, name.lower())
+
+
 def build_profile(abbr, date, folder):
     files = sorted(f for f in os.listdir(folder)
                    if os.path.isfile(os.path.join(folder, f)))
-    docs = [f for f in files
-            if not f.lower().endswith((".zip", ".tmp")) and f != "_manifest.json"]
+    docs = sorted((f for f in files
+                   if not f.lower().endswith((".zip", ".tmp", ".extracted"))
+                   and f != "_manifest.json"),
+                  key=doc_sort_key)
 
     # Agenda — prefer .docx (cleanest), else a PDF agenda.
     agenda = []
