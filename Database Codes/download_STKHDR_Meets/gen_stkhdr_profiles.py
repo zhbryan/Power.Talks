@@ -453,6 +453,67 @@ def parse_minutes(paras):
     return debates[:8], outcomes[:25]
 
 
+_MONTHS = (r"jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec")
+
+
+def clean_doc_title(fname):
+    """Turn a document filename into a readable title for the documents-based
+    fallback summary, e.g. '9. ROS_Update_to_TAC_04_29_2026.pptx' -> 'ROS Update
+    to TAC'."""
+    t = os.path.splitext(fname)[0]
+    t = re.sub(r"^\s*\d+(?:\.\d+)?[.\-\s]+", "", t)         # leading '04. ' / '5.-' / '9.1 '
+    t = re.sub(r"[_\-]+", " ", t)
+    t = re.sub(rf"\b(?:{_MONTHS})[a-z]*\.?\s*\d{{0,2}}\b", "", t, flags=re.I)  # 'Apr29'
+    t = re.sub(r"\b\d{1,2}[ ./-]\d{1,2}[ ./-]\d{2,4}\b", "", t)  # dates (any sep)
+    t = re.sub(r"\b\d{6,8}\b", "", t)                       # 042926 / 20260429
+    t = re.sub(r"\b20\d{2}\b", "", t)                       # stray year
+    t = re.sub(r"\b(?:rev\s*\d+|v\d+|final|public|draft)\b", "", t, flags=re.I)
+    t = re.sub(r"\s+", " ", t).strip(" -—_·.")
+    return t
+
+
+def summarize_from_documents(folder, docs):
+    """Fallback when a meeting has no verified (date-matched) minutes: read
+    through the other documents in the folder and summarize what went on —
+    a few discussion sentences pulled from readable reports/memos, plus the
+    titles of the reports, updates, and presentations that were given."""
+    activity, seen = [], set()
+    readable = []
+    for f in docs:
+        low = f.lower()
+        if low.endswith((".tmp", ".extracted")):
+            continue
+        if "agenda" in low or "minute" in low or "ballot" in low:
+            continue
+        if not low.endswith((".pptx", ".ppt", ".pdf", ".docx", ".doc")):
+            continue
+        title = clean_doc_title(f)
+        if title and len(title) > 3 and title.lower() not in seen:
+            seen.add(title.lower())
+            activity.append(title)
+        if low.endswith((".docx", ".pdf")) and any(
+                k in low for k in ("report", "memo", "summary", "update",
+                                   "comment", "recommend", "overview")):
+            readable.append(f)
+
+    discussion, seen_d = [], set()
+    for f in readable[:2]:                       # bounded: read at most 2 docs
+        for s in minutes_paragraphs(os.path.join(folder, f)):
+            s = re.sub(r"\s+", " ", s).strip()
+            if 60 <= len(s) <= 320 and STRONG.search(s) and not EXCLUDE.search(s):
+                k = s.lower()[:40]
+                if k not in seen_d:
+                    seen_d.add(k)
+                    discussion.append(s if len(s) <= 300 else s[:297] + "…")
+            if len(discussion) >= 4:
+                break
+        if len(discussion) >= 4:
+            break
+
+    bullets = discussion + [f"{a} — presented" for a in activity]
+    return bullets[:8]
+
+
 def wg_reports(files):
     found = []
     for f in files:
@@ -528,6 +589,10 @@ def build_profile(abbr, date, folder):
     if minutes_file:
         debates, mins_outcomes = parse_minutes(
             minutes_paragraphs(os.path.join(folder, minutes_file)))
+    # No verified minutes (or none with extractable debates) → summarize what
+    # went on from the meeting's other documents.
+    if not debates:
+        debates = summarize_from_documents(folder, docs)
 
     # meeting_summary (meeting-level) — distinct from group_summary (group-level).
     if mins_outcomes:

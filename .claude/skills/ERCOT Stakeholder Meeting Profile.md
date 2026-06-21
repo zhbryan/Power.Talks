@@ -260,9 +260,27 @@ prefer the `APPROVED-Minutes` document whose filename carries this meeting's dat
 you summarize the right meeting, and prefer approved over draft). Read motion
 lines ("X moved to … The motion carried …") for `voting_outcomes` with real
 results (carried/failed, opposing/abstaining counts), and substantive discussion
-paragraphs for `debates`. Legacy `.doc` minutes are read via Word (win32com).
-Fall back to `ballot_results` for `voting_outcomes` (with `null` tallies/result)
-and leave `debates` as `[]` when this meeting has no minutes on file yet.
+paragraphs for `debates`. Legacy `.doc` minutes are read via Word (win32com);
+PDF minutes are de-wrapped into sentences.
+
+### No verified minutes — summarize from the other documents
+
+A meeting's own approved minutes are produced at the *following* meeting and
+back-posted later, so recent meetings frequently have **no verified (date-matched)
+minutes** on file. **Do not leave the meeting blank** — instead read through the
+other documents in the folder and summarize what went on:
+
+- **`debates`** ← read the readable reports/memos/updates/comments (`.docx`,
+  `.pdf`) for substantive discussion sentences, and add the titles of the
+  reports, updates, and presentations that were given (agendas, minutes, and
+  ballots excluded). The batch implementation is `summarize_from_documents()`.
+- **`voting_outcomes`** ← fall back to `ballot_results` (with `null`
+  tallies/result, since no minutes confirm the vote).
+- **`topics`** ← still from the agenda.
+
+This is a best-effort "what happened" picture from the meeting materials, not the
+official record; it is automatically replaced by real debates/outcomes once the
+approved minutes are posted and a regeneration runs.
 
 **Example (`meeting_summary` for ROS 2026-06-04):**
 
