@@ -225,6 +225,46 @@ def download_file(url: str, dest_path: str) -> str:
         return "err"
 
 
+# Paper Trails revision-request categories. Their bundles are NOT unzipped and
+# their loose packet files are not kept under meeting folders — revision requests
+# live in the Paper Trails section, not the meeting document list.
+_RR_CATS = "NPRR|NOGRR|PGRR|RRGRR|SCR|RMGRR|COPMGRR|VCMRR|OBDRR|SMOGRR|NGRR"
+# Packet files start with the revision-request id — either number-first (modern,
+# e.g. "1214NPRR-16 …", "055OBDRR-02 …") or category-first (older, e.g.
+# "NPRR078 Impact Analysis.doc"). Numbered agenda items ("10.-…") and
+# date-prefixed meeting files ("2026-TAC-…") don't start this way, so they're safe.
+RR_FILE_RE = re.compile(rf"^(?:\d+(?:{_RR_CATS})|(?:{_RR_CATS})\d)", re.IGNORECASE)
+# Presentation decks (even when titled after an RR, e.g. "NPRR1325_Overview.pptx"
+# or "NOGRR282 Update.pptx") are meeting materials and are kept.
+_PRESENTATION_EXTS = (".ppt", ".pptx")
+# A zip is a revision-request bundle if its name carries a category code or
+# "Revision Request(s)".
+RR_ZIP_RE = re.compile(rf"(?:{_RR_CATS}|revision[-_ ]?requests?)", re.IGNORECASE)
+
+
+def remove_revision_request_files(folder: str) -> int:
+    """Delete loose revision-request packet files (ERCOT 'NNNNCAT-NN …' naming)
+    from a meeting date folder — those belong in Paper Trails, not the meeting
+    document list. Leaves numbered agenda items, date-prefixed and category-first
+    meeting presentations (e.g. 'NOGRR282 Update…') untouched. Returns the count.
+    """
+    if not os.path.isdir(folder):
+        return 0
+    removed = 0
+    for fn in sorted(os.listdir(folder)):
+        if fn.lower().endswith(_PRESENTATION_EXTS):
+            continue
+        if RR_FILE_RE.match(fn) and os.path.isfile(os.path.join(folder, fn)):
+            try:
+                os.remove(os.path.join(folder, fn))
+                removed += 1
+            except OSError as exc:
+                print(f"    [RR-RM-ERR] {fn} — {exc}")
+    if removed:
+        print(f"    [RR-CLEAN] removed {removed} revision-request file(s)")
+    return removed
+
+
 def extract_zips(folder: str) -> int:
     """Unzip every .zip in `folder` into that same meeting-date folder, then
     delete the zip. Behavior:
@@ -233,13 +273,18 @@ def extract_zips(folder: str) -> int:
       2) overwrite any duplicate files already present;
       3) remove the zip afterwards, leaving a small '<zip>.extracted' marker so
          routine incremental runs don't re-download and re-extract it.
-    A corrupt zip is left in place. Returns the number of zips extracted.
+    Revision-request bundles (NPRR/NOGRR/PGRR/SCR/COPMGRR/RMGRR/… or
+    'Revision-Requests-*') are left zipped, never extracted. A corrupt zip is
+    left in place. Returns the number of zips extracted.
     """
     if not os.path.isdir(folder):
         return 0
     extracted = 0
     for fn in sorted(os.listdir(folder)):
         if not fn.lower().endswith(".zip"):
+            continue
+        if RR_ZIP_RE.search(fn):
+            print(f"    [ZIP-KEEP] {fn} (revision-request bundle — not unzipped)")
             continue
         zpath = os.path.join(folder, fn)
         try:
@@ -278,7 +323,8 @@ def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[in
         time.sleep(REQUEST_DELAY)
         if not doc_links:
             print("    (no downloadable documents found)")
-            extract_zips(folder)          # clear any leftover zips
+            extract_zips(folder)                  # clear any leftover zips
+            remove_revision_request_files(folder)  # strip loose RR packet files
             continue
 
         new_items = []
@@ -310,9 +356,11 @@ def process_meetings(meetings: list[tuple[str, str]], base_dir: str) -> tuple[in
         else:
             print("    Nothing new to download.")
 
-        # Unzip any bundled documents (newly downloaded or left over) into the
-        # meeting-date folder, overwriting duplicates and removing the zip.
+        # Unzip bundled documents (except revision-request bundles) into the
+        # meeting-date folder, then strip any loose revision-request packet files
+        # — those belong in Paper Trails, not the meeting document list.
         extract_zips(folder)
+        remove_revision_request_files(folder)
     return total_ok, total_skip, total_err, meetings_updated
 
 

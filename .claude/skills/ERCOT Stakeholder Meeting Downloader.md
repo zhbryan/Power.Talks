@@ -119,6 +119,36 @@ document list. A corrupt archive is left in place and logged `[ZIP-ERR]`.
 > ```
 > Then regenerate manifests/profiles so the newly surfaced files appear.
 
+## Revision requests stay in Paper Trails (not the meeting list)
+
+Revision-request paperwork (NPRR, NOGRR, PGRR, SCR, COPMGRR, RMGRR — and the
+sibling types RRGRR, OBDRR, VCMRR, SMOGRR) belongs in the **Paper Trails**
+section, not the meeting document list. So:
+
+1. **Revision-request bundles are never unzipped.** `extract_zips` skips any zip
+   whose name carries a category code or `Revision-Request(s)` (`RR_ZIP_RE`),
+   logging `[ZIP-KEEP]`. They remain as `.zip` (already hidden from the lists).
+2. **Loose revision-request packet files are removed.**
+   `remove_revision_request_files(folder)` deletes files whose name *starts with*
+   a revision-request id — number-first `1214NPRR-16 …`, `055OBDRR-02 …` or
+   category-first `NPRR078 Impact Analysis.doc` (`RR_FILE_RE`). It runs after
+   `extract_zips` on every processed meeting.
+   - **Kept:** numbered agenda items (`10.-…`), date-prefixed meeting files
+     (`2026-TAC-…Ballot…`), and presentation decks (`.ppt`/`.pptx`, even when
+     titled after an RR like `NPRR1325_Overview.pptx` or `NOGRR282 Update.pptx`).
+3. **Regenerate the file lists** afterwards (`gen_stkhdr_manifest.py` and, for
+   the meeting summaries, `gen_stkhdr_profiles.py`) so the meeting-date document
+   lists reflect the removals.
+
+> **One-time cleanup of already-extracted RR files** (e.g. after a zip backfill):
+> ```python
+> import os, re, download_ercot_stkhdr as d
+> for root, _, _ in os.walk(d.BASE_ROOT):
+>     if re.search(r"\d{4}-\d{2}-\d{2}$", os.path.basename(root)):
+>         d.remove_revision_request_files(root)
+> ```
+> Then regenerate manifests and profiles.
+
 The default scope is **incremental** (`SINCE_YEAR` = current year). For a full
 backfill, set `SINCE_YEAR = None`.
 
