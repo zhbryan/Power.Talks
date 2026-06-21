@@ -190,6 +190,24 @@ from the live group page only when leadership changes.
 | `voting_parties` | Array of the voting blocs/members that hold a vote in this group | Segment-rep doc; ERCOT market-segment model (see below) |
 | `voting_structure` | How votes are cast and tallied (segment-weighted voting, simple/​two-thirds majority, advisory-only) | Group charter / `ERCOT Introduction.md` |
 
+### Committee leadership — update scheme
+
+Chair/Vice Chair for every committee live in the `C` registry near the top of
+`gen_stkhdr_profiles.py` (mirrored in the §1 "Latest … Chair/VC" table of
+`ERCOT Stakeholder Meetings Links.md`). **If a committee shows no chair/vice
+chair, the registry entry is just blank (`None, None`) — not a parse failure.**
+Every active group lists its leaders in the **Contact Information** section of its
+`https://www.ercot.com/committees/<path>` page. To fill or refresh:
+
+1. `web_fetch` the group's committee page and read the Contact Information chair/VC.
+2. Set the names in the `C` entry in `gen_stkhdr_profiles.py` and the matching
+   §1 row in the Links skill (use `A / B / C (Co-Chairs)` in the chair slot for
+   co-chaired groups; leave the VC `None`).
+3. Regenerate the manifests (group homepage) and the group's profiles.
+
+Inactive task forces (e.g. `RTCBTF`, `BESTF`, `TXSET`) publish no leadership —
+leave them `None`.
+
 **ERCOT market-segment voting model.** TAC and its subordinate subcommittees
 (PRS, ROS, RMS, WMS) and most working groups vote by **market segment**, not by
 headcount. The standard voting segments are:

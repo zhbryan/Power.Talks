@@ -230,6 +230,15 @@ The groups confirmed in-scope after Step 0 evaluation. **Treat this list as a sn
 
 **Latest (current year) URLs — Chair/VC as of May 2026:**
 
+> **Filling/refreshing Chair & Vice Chair.** A `—` means the entry hasn't been
+> looked up, not that the group has no leaders. Every active group lists its
+> Chair/Vice Chair in the **Contact Information** section of its Latest URL —
+> `web_fetch` that page to fill the blank. Keep this table in sync with the `C`
+> registry in `Database Codes/download_STKHDR_Meets/gen_stkhdr_profiles.py`
+> (the downstream source for group profiles), and regenerate manifests/profiles
+> after a change. Co-chaired groups: list all chairs as `A / B / C (Co-Chairs)`.
+> Inactive task forces publish no leadership — leave `—`.
+
 | Committee | Latest URL | Chair | Vice Chair |
 |---|---|---|---|
 | Board | `https://www.ercot.com/committees/board` | Bill Flores | Peggy Heeg |

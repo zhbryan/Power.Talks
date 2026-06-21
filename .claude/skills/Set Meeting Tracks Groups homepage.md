@@ -32,6 +32,10 @@ in `ERCOT Stakeholder Meeting Profile.md`):
   **meeting summary**: this meeting's topics, debates, and voting outcomes, plus
   document count. Fetched from the meeting profile JSON (`meeting_summary`), with
   a graceful "not yet generated" fallback when the profile is missing.
+  - In **Voting Outcomes**, the left timeline label (the item, e.g. `NPRR1308`)
+    is rendered word-per-line, so a multi-word label like **`Combined Ballot`**
+    stacks onto two lines and fits the narrow label column (`np-tl-date`,
+    `min-width:68px`) instead of running wide and misaligning the row.
 - **Artifacts** → the **full** `ARTIFACTS` list (the Market Rules right-panel
   setting — same as the Paper Trails item-rule homepage), not the trimmed
   3-item set used on the tree landing.
