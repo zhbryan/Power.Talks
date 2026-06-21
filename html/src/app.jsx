@@ -53,6 +53,9 @@ function App() {
   const [activeScr, setActiveScr] = React.useState(null);
   const [activeNogrr, setActiveNogrr] = React.useState(null);
   const [activeRmgrr, setActiveRmgrr] = React.useState(null);
+  // A submitted document selected from an issue's "Documents Submitted" list —
+  // its summary renders in the content window. { ...docEntry, issueId, cat }.
+  const [activeRuleDoc, setActiveRuleDoc] = React.useState(null);
   const [draft, setDraft] = React.useState("");
 
   React.useEffect(() => { setActiveNprr(null); }, [activeSection, activePaperCode]);
@@ -61,6 +64,11 @@ function App() {
   React.useEffect(() => { setActiveScr(null); }, [activeSection, activePaperCode]);
   React.useEffect(() => { setActiveNogrr(null); }, [activeSection, activePaperCode]);
   React.useEffect(() => { setActiveRmgrr(null); }, [activeSection, activePaperCode]);
+  // Clear the open document summary whenever the section, category, or selected
+  // issue changes (so it doesn't linger over a different issue).
+  React.useEffect(() => { setActiveRuleDoc(null); }, [activeSection, activePaperCode,
+    activeNprr, activeCopmgrr, activePgrr, activeScr, activeNogrr, activeRmgrr]);
+  const onRuleDocClick = (doc, issueId, cat) => setActiveRuleDoc({ ...doc, issueId, cat });
 
   // Leaving (or re-entering) Meeting Tracks resets to the tree landing view.
   React.useEffect(() => {
@@ -254,7 +262,7 @@ function App() {
               activeSection === "market-home"
                 ? <ERCOTHome onSectionChange={setActiveSection}/>
                 : activeSection === "paper-trails"
-                ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick} onPgrrClick={onPgrrClick} onScrClick={onScrClick} onNogrClick={onNogrClick} onRmgrClick={onRmgrClick}/>
+                ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick} onPgrrClick={onPgrrClick} onScrClick={onScrClick} onNogrClick={onNogrClick} onRmgrClick={onRmgrClick} ruleDoc={activeRuleDoc} onRuleDocClose={() => setActiveRuleDoc(null)}/>
                 : activeSection === "meeting-tracks"
                 ? (activeMeetingDoc
                     ? <MeetingTracksItemHome {...activeMeetingDoc} groupName={activeMeetingGroupName} onBack={() => setActiveMeetingDoc(null)}/>
@@ -307,6 +315,7 @@ function App() {
         onClose={() => setRightOpen(false)}
         onRunPrompt={onRunPrompt}
         onArtifactClick={onArtifactClick}
+        onRuleDocClick={onRuleDocClick}
         context={{ section: activeSection, code: activePaperCode, meetingGroup: activeMeetingGroup, meetingGroupName: activeMeetingGroupName, meetingDate: activeMeetingDate, meetingDoc: activeMeetingDoc, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr }}
       />
 

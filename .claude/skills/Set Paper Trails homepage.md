@@ -69,15 +69,14 @@ All URLs are relative to the WAMP docroot; spaces are %-encoded:
 ```
 /Power.Talks/Documents%20Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick%20runs/<ISSUE_ID>%20Profile.json
 /Power.Talks/Documents%20Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick%20runs/<ISSUE_ID>%20Summary.json
-/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick%20runs/Doc%20Summaries/<safe-name>.json
 /Power.Talks/Documents%20Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<original document>   ← download target
 ```
 
 | View | Fetches |
 |---|---|
 | Center detail view (`illustration.jsx`) | `Summary.json` for all 6 categories |
-| Center **Document Summary view** (`illustration.jsx`) | a `Doc Summaries/<safe-name>.json` when a document title is clicked |
-| Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for NPRR, COPMGRR, PGRR; `Summary.json` for SCR, NOGRR, RMGRR; plus the `source_documents` list (title link + download button) |
+| Center **Document Summary view** (`illustration.jsx`) | nothing — renders the clicked `source_documents` entry passed via `activeRuleDoc` |
+| Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for NPRR, COPMGRR, PGRR; `Summary.json` for SCR, NOGRR, RMGRR. The card's "Documents Submitted" list reads `Profile.json["source_documents"]` |
 
 ## Content Window — Document Summary view
 
@@ -85,19 +84,17 @@ The center pane has two modes: the issue **Summary detail view** (default) and a
 **Document Summary view** shown when a document title is clicked in the Quick
 runs "Documents Submitted" list (block 11 of `Set-Paper-Trails-Item-Rule-Homepage`).
 
-- **State:** add `activeRuleDoc = { cat, issue, file }` in `app.jsx`; clicking a
-  document title sets it, clicking the issue/another rule clears it. When set,
-  `PaperTrailsIllustration` renders the Document Summary view instead of (or
-  above) the issue Summary.
-- **Fetch:** the per-document JSON written by the `Set-Paper-Trails-Document-Summary`
-  skill at the `Doc Summaries/<safe-name>.json` URL above (`<safe-name>` =
-  original filename with extension → `.json`, sanitized, %-encoded). Render
-  `doc_type`, `date`, `author`, `summary`, and `key_points`; a 404 shows a
-  "run the Document Summary skill" hint.
-- **Download:** the original file is served directly by WAMP — the download
-  button is `<a download href={download_url}>` to
-  `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<original document>` (%-encoded). No JSON,
-  no rebuild — the file just downloads.
+- **State:** `activeRuleDoc` in `app.jsx` holds the clicked `source_documents`
+  entry plus `{issueId, cat}` (set by `onRuleDocClick`; an effect clears it when
+  the section/category/selected issue changes). It's passed to
+  `PaperTrailsIllustration` as `ruleDoc` (+ `onRuleDocClose`).
+- **Render:** `DocumentSummaryView` in `illustration.jsx` shows the entry's
+  `doc_type`, `file`, `date`, `author`, `summary`, `key_points` plus a back link
+  and a download button — **no fetch** (the entry already has everything). While
+  `ruleDoc` is set, the category panels/issue detail are hidden.
+- **Download:** WAMP serves the original directly — `<a download
+  href={download_url}>` to `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<original
+  document>` (%-encoded). No JSON, no rebuild — the file just downloads.
 
 COPMGRR issue IDs are zero-padded to 3 digits (`COPMGRR015`); all others are
 plain integers.
@@ -178,5 +175,5 @@ Artifact items in the right panel's Artifacts tab are handled by
 | Adding list entries with `"` in titles | Breaks the JS string — replace with `'` |
 | Assuming every category has a Pending list | SCR currently ships only Approved/Withdrawn/Rejected arrays; PGRR/RMGRR/NPRR/COPMGRR have no Rejected |
 | Stale browser cache after rebundle | Hard-refresh (Ctrl+F5); the bundle is one big HTML file |
-| Document title link 404s in the content window | The `Doc Summaries/<safe-name>.json` wasn't generated — run `Set-Paper-Trails-Document-Summary` for that file |
-| Download button serves the JSON, not the file | Point `download_url` at the original document under the issue folder, not the summary JSON |
+| Documents Submitted list empty though files exist | `source_documents` not populated — run `gen_mkt_doc_summaries.py` (the `Set-Paper-Trails-Document-Summary` skill) |
+| Download button serves the JSON, not the file | Point `download_url` at the original document under the issue folder, not a summary JSON |

@@ -32,16 +32,19 @@ All six categories: `NPRR`, `SCR`, `COPMGRR`, `NOGRR`, `PGRR`, `RMGRR`
 ## Source and output locations
 
 ```
-Original document:
+Original documents:
   Documents Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<filename>
 
-Document summary JSON (this skill writes):
-  Documents Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick runs/Doc Summaries/<safe-name>.json
+Where the summaries live (this skill writes):
+  the `source_documents` array INSIDE the issue's
+  Documents Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick runs/<ISSUE_ID> Profile.json
 ```
 
-`<safe-name>` = the original filename with its extension swapped for `.json`,
-Windows-sanitized. Create `Quick runs/Doc Summaries/` if absent. The content
-window fetches the JSON at the %-encoded URL of that path.
+**Summaries are embedded in the issue `Profile.json` as `source_documents`** —
+one entry per submitted file (no separate per-document JSON files). The item-rule
+card already fetches `Profile.json`, so it gets the list **and** the summaries in
+one request, and the content window renders the entry passed to it on click — no
+extra fetch. The batch implementation is `Database Codes/gen_mkt_doc_summaries.py`.
 
 ## Reading strategy (same as the profile skill)
 
@@ -54,13 +57,11 @@ window fetches the JSON at the %-encoded URL of that path.
 | `.xlsx` | `openpyxl` cells |
 | `.pptx` | `python-pptx` slide text (if available; else summarize from the title) |
 
-## Summary JSON schema
+## `source_documents` entry schema (one per submitted file)
 
 ```json
 {
-  "document": "1264NPRR-19 ERCOT Comments 031125.docx",
-  "issue": "NPRR1264",
-  "category": "NPRR",
+  "file": "1264NPRR-19 ERCOT Comments 031125.docx",
   "doc_type": "Comments",
   "date": "2025-03-11",
   "author": "ERCOT",
@@ -69,6 +70,9 @@ window fetches the JSON at the %-encoded URL of that path.
   "download_url": "/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NPRR/NPRR1264/1264NPRR-19%20ERCOT%20Comments%20031125.docx"
 }
 ```
+
+`Profile.json["source_documents"]` is the array of these (newest/seq order,
+`.zip` excluded).
 
 - `doc_type` — infer from filename/content: `Impact Analysis` · `Comments` ·
   `Report` (PRS/ROS/TAC/Board) · `Ballot` · `Markup/Redline` · `Presentation` ·
@@ -81,35 +85,35 @@ window fetches the JSON at the %-encoded URL of that path.
 
 ## Steps
 
-1. Resolve `<CAT>` / `<ISSUE_ID>` / `<filename>`.
-2. Read the document text per the strategy above.
-3. Classify `doc_type`; pull `date` and `author` from the filename/content.
-4. Write a 2–4 sentence `summary` and 2–6 `key_points` — about **this document
-   only**, not the whole issue.
-5. Set `download_url` to the %-encoded path of the original file.
-6. Ensure `Quick runs/Doc Summaries/` exists; write `<safe-name>.json` (2-space indent).
-7. Report the saved path; list any field left `null`.
+1. For each issue: list the submitted files (`.zip`/`.tmp` excluded), in seq order.
+2. For each file: classify `doc_type`; pull `date`/`author` from the filename
+   (and content if reading). Filename-derived is the default (fast, full
+   coverage); pass `--read` to also open `.docx/.pdf/.xlsx` for richer `summary`.
+3. Write a 2–4 sentence `summary` (and `key_points`) about **this document only**,
+   not the whole issue; set `download_url` to the %-encoded original-file path.
+4. Set `Profile.json["source_documents"]` to the array of entries and write the
+   profile back (2-space indent). Leave the rest of the profile untouched.
+5. Report counts.
 
 ## Batch / refresh
 
-Generate a summary for **each** entry in the issue's `source_documents`
-(`Profile.json`). Re-run for a document when a newer version is downloaded
-(match by filename). The implementation can live alongside the other generators
-in `Database Codes/` (e.g. `gen_mkt_doc_summaries.py`) and reuse the profile
-skill's readers.
+`gen_mkt_doc_summaries.py` does all issues (or a category subset:
+`… NPRR PGRR`). Re-run after a downloader pass so newly submitted files appear.
+It only rewrites the `source_documents` field of each `Profile.json`.
 
 ## How it surfaces (cross-skill)
 
-- **`Set-Paper-Trails-Item-Rule-Homepage`** — renders the "Documents Submitted"
-  list: each row is the title link + download button.
-- **`Set-Paper-Trails-Homepage`** — the center **content window** renders this
-  summary JSON when a title link is clicked ("Document Summary view").
+- **`Set-Paper-Trails-Item-Rule-Homepage`** — block 11 "Documents Submitted"
+  renders `source_documents`: each row is the title link + download button.
+- **`Set-Paper-Trails-Homepage`** — clicking a title sets `activeRuleDoc` (the
+  clicked entry) in `app.jsx`; the center **content window** renders that entry's
+  summary directly (no extra fetch). The download button uses `download_url`.
 
 ## Common mistakes
 
 | Mistake | Fix |
 |---|---|
-| Saving outside `Quick runs/Doc Summaries/` | The content window 404s — use the exact path |
+| Writing separate per-document JSON files | Summaries live in `Profile.json["source_documents"]`; the card already has them |
+| Rewriting the whole profile | Only set the `source_documents` field; leave other fields intact |
 | Summarizing the whole issue | Summarize the single document; the issue summary is a different skill |
-| Un-encoded `download_url` | %-encode spaces and special characters so the browser fetches the right file |
-| Missing `doc_type`/`date` | Best-effort from filename + content; `null` only when truly unavailable |
+| Un-encoded `download_url` | %-encode spaces/specials so the browser fetches the right file |

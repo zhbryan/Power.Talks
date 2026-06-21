@@ -46,25 +46,21 @@ switch (`hasNprr ? <RuleProfileCard cat="NPRR" num={ctx.nprr} /> : ...`).
 Lists the files submitted so far for the revision request, from
 `source_documents` in `Profile.json` (newest first; exclude `.zip`). Each row has:
 
-- **Title link** — the document name as a hyperlink. Clicking it opens that
-  document's **summary in the center content window** (not the right panel) —
-  the summary is produced by the `Set-Paper-Trails-Document-Summary` skill and
-  fetched from
-  `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick runs/Doc Summaries/<safe-name>.json`.
-  Wire the click through `app.jsx` state (e.g. `activeRuleDoc = {cat, issue,
-  file}`) so `illustration.jsx` renders the Document Summary view in the content
-  window (see `Set-Paper-Trails-Homepage`).
-- **Download button** — a small control on the **same title line**; it is an
-  `<a download href={doc.download_url || originalFileURL}>` pointing at the
-  **original** file under `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<filename>`
-  (%-encoded). It downloads the original to the user's machine and must not
-  navigate the SPA (use the `download` attribute; `e.stopPropagation()` so it
-  doesn't also trigger the title-link summary).
+- **Title link** — shows `doc_type · date` (the readable title; the raw filename
+  is the tooltip). Clicking calls `onDocClick(doc, issueId, cat)` →
+  `onRuleDocClick` in `app.jsx`, which sets `activeRuleDoc = {...doc, issueId,
+  cat}`. `illustration.jsx` then renders that entry's summary in the center
+  **content window** (no extra fetch — the entry already carries `summary`,
+  `key_points`, etc.). See `Set-Paper-Trails-Homepage`.
+- **Download button** — a small control on the **same title line**; an
+  `<a download href={doc.download_url}>` pointing at the **original** file under
+  `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<filename>` (%-encoded). It downloads the
+  original and must not navigate the SPA (use the `download` attribute +
+  `e.stopPropagation()` so it doesn't also trigger the title-link summary).
 
-Render the list even when sparse; if `source_documents` is empty, show `—`. A
-document with no generated summary yet still shows its title (the content window
-shows a "run the Document Summary skill" hint on 404) and a working download
-button.
+Each entry comes from `Profile.json["source_documents"]` (populated by the
+`Set-Paper-Trails-Document-Summary` skill / `gen_mkt_doc_summaries.py`). Render
+the list even when sparse; if `source_documents` is empty/missing, show `—`.
 
 > **Governing-document sections are intentionally NOT on this card** (removed
 > 2026-06-12 by request) — do not re-add a "Protocol Sections" block. The

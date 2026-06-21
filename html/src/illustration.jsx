@@ -1179,7 +1179,50 @@ function RmgrPanels({ onRmgrClick }) {
   );
 }
 
-function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgrrClick, onPgrrClick, onScrClick, onNogrClick, onRmgrClick }) {
+function DocumentSummaryView({ doc, onBack }) {
+  if (!doc) return null;
+  const Row = ({ label, value }) => value ? (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.45 }}>{value}</div>
+    </div>
+  ) : null;
+  const kp = doc.key_points || [];
+  return (
+    <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+        <a href="#" onClick={(e) => { e.preventDefault(); onBack && onBack(); }}
+           style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--accent-2)", textDecoration: "none" }}>← back to {doc.issueId}</a>
+        {doc.download_url &&
+          <a href={doc.download_url} download
+             style={{ marginLeft: "auto", fontSize: 12, color: "var(--accent-2)", textDecoration: "none", border: "1px solid var(--rule-2)", borderRadius: 8, padding: "4px 10px" }}>
+            ⬇ Download original
+          </a>}
+      </div>
+      <div style={{ fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)" }}>
+        {doc.issueId} · Document Summary
+      </div>
+      <div style={{ fontFamily: "var(--serif)", fontSize: 22, lineHeight: 1.15, margin: "2px 0 10px", color: "var(--ink)" }}>
+        {doc.doc_type || doc.file}
+      </div>
+      <Row label="File" value={doc.file} />
+      <Row label="Type" value={doc.doc_type} />
+      <Row label="Date" value={doc.date} />
+      <Row label="Author / Filer" value={doc.author} />
+      <Row label="Summary" value={doc.summary} />
+      {kp.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 2 }}>Key Points</div>
+          <ul style={{ margin: "2px 0", paddingLeft: 18, fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.5 }}>
+            {kp.map((k, i) => <li key={i}>{k}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgrrClick, onPgrrClick, onScrClick, onNogrClick, onRmgrClick, ruleDoc, onRuleDocClose }) {
   const activeItem = PAPER_TRAIL_CODES.find(c => c.code === active) || PAPER_TRAIL_CODES[0];
   const [selectedNprr, setSelectedNprr] = React.useState(null);
   const [selectedCopmgrr, setSelectedCopmgrr] = React.useState(null);
@@ -1353,7 +1396,9 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
         <span className="count">{activeItem.count.toLocaleString()} documents on file</span>
       </div>
 
-      {active === "NPRR" && (
+      {ruleDoc && <DocumentSummaryView doc={ruleDoc} onBack={onRuleDocClose} />}
+
+      {!ruleDoc && active === "NPRR" && (
         selectedNprr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
               <NprrDetailView nprr={selectedNprr} onBack={handleBack} />
@@ -1361,7 +1406,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
           : <NprrPanels onNprrClick={handleNprrClick} />
       )}
 
-      {active === "COPMGRR" && (
+      {!ruleDoc && active === "COPMGRR" && (
         selectedCopmgrr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
               <CopmgrrDetailView copmgrr={selectedCopmgrr} onBack={handleCopmgrrBack} />
@@ -1369,7 +1414,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
           : <CopmgrrPanels onCopmgrrClick={handleCopmgrrClick} />
       )}
 
-      {active === "PGRR" && (
+      {!ruleDoc && active === "PGRR" && (
         selectedPgrr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
               <PgrrDetailView pgrr={selectedPgrr} onBack={handlePgrrBack} />
@@ -1377,7 +1422,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
           : <PgrrPanels onPgrrClick={handlePgrrClick} />
       )}
 
-      {active === "SCR" && (
+      {!ruleDoc && active === "SCR" && (
         selectedScr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
               <ScrDetailView scr={selectedScr} onBack={handleScrBack} />
@@ -1385,7 +1430,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
           : <ScrPanels onScrClick={handleScrClick} />
       )}
 
-      {active === "NOGRR" && (
+      {!ruleDoc && active === "NOGRR" && (
         selectedNogrr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
               <NogrDetailView nogrr={selectedNogrr} onBack={handleNogrBack} />
@@ -1393,7 +1438,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
           : <NogrPanels onNogrClick={handleNogrClick} />
       )}
 
-      {active === "RMGRR" && (
+      {!ruleDoc && active === "RMGRR" && (
         selectedRmgrr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
               <RmgrDetailView rmgrr={selectedRmgrr} onBack={handleRmgrBack} />
