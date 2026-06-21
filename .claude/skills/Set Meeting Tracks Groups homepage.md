@@ -21,10 +21,17 @@ tree to that committee's **meeting list**, grouped by year:
   (see `Set-Meeting-Tracks-Item-Rule-Homepage`).
 - A **back link** ("← ERCOT Stakeholder Process") returns to the tree.
 
-Right panel ("Quick runs") on a group/item homepage:
-- **For the talk** → the meeting profile (`MeetingProfileCard`), per
-  `ERCOT Stakeholder Meeting Profile.md` — fetched live, with a graceful
-  "not yet generated" fallback when the profile is missing.
+Right panel ("Quick runs") on a group/item homepage — **`MeetingProfileCard`
+shows two different summaries depending on what's open** (per the two-tier model
+in `ERCOT Stakeholder Meeting Profile.md`):
+- **For the talk · group level** (a group is open, no meeting selected) → the
+  **group introduction**: full name, chair/vice chair, mandate, voting parties,
+  and voting structure. Fetched from the committee `_manifest.json`
+  (`group_summary`). This is the default view the moment a group is clicked.
+- **For the talk · meeting level** (a specific meeting/document is open) → the
+  **meeting summary**: this meeting's topics, debates, and voting outcomes, plus
+  document count. Fetched from the meeting profile JSON (`meeting_summary`), with
+  a graceful "not yet generated" fallback when the profile is missing.
 - **Artifacts** → the **full** `ARTIFACTS` list (the Market Rules right-panel
   setting — same as the Paper Trails item-rule homepage), not the trimmed
   3-item set used on the tree landing.
@@ -50,9 +57,18 @@ Documents Database/ERCOT.STKHDR.MEETS/<COMMITTEE>/_manifest.json
 Shape:
 
 ```json
-{ "committee": "TAC", "generated": "…", "meeting_count": 214,
+{ "committee": "TAC", "committee_full_name": "Technical Advisory Committee",
+  "chair": "Caitlin Smith", "vice_chair": "Martha Henson",
+  "group_summary": { "overview": "…", "leadership": "…",
+    "voting_parties": ["…"], "voting_structure": "…" },
+  "generated": "…", "meeting_count": 214,
   "meetings": [ { "date": "2026-05-19", "doc_count": 12, "docs": ["…", "…"] }, … ] }
 ```
+
+The group-level fields (`committee_full_name`, `chair`, `vice_chair`,
+`group_summary`) let the group homepage show the group introduction **before**
+any meeting is selected. They are derived by `group_summary()` in
+`gen_stkhdr_profiles.py`, imported by the manifest generator.
 
 Meetings are newest-first; `docs` excludes `.tmp` files, **`.zip` archives**
 (case-insensitive — no zip link ever shows in the document list, and `doc_count`

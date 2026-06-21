@@ -927,7 +927,7 @@ function MeetingTracksGroupHome({ committee, groupName, onBack, onDocClick, onMe
 
   React.useEffect(() => {
     setLoading(true); setError(null); setData(null);
-    fetch(`${STK_BASE}/${encodeURIComponent(committee)}/_manifest.json`)
+    fetch(`${STK_BASE}/${encodeURIComponent(committee)}/_manifest.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => {
         setData(d); setLoading(false);

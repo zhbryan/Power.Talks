@@ -82,6 +82,32 @@ CAL_SLUG = {  # calendar URL slug per committee (best-effort, base form)
 }
 
 
+# ── ERCOT Board of Directors — voting members (the "voting parties") ─────────
+# UPDATE SCHEME: the Board is not market-segment-based, so its voting parties are
+# the named directors. Refresh this registry from the live ERCOT pages whenever
+# the Board changes (ERCOT posts a news release when directors are appointed):
+#   • Independent directors:  https://www.ercot.com/about/governance/directors
+#   • Committee rosters:      https://www.ercot.com/committees/board/finance_audit
+#                             https://www.ercot.com/committees/board/hr_governance
+#                             https://www.ercot.com/committees/board/tech-security
+# After editing, bump BOARD_LAST_VERIFIED and regenerate the manifests
+# (gen_stkhdr_manifest.py) so the group homepage's Voting Parties list updates.
+BOARD_LAST_VERIFIED = "2026-06"
+BOARD_MEMBERS = {
+    "BOARD": ["Bill Flores (Chair)", "Peggy Heeg (Vice Chair)", "Linda Capuano",
+              "Julie England", "Christopher A. Krummel", "Kathleen McAllister",
+              "Bill Mohl", "John Swainson"],
+    "FA":  ["Christopher A. Krummel (Chair)", "Benjamin Barkley", "Julie England", "Bill Mohl"],
+    "HRG": ["Peggy Heeg (Chair)", "Benjamin Barkley", "Christopher A. Krummel", "Kathleen McAllister"],
+    "TS":  ["John Swainson (Chair)", "Linda Capuano", "Julie England", "Bill Mohl"],
+}
+# Ex officio (sit on the Board but the President/CEO and PUCT Chair are non-voting).
+BOARD_EX_OFFICIO = ["Pablo Vegas (President & CEO, non-voting)",
+                    "Thomas Gleeson (PUCT Chair, non-voting)",
+                    "Courtney Hjaltman (PUCT Commissioner)",
+                    "Benjamin Barkley (OPUC Public Counsel)"]
+
+
 def group_summary(abbr):
     full, chair, vc, model, parent = C.get(abbr, (abbr, None, None, "wg", "its parent committee"))
     lead_bits = []
@@ -90,14 +116,23 @@ def group_summary(abbr):
     leadership = "; ".join(lead_bits) if lead_bits else None
 
     if model == "board":
+        parties = BOARD_MEMBERS.get(abbr, ["ERCOT Board of Directors"])
         if abbr == "BOARD":
             overview = ("The ERCOT Board of Directors is the governing body of ERCOT, "
                         "overseeing management, finance, and the reliability of the Texas grid.")
+            structure = ("The eight independent directors hold the votes; matters are decided "
+                         "by a majority. Ex officio members participate but the President & CEO "
+                         "(Pablo Vegas) and PUCT Chair (Thomas Gleeson) are non-voting; "
+                         "Courtney Hjaltman (PUCT Commissioner) and Benjamin Barkley (OPUC "
+                         f"Public Counsel) also serve ex officio. Not subject to ERCOT "
+                         f"market-segment voting. Roster verified {BOARD_LAST_VERIFIED}.")
         else:
-            overview = f"The {full} is a governance committee of the ERCOT Board of Directors."
-        parties = ["ERCOT Board of Directors"]
-        structure = ("Board governance voting — matters are decided by a majority of "
-                     "directors. Not subject to ERCOT market-segment voting.")
+            overview = (f"The {full} is a standing committee of the ERCOT Board of Directors, "
+                        f"reviewing matters in its area and forwarding recommendations to the "
+                        f"full Board.")
+            structure = ("Decisions by a majority of the committee's directors, forwarded to "
+                         f"the full ERCOT Board. Not subject to ERCOT market-segment voting. "
+                         f"Roster verified {BOARD_LAST_VERIFIED}.")
     elif model == "segment":
         if abbr == "TAC":
             overview = ("The Technical Advisory Committee (TAC) is the senior stakeholder "
@@ -131,6 +166,10 @@ def group_summary(abbr):
 
 
 def extract_agenda(path):
+    return _agenda_pdf(path) if path.lower().endswith(".pdf") else _agenda_docx(path)
+
+
+def _agenda_docx(path):
     try:
         from docx import Document
         doc = Document(path)
@@ -153,6 +192,63 @@ def extract_agenda(path):
         if m:
             add(m.group(1))
     return items[:40]
+
+
+def _agenda_pdf(path):
+    """Extract numbered agenda items from a PDF, using column geometry to keep
+    the Topic text and drop the Topic-Type / Presenter columns."""
+    try:
+        import pdfplumber
+    except Exception:
+        return []
+    items, seen = [], set()
+    try:
+        with pdfplumber.open(path) as pdf:
+            for page in pdf.pages:
+                words = page.extract_words()
+                if not words:
+                    continue
+                top_min, top_max = page.height * 0.07, page.height * 0.93
+                lines = {}
+                for w in words:
+                    if top_min <= w["top"] <= top_max:  # drop header/footer margins
+                        lines.setdefault(round(w["top"] / 3.0), []).append(w)
+                cutoff = None
+                for k in sorted(lines):
+                    txt = [w["text"] for w in lines[k]]
+                    if "Presenter" in txt and "Type" in txt:
+                        tops = [w for w in lines[k] if w["text"] == "Topic"]
+                        cutoff = ((tops[-1]["x0"] if tops else
+                                   [w for w in lines[k] if w["text"] == "Type"][0]["x0"]) - 4)
+                        break
+                if cutoff is None:
+                    cutoff = page.width * 0.60
+                cur = None
+                for k in sorted(lines):
+                    ws = sorted(lines[k], key=lambda w: w["x0"])
+                    line = re.sub(r"\s+", " ",
+                                  " ".join(w["text"] for w in ws if w["x0"] < cutoff)).strip()
+                    if re.match(r"^(\d+)\.\s+", line):
+                        if cur:
+                            items.append(cur)
+                        cur = re.sub(r"^\d+\.\s+", "", line)
+                    elif re.match(r"^\d+\.\d+", line):  # sub-item → close current
+                        if cur:
+                            items.append(cur); cur = None
+                    elif (cur is not None and line
+                          and not re.match(r"^(Item|Convene|Adjourn|Recess|Executive Session"
+                                           r"|Agenda|ERCOT Public|Page)\b", line)):
+                        cur += " " + line
+                if cur:
+                    items.append(cur)
+    except Exception:
+        return []
+    clean = []
+    for it in items:
+        it = re.sub(r"\s+", " ", it).strip().rstrip(",")
+        if it and it.lower() not in seen and 3 < len(it) < 160:
+            seen.add(it.lower()); clean.append(it)
+    return clean[:40]
 
 
 def extract_ballot(path):
@@ -204,6 +300,159 @@ def extract_ballot(path):
     return out
 
 
+# ── Minutes parsing: debates + real voting outcomes ──────────────────────────
+NUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+       "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+RR = re.compile(r"\b((?:NPRR|NOGRR|PGRR|RRGRR|SCR|RMGRR|COPMGRR|VCMRR|OBDRR|"
+                r"SMOGRR|NGRR|PGRR)\d{2,4})\b")
+STRONG = re.compile(r"\b(concern|oppos|object|discuss|withdr|requested additional|"
+                    r"further discuss|disagree|debat|reiterat|caution|challenge|"
+                    r"friendly amendment|took no action)\w*", re.I)
+EXCLUDE = re.compile(r"no objection|there were no objection|antitrust|to order|"
+                     r"adjourn|no other business", re.I)
+_WORD = {"app": None, "count": 0}  # reused Word instance, recycled periodically
+_WORD_RECYCLE = 25                 # restart Word every N opens (avoids degradation)
+
+
+def _word_paragraphs(path):
+    """Read a legacy .doc via a reused Word instance; [] on any failure.
+
+    Reads the whole document in one `Content.Text` call (splitting on the \\r
+    paragraph mark) rather than iterating the Paragraphs COM collection, which
+    returns incomplete results when many files are opened in sequence. Dialogs
+    and macros are suppressed so a stray document can't block the batch.
+    """
+    try:
+        import win32com.client
+        # Recycle Word periodically — a long-lived instance starts returning
+        # truncated Content.Text after ~150 opens.
+        if _WORD["app"] is not None and _WORD["count"] >= _WORD_RECYCLE:
+            close_word()
+        if _WORD["app"] is None:
+            app = win32com.client.Dispatch("Word.Application")
+            app.Visible = False
+            try:
+                app.DisplayAlerts = 0            # wdAlertsNone
+                app.AutomationSecurity = 3       # msoAutomationSecurityForceDisable
+            except Exception:
+                pass
+            _WORD["app"] = app
+            _WORD["count"] = 0
+        _WORD["count"] += 1
+        doc = _WORD["app"].Documents.Open(
+            os.path.abspath(path), ReadOnly=True, ConfirmConversions=False,
+            AddToRecentFiles=False)
+        text = doc.Content.Text
+        doc.Close(False)
+        return text.split("\r")
+    except Exception:
+        return []
+
+
+def close_word():
+    if _WORD["app"] is not None:
+        try:
+            _WORD["app"].Quit()
+        except Exception:
+            pass
+        _WORD["app"] = None
+        _WORD["count"] = 0
+
+
+def minutes_paragraphs(path):
+    low = path.lower()
+    if low.endswith(".docx"):
+        try:
+            from docx import Document
+            return [p.text for p in Document(path).paragraphs]
+        except Exception:
+            return []
+    if low.endswith(".pdf"):
+        return _pdf_sentences(path)
+    return _word_paragraphs(path)  # .doc
+
+
+def _pdf_sentences(path):
+    """PDF minutes: de-wrap lines and split into sentences so a motion and its
+    result land in parseable units for parse_minutes()."""
+    try:
+        import pdfplumber
+        with pdfplumber.open(path) as pdf:
+            text = "\n".join((p.extract_text() or "") for p in pdf.pages)
+    except Exception:
+        return []
+    text = re.sub(r"-\n", "", text)            # join hyphenated line breaks
+    text = re.sub(r"\s*\n\s*", " ", text)       # de-wrap
+    for ab in ("Mr.", "Ms.", "Mrs.", "Dr.", "No.", "Sr.", "Jr.", "St.",
+               "Inc.", "Co.", "vs.", "U.S.", "a.m.", "p.m."):
+        text = text.replace(ab, ab.replace(".", "\x00"))
+    sents = re.split(r"(?<=[.;:])\s+(?=[A-Z(])", text)
+    return [s.replace("\x00", ".").strip() for s in sents if s.strip()]
+
+
+def _result_text(low):
+    if "fail" in low:
+        base = "Failed"
+    elif "unanim" in low:
+        return "Carried unanimously"
+    else:
+        base = "Carried"
+    opp = re.search(r"(one|two|three|four|five|six|\d+)\s+(?:opposing|objection|negative)", low)
+    ab = re.search(r"(one|two|three|four|five|six|\d+)\s+abstention", low)
+    extra = []
+    if opp:
+        extra.append(f"{NUM.get(opp.group(1), opp.group(1))} opposing")
+    if ab:
+        extra.append(f"{NUM.get(ab.group(1), ab.group(1))} abstaining")
+    return base + (" — " + ", ".join(extra) if extra else "")
+
+
+def parse_minutes(paras):
+    """Return (debates, voting_outcomes) parsed from minutes paragraphs."""
+    outcomes, debates, seen_o, seen_d = [], [], {}, set()
+    last_item = None
+    for raw in paras:
+        t = re.sub(r"\s+", " ", raw).strip()
+        if not t:
+            continue
+        low = t.lower()
+        if RR.search(t) and len(t) < 120:
+            last_item = RR.search(t).group(1)
+        has_moved = "moved to" in low
+        has_result = ("motion carried" in low or "carried with" in low
+                      or "carried unanim" in low or "motion fail" in low
+                      or "motion passed" in low or "passed with" in low
+                      or "passed unanim" in low)
+        if has_moved:
+            if "combined ballot" in low or "combo ballot" in low:
+                item = "Combined Ballot"
+            else:
+                item = RR.search(t).group(1) if RR.search(t) else last_item
+            res = _result_text(low) if has_result else None
+            mv = re.search(r"moved to (.+?)(?:\.\s|\.$|$)", t, re.I)
+            motion = re.sub(r"\s+", " ", (mv.group(1) if mv else t)).strip()[:240]
+            k = (item, motion[:50])
+            if k in seen_o:
+                if res and not seen_o[k]["result"]:
+                    seen_o[k]["result"] = res
+                continue
+            o = {"item": item, "motion": motion, "result": res,
+                 "for": None, "against": None, "abstain": None}
+            seen_o[k] = o
+            outcomes.append(o)
+        elif has_result:  # standalone "The motion carried…" → attach to last open outcome
+            res = _result_text(low)
+            for o in reversed(outcomes):
+                if o["result"] is None:
+                    o["result"] = res
+                    break
+        elif STRONG.search(t) and not EXCLUDE.search(t) and 70 <= len(t) <= 600:
+            if low[:40] not in seen_d:
+                seen_d.add(low[:40])
+                debates.append(t if len(t) <= 320 else t[:317].rstrip() + "…")
+    return debates[:8], outcomes[:25]
+
+
 def wg_reports(files):
     found = []
     for f in files:
@@ -231,16 +480,53 @@ def build_profile(abbr, date, folder):
     docs = [f for f in files
             if not f.lower().endswith((".zip", ".tmp")) and f != "_manifest.json"]
 
+    # Agenda — prefer .docx (cleanest), else a PDF agenda.
     agenda = []
-    for f in docs:
-        if "agenda" in f.lower() and f.lower().endswith(".docx"):
-            agenda = extract_agenda(os.path.join(folder, f)); break
+    agenda_file = next((f for f in docs if "agenda" in f.lower()
+                        and f.lower().endswith(".docx")), None)
+    if not agenda_file:
+        agenda_file = next((f for f in docs if "agenda" in f.lower()
+                            and f.lower().endswith(".pdf")), None)
+    if agenda_file:
+        agenda = extract_agenda(os.path.join(folder, agenda_file))
     ballots = []
     for f in docs:
         if "ballot" in f.lower() and f.lower().endswith((".xls", ".xlsx")):
             ballots = extract_ballot(os.path.join(folder, f)); break
 
-    topics = [a for a in agenda if not TOPIC_SKIP.search(a)][:6]
+    topics = [a for a in agenda if not TOPIC_SKIP.search(a)][:8]
+
+    # Study THIS meeting's own minutes (folders often also hold the prior
+    # meeting's draft minutes — match by date so we summarize the right meeting).
+    # Prefer approved over draft, and cleaner formats (.docx > .doc > .pdf).
+    debates, mins_outcomes = [], []
+    yyyymmdd = date.replace("-", "")
+    mmddyyyy = date[5:7] + date[8:10] + date[0:4]
+    def is_this_meeting(f):
+        dg = re.sub(r"\D", "", f)
+        return yyyymmdd in dg or mmddyyyy in dg
+    FMT_RANK = {".docx": 3, ".doc": 2, ".pdf": 1}
+    mins = [f for f in docs
+            if "minute" in f.lower() and f.lower().endswith((".docx", ".doc", ".pdf"))
+            and is_this_meeting(f)]
+    minutes_file = max(
+        mins, key=lambda f: (10 if "approved" in f.lower() else 0)
+                            + FMT_RANK[os.path.splitext(f.lower())[1]]) if mins else None
+    if minutes_file:
+        debates, mins_outcomes = parse_minutes(
+            minutes_paragraphs(os.path.join(folder, minutes_file)))
+
+    # meeting_summary (meeting-level) — distinct from group_summary (group-level).
+    if mins_outcomes:
+        voting_outcomes = mins_outcomes
+    else:
+        voting_outcomes = [{"item": b["item"], "motion": b["motion"],
+                            "result": b["result"], "for": b["for"],
+                            "against": b["against"], "abstain": b["abstain"]}
+                           for b in ballots]
+    meeting_sum = {"topics": topics, "debates": debates,
+                   "voting_outcomes": voting_outcomes}
+
     full, chair, vc, gsum = group_summary(abbr)
     mmddyyyy = date[5:7] + date[8:10] + date[0:4]
     slug = CAL_SLUG.get(abbr, f"{abbr}-Meeting")
@@ -254,6 +540,7 @@ def build_profile(abbr, date, folder):
         "chair": chair,
         "vice_chair": vc,
         "group_summary": gsum,
+        "meeting_summary": meeting_sum,
         "agenda_items": agenda,
         "ballot_results": ballots,
         "working_group_reports": wg_reports(docs),
@@ -268,31 +555,34 @@ def main():
     overwrite = "--overwrite" in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith("--")]
     written = skipped = errors = 0
-    for abbr in sorted(os.listdir(ROOT)):
-        if only and abbr not in only:
-            continue
-        cdir = os.path.join(ROOT, abbr)
-        if not os.path.isdir(cdir):
-            continue
-        for date in sorted(d for d in os.listdir(cdir) if DATE_RE.match(d)):
-            folder = os.path.join(cdir, date)
-            if not os.path.isdir(folder):
+    try:
+        for abbr in sorted(os.listdir(ROOT)):
+            if only and abbr not in only:
                 continue
-            qr = os.path.join(folder, "Quick runs")
-            out = os.path.join(qr, f"{abbr}-{date} Profile.json")
-            if os.path.exists(out) and not overwrite:
-                skipped += 1; continue
-            try:
-                prof = build_profile(abbr, date, folder)
-                os.makedirs(qr, exist_ok=True)
-                with open(out, "w", encoding="utf-8") as fh:
-                    json.dump(prof, fh, indent=2, ensure_ascii=False)
-                written += 1
-                if written % 100 == 0:
-                    print(f"  ... {written} written")
-            except Exception as e:
-                errors += 1
-                print(f"  ERROR {abbr}/{date}: {e}")
+            cdir = os.path.join(ROOT, abbr)
+            if not os.path.isdir(cdir):
+                continue
+            for date in sorted(d for d in os.listdir(cdir) if DATE_RE.match(d)):
+                folder = os.path.join(cdir, date)
+                if not os.path.isdir(folder):
+                    continue
+                qr = os.path.join(folder, "Quick runs")
+                out = os.path.join(qr, f"{abbr}-{date} Profile.json")
+                if os.path.exists(out) and not overwrite:
+                    skipped += 1; continue
+                try:
+                    prof = build_profile(abbr, date, folder)
+                    os.makedirs(qr, exist_ok=True)
+                    with open(out, "w", encoding="utf-8") as fh:
+                        json.dump(prof, fh, indent=2, ensure_ascii=False)
+                    written += 1
+                    if written % 100 == 0:
+                        print(f"  ... {written} written")
+                except Exception as e:
+                    errors += 1
+                    print(f"  ERROR {abbr}/{date}: {e}")
+    finally:
+        close_word()
     print(f"\nDone. written={written} skipped(existing)={skipped} errors={errors}")
 
 

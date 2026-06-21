@@ -92,6 +92,20 @@ ballot_lines = [s for s in strings if any(k in s.upper() for k in ("NPRR", "NOGR
 
 ---
 
+## Two-tier summary model (what the right panel shows)
+
+The same profile feeds **two different "Quick runs / For the talk" views**, and
+their summary content must be **different**:
+
+| Level | Opened when… | Summary content | JSON source |
+|-------|--------------|-----------------|-------------|
+| **Group homepage** | a group name is clicked (no specific meeting) | Introduction to the **group** — leadership, voting parties, voting structure, mandate | `group_summary` (and `committee_full_name` / `chair` / `vice_chair`) |
+| **Meeting homepage** | a specific meeting date/document is opened | Summary of **that meeting** — topics, debates/discussion, voting outcomes | `meeting_summary` (and `documents`) |
+
+`group_summary` is **group-level** (identical across all the group's meetings).
+`meeting_summary` is **meeting-level** (unique per meeting). Do not repeat the
+group introduction inside the meeting view — keep the two cleanly separated.
+
 ## Profile Fields
 
 Extract the following fields. Use `null` for any field not found; use `[]` for empty arrays.
@@ -105,7 +119,8 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
 | 5 | `calendar_url` | `https://www.ercot.com/calendar/MMDDYYYY-<SLUG>` |
 | 6 | `chair` | From segment reps doc or agenda opening |
 | 7 | `vice_chair` | From segment reps doc or agenda opening |
-| 7a | `group_summary` | Object summarizing the meeting **group** — leadership, voting parties, and mandate (see below). Independent of the individual meeting. |
+| 7a | `group_summary` | **Group-level.** Object summarizing the meeting **group** — leadership, voting parties, structure, mandate (see below). Shown on the group homepage. Independent of the individual meeting. |
+| 7b | `meeting_summary` | **Meeting-level.** Object summarizing **this meeting** — `topics`, `debates`, `voting_outcomes` (see below). Shown on the meeting homepage. |
 | 8 | `agenda_items` | Array of agenda item title strings, in order |
 | 9 | `ballot_results` | Array of `{item, motion, for, against, abstain, result}` objects from ballot `.xls` |
 | 10 | `working_group_reports` | Array of WG abbreviations that submitted a report (e.g. `["NDSWG", "PLWG", "DWG"]`) |
@@ -130,6 +145,11 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
     "leadership": null,
     "voting_parties": [],
     "voting_structure": null
+  },
+  "meeting_summary": {
+    "topics": [],
+    "debates": [],
+    "voting_outcomes": []
   },
   "agenda_items": [],
   "ballot_results": [],
@@ -183,6 +203,35 @@ that the group uses ERCOT market-segment voting. Working groups that are advisor
 (report up rather than ballot) should say so in `voting_structure` and may leave
 `voting_parties` as `[]`.
 
+### Board voting parties — update scheme
+
+The Board and its committees (`BOARD`, `FA`, `HRG`, `TS`) are **not**
+market-segment bodies, so their `voting_parties` are the **named directors**, not
+segments. Maintain them from the live ERCOT pages:
+
+| Source | Use for |
+|--------|---------|
+| `https://www.ercot.com/about/governance/directors` | The 8 independent directors (the voting members) + Chair/Vice Chair |
+| `https://www.ercot.com/committees/board/finance_audit` | F&A committee roster |
+| `https://www.ercot.com/committees/board/hr_governance` | HR&G committee roster |
+| `https://www.ercot.com/committees/board/tech-security` | T&S committee roster |
+
+**When to refresh:** ERCOT posts a news release whenever directors are appointed
+(e.g. `ercot.com/news/release/...`). Re-verify on each major update and at least
+annually. **The eight independent directors are the voting members**; the ex
+officio members — President & CEO and PUCT Chair (non-voting), plus the PUCT
+Commissioner and OPUC Public Counsel — are noted in `voting_structure`, not in
+`voting_parties`.
+
+**Where it lives:** the `BOARD_MEMBERS` registry and `BOARD_LAST_VERIFIED` in
+`Database Codes/download_STKHDR_Meets/gen_stkhdr_profiles.py`. After editing,
+bump `BOARD_LAST_VERIFIED` and **regenerate the manifests** (`gen_stkhdr_manifest.py`)
+so the group homepage's bulleted Voting Parties list updates.
+
+As of `2026-06`: Chair **Bill Flores**, Vice Chair **Peggy Heeg**; directors
+**Linda Capuano, Julie England, Christopher A. Krummel, Kathleen McAllister,
+Bill Mohl, John Swainson**.
+
 **Example (`group_summary` for ROS):**
 
 ```json
@@ -191,6 +240,40 @@ that the group uses ERCOT market-segment voting. Working groups that are advisor
   "leadership": "Chair: Sandeep Borkar (promoted from Vice Chair); Vice Chair: Shane Thomas",
   "voting_parties": ["Consumer", "Cooperative", "Independent Generator", "Independent Power Marketer", "Independent Retail Electric Provider", "Investor Owned Utility", "Municipal"],
   "voting_structure": "ERCOT market-segment voting; revision requests and recommendations carried to TAC by majority of segments present."
+}
+```
+
+## meeting_summary — the individual meeting summary
+
+`meeting_summary` is **unique to one meeting** and drives the meeting homepage's
+Quick runs / For the talk view. It answers "what happened at this meeting?"
+
+| Key | Content | Source |
+|-----|---------|--------|
+| `topics` | Array of the substantive subjects covered — the agenda items minus boilerplate (antitrust, agenda review, minutes approval, adjourn) | Agenda; minutes section headers |
+| `debates` | Array of plain-text notes on the key discussions, positions, and points of contention | Minutes (discussion paragraphs); comment documents |
+| `voting_outcomes` | Array of `{item, motion, result, for, against, abstain}` — the result of each motion/ballot | Combined ballot `.xls`; "Motion Carries/Fails" lines; approved minutes |
+
+Build `voting_outcomes` and `debates` from **this meeting's own minutes** —
+prefer the `APPROVED-Minutes` document whose filename carries this meeting's date
+(a folder often also holds the *prior* meeting's draft minutes; match the date so
+you summarize the right meeting, and prefer approved over draft). Read motion
+lines ("X moved to … The motion carried …") for `voting_outcomes` with real
+results (carried/failed, opposing/abstaining counts), and substantive discussion
+paragraphs for `debates`. Legacy `.doc` minutes are read via Word (win32com).
+Fall back to `ballot_results` for `voting_outcomes` (with `null` tallies/result)
+and leave `debates` as `[]` when this meeting has no minutes on file yet.
+
+**Example (`meeting_summary` for ROS 2026-06-04):**
+
+```json
+{
+  "topics": ["Election of 2026 ROS leadership", "ROS revision requests (NOGRR/PGRR/NPRR)", "OTWG, PDCWG, and PLWG working group reports"],
+  "debates": ["Tabled NOGRR286 and PGRR146/147 referred back to PLWG", "Large-load interconnection and IBR ride-through items carried over"],
+  "voting_outcomes": [
+    {"item": "NOGRR273", "motion": "To endorse and forward to TAC", "result": null, "for": null, "against": null, "abstain": null},
+    {"item": "Combined Ballot", "motion": "To approve the Combined Ballot as presented", "result": null, "for": null, "against": null, "abstain": null}
+  ]
 }
 ```
 
@@ -203,11 +286,12 @@ that the group uses ERCOT market-segment voting. Working groups that are advisor
 3. Populate the `documents` field with the filenames found, **excluding any `.zip` archive (case-insensitive), `.tmp` files, and the manifest** — no zip link ever appears in the content window.
 4. Read each document in order of priority: segment reps → agenda → ballot → minutes → WG reports.
 5. Build `group_summary` (leadership, voting parties, voting structure, overview) from the group's leadership table in `ERCOT Stakeholder Meetings Links.md` §1 and the ERCOT market-segment model; reuse an existing group profile if leadership is unchanged.
-6. Extract all remaining fields. For `ballot_results`, parse the combined ballot `.xls`; for individual separate ballots, add one entry per file.
-7. Infer `meeting_type` from the calendar URL slug if the agenda does not state it explicitly (see `ERCOT Stakeholder Meetings Links.md` §2.3).
-8. Ensure `Quick runs/` exists under the meeting date folder.
-9. Write the JSON file with 2-space indentation.
-10. Report the saved path and list any fields that could not be populated.
+6. Build `meeting_summary` (`topics`, `debates`, `voting_outcomes`) for **this** meeting from the agenda, minutes, and ballot — keep it distinct from `group_summary`.
+7. Extract all remaining fields. For `ballot_results`, parse the combined ballot `.xls`; for individual separate ballots, add one entry per file.
+8. Infer `meeting_type` from the calendar URL slug if the agenda does not state it explicitly (see `ERCOT Stakeholder Meetings Links.md` §2.3).
+9. Ensure `Quick runs/` exists under the meeting date folder.
+10. Write the JSON file with 2-space indentation.
+11. Report the saved path and list any fields that could not be populated.
 
 ---
 
@@ -221,4 +305,5 @@ that the group uses ERCOT market-segment voting. Working groups that are advisor
 | Treating a draft ballot as the final ballot | Use the `APPROVED-Minutes` doc to verify vote outcomes if a draft ballot differs |
 | Listing `.zip` archives in `documents` | Exclude every `.zip` (case-insensitive) — they never appear in the content window; still list non-zip files you could not read |
 | Leaving `group_summary` empty | Always populate leadership + voting parties from the §1 leadership table and the ERCOT market-segment model |
+| Mixing the two tiers | `group_summary` = group intro (leadership/voting); `meeting_summary` = this meeting's topics/debates/outcomes. The group view shows the former, the meeting view the latter — keep them distinct |
 | Leaving `[]` fields as `null` | Array fields must be `[]` when empty, never `null` |

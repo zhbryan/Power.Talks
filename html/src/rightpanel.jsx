@@ -200,7 +200,7 @@ function MeetingProfileCard({ committee, date }) {
     const url = date
       ? `${base}/${encodeURIComponent(committee)}/${encodeURIComponent(date)}/Quick%20runs/${encodeURIComponent(committee + "-" + date)}%20Profile.json`
       : `${base}/${encodeURIComponent(committee)}/_manifest.json`;
-    fetch(url)
+    fetch(url, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setData(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
@@ -274,8 +274,13 @@ function MeetingProfileCard({ committee, date }) {
     );
   }
 
-  // Meeting view: group summary + this meeting's agenda and documents.
-  const agenda = data.agenda_items || [];
+  // Meeting view: this meeting's summary — topics, debates, voting outcomes.
+  // (The group introduction belongs to the group view, not here.)
+  const ms = data.meeting_summary || {};
+  const topics = ms.topics && ms.topics.length ? ms.topics : (data.agenda_items || []);
+  const debates = ms.debates || [];
+  const outcomes = ms.voting_outcomes && ms.voting_outcomes.length
+    ? ms.voting_outcomes : (data.ballot_results || []);
   // Defensive: never surface a .zip link even if an older profile listed one.
   const docs = (data.documents || []).filter(d => !/\.zip$/i.test(String(d)));
 
@@ -288,12 +293,31 @@ function MeetingProfileCard({ committee, date }) {
       </div>
       <div className="np-title">{data.committee_full_name || committee}</div>
 
-      {GroupBlock}
+      <div className="np-sec-lbl">Topics</div>
+      {topics.length ? <Bullets items={topics} /> : <div className="np-body">—</div>}
 
       <hr className="np-divider" />
-      <div className="np-sec-lbl">Agenda Items</div>
-      {agenda.length
-        ? <Bullets items={agenda} />
+      <div className="np-sec-lbl">Debates &amp; Discussion</div>
+      {debates.length
+        ? <Bullets items={debates} />
+        : <div className="np-body" style={{ color: "var(--muted)" }}>No minutes on file yet.</div>}
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Voting Outcomes</div>
+      {outcomes.length
+        ? <div className="np-tl">
+            {outcomes.map((o, i) => (
+              <div key={i} className="np-tl-row">
+                <div className="np-tl-dot" />
+                <span className="np-tl-date">{o.item || "—"}</span>
+                <span className="np-tl-ev">
+                  {o.motion || ""}
+                  {o.result ? <b> — {o.result}</b> : ""}
+                  {o.for != null ? ` (${o.for}-${o.against}-${o.abstain || 0})` : ""}
+                </span>
+              </div>
+            ))}
+          </div>
         : <div className="np-body">—</div>}
 
       <hr className="np-divider" />
