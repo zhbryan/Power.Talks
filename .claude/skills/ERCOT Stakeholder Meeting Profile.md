@@ -66,7 +66,7 @@ Identify each file's role by keywords in the filename. Read all documents presen
 |-----------|--------|
 | `.docx` | `python-docx`: `Document(path)` — read `.paragraphs` and `.tables` |
 | `.doc`  | `win32com.client`: open with `Word.Application`, read `.Content.Text` |
-| `.xls`  | Binary string extraction — search for ballot item text and vote counts |
+| `.xls`  | `xlrd` (`pip install xlrd`) — read cells per sheet (BIFF; openpyxl cannot read `.xls`) |
 | `.xlsx` | `openpyxl`: `load_workbook(path, read_only=True, data_only=True)` |
 | `.pptx` | `python-pptx`: iterate slides, read `.shapes` text frames |
 
@@ -81,14 +81,17 @@ doc.Close(False)
 word.Quit()
 ```
 
-**For `.xls` ballot vote extraction:**
-```python
-import re
-with open(path, "rb") as f:
-    data = f.read()
-strings = [s.decode("ascii", errors="ignore") for s in re.findall(rb"[\x20-\x7e]{10,}", data)]
-ballot_lines = [s for s in strings if any(k in s.upper() for k in ("NPRR", "NOGRR", "PGRR", "FOR", "AGAINST", "MOTION"))]
-```
+**For ballot vote extraction — read the actual spreadsheet, not the bytes.**
+ERCOT ballots are Microsoft-Forms workbooks. Read **every** `*ballot*.xls/.xlsx`
+in the meeting folder (`.xls` via `xlrd`, `.xlsx` via `openpyxl`) and parse two
+sheets:
+- **`Vote`** — the **result** (a cell reading `Motion Passes` / `Motion Fails` /
+  `Motion Carries`) and the **committee tally total** row (`<COMMITTEE> Vote:`
+  followed by the Yes / No / Abstain numbers, e.g. `TAC Vote: | 24 | 2 | 4`; skip
+  the per-`Segment Vote:` rows).
+- **`Ballot Details`** — the real item/motion text (`NPRR1308 - To recommend
+  approval …`). For a **combined** ballot, this lists every item the single
+  tally/result covers. The batch implementation is `extract_ballots(folder, docs)`.
 
 ---
 
@@ -252,9 +255,18 @@ Quick runs / For the talk view. It answers "what happened at this meeting?"
 |-----|---------|--------|
 | `topics` | Array of the substantive subjects covered — the agenda items minus boilerplate (antitrust, agenda review, minutes approval, adjourn) | Agenda; minutes section headers |
 | `debates` | Array of plain-text notes on the key discussions, positions, and points of contention | Minutes (discussion paragraphs); comment documents |
-| `voting_outcomes` | Array of `{item, motion, result, for, against, abstain}` — the result of each motion/ballot | Combined ballot `.xls`; "Motion Carries/Fails" lines; approved minutes |
+| `voting_outcomes` | Array of `{item, motion, result, for, against, abstain}` — the result of each motion/ballot | **Ballot spreadsheets** (`*ballot*.xls/.xlsx`) read via `extract_ballots()` — primary; minutes "Motion Carries/Fails" lines — secondary |
 
-Build `voting_outcomes` and `debates` from **this meeting's own minutes** —
+**`voting_outcomes` come primarily from the ballot spreadsheets.** Read every
+`*ballot*.xls/.xlsx` in the folder (see Reading Strategy): the `Vote` sheet gives
+the **Passed/Failed result and the Yes/No/Abstain tally**, and `Ballot Details`
+gives the item/motion text (a combined ballot expands into all its items, which
+share the one result). Use the **minutes-derived** outcomes only when a meeting
+has no ballot spreadsheets. RR-specific packet ballots (`1275NPRR-14 PRS
+Ballot…`) are removed by the downloader, so only the meeting's own ballots
+(`TAC-Combined-Ballot…`, `TAC-NPRR1308-NOGRR282-Ballot…`) remain to read.
+
+Build `debates` from **this meeting's own minutes** —
 prefer the `APPROVED-Minutes` document whose filename carries this meeting's date
 (a folder often also holds the *prior* meeting's draft minutes; match the date so
 you summarize the right meeting, and prefer approved over draft). Read motion
@@ -274,8 +286,8 @@ other documents in the folder and summarize what went on:
   `.pdf`) for substantive discussion sentences, and add the titles of the
   reports, updates, and presentations that were given (agendas, minutes, and
   ballots excluded). The batch implementation is `summarize_from_documents()`.
-- **`voting_outcomes`** ← fall back to `ballot_results` (with `null`
-  tallies/result, since no minutes confirm the vote).
+- **`voting_outcomes`** ← still read straight from the ballot spreadsheets
+  (real Passed/Failed + Yes/No/Abstain tallies); ballots don't depend on minutes.
 - **`topics`** ← still from the agenda.
 
 This is a best-effort "what happened" picture from the meeting materials, not the

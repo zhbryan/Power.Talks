@@ -251,53 +251,131 @@ def _agenda_pdf(path):
     return clean[:40]
 
 
-def extract_ballot(path):
-    txt = []
+_RR_CODE = re.compile(r"\b((?:NPRR|NOGRR|PGRR|RRGRR|SCR|RMGRR|COPMGRR|VCMRR|"
+                      r"OBDRR|SMOGRR)\d{2,4})\b")
+
+
+def _read_sheets(path):
+    """Return {sheet_name: [[cell, …], …]} for .xls (xlrd) or .xlsx (openpyxl)."""
+    low = path.lower()
     try:
-        if path.lower().endswith(".xlsx"):
+        if low.endswith(".xlsx"):
             from openpyxl import load_workbook
             wb = load_workbook(path, read_only=True, data_only=True)
-            for ws in wb.worksheets:
-                for row in ws.iter_rows(values_only=True):
-                    for v in row:
-                        if isinstance(v, str) and v.strip():
-                            txt.append(v.strip())
-        else:  # .xls binary string extraction
-            with open(path, "rb") as f:
-                data = f.read()
-            txt = [s.decode("ascii", "ignore")
-                   for s in re.findall(rb"[\x20-\x7e]{6,}", data)]
+            return {ws.title: [list(r) for r in ws.iter_rows(values_only=True)]
+                    for ws in wb.worksheets}
+        import xlrd
+        bk = xlrd.open_workbook(path)
+        return {sh.name: [[sh.cell_value(r, c) for c in range(sh.ncols)]
+                          for r in range(sh.nrows)] for sh in bk.sheets()}
     except Exception:
-        return []
-    motion_verb = re.compile(r"\bTo (approve|endorse|table|recommend|adopt|forward|"
-                             r"accept|reject|remand|refer|amend)\b", re.I)
-    rr = re.compile(r"^([A-Z]{2,7}\d{3,4})")
-    out, seen = [], set()
-    for line in txt:
-        line = re.sub(r"[`^\x00-\x1f]+$", "", line).strip()
-        if not (8 < len(line) < 300):
-            continue
-        if not (motion_verb.search(line) or rr.match(line)):
-            continue
-        key = line.lower()
-        if key in seen:
-            continue
-        seen.add(key)
-        m = rr.match(line)
+        return {}
+
+
+def _is_num(x):
+    return bool(re.match(r"^-?\d+(?:\.\d+)?$", str(x).strip()))
+
+
+def _parse_vote_sheet(rows):
+    """From a ballot 'Vote' sheet read the result and the **total** tally
+    (Yes / No / Abstain). Layouts differ — the total row is labelled
+    '<COMMITTEE> Vote:' (TAC) or 'Segment Vote:' (PRS) and sits *above* the
+    per-entity data header ('… Yes | No | Abstain'); per-segment 'Segment Vote:'
+    rows sit below it. So we read the first tally row before that header.
+    Returns (result, for, against, abstain)."""
+    grid = [[("" if c is None else str(c).strip()) for c in row] for row in rows]
+
+    # result — anywhere on the sheet
+    result = None
+    for cells in grid:
+        m = re.search(r"motion\s+(passes|carries|fails)",
+                      " ".join(c for c in cells if c).lower())
         if m:
-            item = m.group(1)
-        elif "combined ballot" in line.lower():
-            item = "Combined Ballot"
-        elif "leadership" in line.lower() and " - " in line:
-            item = line.split(" - ", 1)[0].strip()
-        else:
-            item = None
-        motion = line.split(" - ", 1)[1].strip() if " - " in line else line
-        out.append({"item": item, "motion": motion, "for": None,
-                    "against": None, "abstain": None, "result": None})
-        if len(out) >= 60:
+            result = "Failed" if m.group(1) == "fails" else "Passed"
             break
-    return out
+
+    # locate the per-entity data header (Yes/No/Abstain columns)
+    hdr = len(grid)
+    for i, cells in enumerate(grid):
+        low = [c.lower() for c in cells]
+        if ("yes" in low and "no" in low and "abstain" in low) or \
+           any("sector / entity" in c for c in low):
+            hdr = i
+            break
+    region = grid[:hdr] if hdr < len(grid) else grid[:8]
+
+    # total tally: first row in the region with a 'Vote:' cell + >=3 numbers
+    for cells in region:
+        for i, c in enumerate(cells):
+            if c.lower().endswith("vote:"):
+                ns = [int(float(x)) for x in cells[i + 1:] if _is_num(x)]
+                if len(ns) >= 3:
+                    return result, ns[0], ns[1], ns[2]
+    # fallback: first region row that simply has >=3 numbers
+    for cells in region:
+        ns = [int(float(c)) for c in cells if _is_num(c)]
+        if len(ns) >= 3:
+            return result, ns[0], ns[1], ns[2]
+    return result, None, None, None
+
+
+def _split_detail(s):
+    """'NPRR1308 - To recommend approval…' -> ('NPRR1308', 'To recommend…')."""
+    s = re.sub(r"\s+", " ", str(s)).strip()
+    if " - " in s:
+        left, right = s.split(" - ", 1)
+        if _RR_CODE.search(left) or "ballot" in left.lower() or "leadership" in left.lower():
+            return left.strip(), right.strip()
+    m = _RR_CODE.search(s)
+    return (m.group(1) if m else None), s
+
+
+def extract_ballots(folder, docs):
+    """Read every ballot spreadsheet (.xls via xlrd, .xlsx via openpyxl) in the
+    meeting folder and return voting outcomes with real tallies. The 'Vote' sheet
+    gives the result + committee tally (Yes/No/Abstain); the 'Ballot Details'
+    sheet gives the actual item/motion text."""
+    outcomes, seen = [], set()
+    for f in sorted(docs, key=doc_sort_key):
+        low = f.lower()
+        if "ballot" not in low or not low.endswith((".xls", ".xlsx")):
+            continue
+        sheets = _read_sheets(os.path.join(folder, f))
+        if not sheets:
+            continue
+        vote = sheets.get("Vote") or next(iter(sheets.values()), [])
+        result, yes, no, ab = _parse_vote_sheet(vote)
+        details = [str(r[0]).strip() for r in sheets.get("Ballot Details", [])
+                   if r and str(r[0]).strip()]
+        combined = "combined" in low or "combo" in low or len(details) >= 4
+
+        def add(item, motion, fr, ag, abst, res):
+            motion = re.sub(r"\s+", " ", str(motion)).strip()[:240]
+            key = (item, motion[:50])
+            if motion and key not in seen:
+                seen.add(key)
+                outcomes.append({"item": item, "motion": motion, "result": res,
+                                 "for": fr, "against": ag, "abstain": abst})
+
+        if combined:
+            n = len([d for d in details if d]) or None
+            add("Combined Ballot",
+                f"Approve the combined ballot{f' ({n} items)' if n else ''}",
+                yes, no, ab, result)
+            for d in details:                       # list each item (shares result)
+                it, mo = _split_detail(d)
+                add(it, mo, None, None, None, result)
+        elif details:
+            for d in details:                       # each item carries this tally
+                it, mo = _split_detail(d)
+                add(it, mo, yes, no, ab, result)
+        else:
+            m = _RR_CODE.search(f)
+            add(m.group(1) if m else None,
+                clean_doc_title(f) or f, yes, no, ab, result)
+        if len(outcomes) >= 40:
+            break
+    return outcomes
 
 
 # ── Minutes parsing: debates + real voting outcomes ──────────────────────────
@@ -563,10 +641,8 @@ def build_profile(abbr, date, folder):
                             and f.lower().endswith(".pdf")), None)
     if agenda_file:
         agenda = extract_agenda(os.path.join(folder, agenda_file))
-    ballots = []
-    for f in docs:
-        if "ballot" in f.lower() and f.lower().endswith((".xls", ".xlsx")):
-            ballots = extract_ballot(os.path.join(folder, f)); break
+    # Read every ballot spreadsheet for voting outcomes with real tallies.
+    ballots = extract_ballots(folder, docs)
 
     topics = [a for a in agenda if not TOPIC_SKIP.search(a)][:8]
 
@@ -595,13 +671,9 @@ def build_profile(abbr, date, folder):
         debates = summarize_from_documents(folder, docs)
 
     # meeting_summary (meeting-level) — distinct from group_summary (group-level).
-    if mins_outcomes:
-        voting_outcomes = mins_outcomes
-    else:
-        voting_outcomes = [{"item": b["item"], "motion": b["motion"],
-                            "result": b["result"], "for": b["for"],
-                            "against": b["against"], "abstain": b["abstain"]}
-                           for b in ballots]
+    # Prefer ballot-derived outcomes (real Yes/No/Abstain tallies + Passed/Failed),
+    # then minutes-derived outcomes when there are no ballot spreadsheets.
+    voting_outcomes = ballots if ballots else mins_outcomes
     meeting_sum = {"topics": topics, "debates": debates,
                    "voting_outcomes": voting_outcomes}
 
