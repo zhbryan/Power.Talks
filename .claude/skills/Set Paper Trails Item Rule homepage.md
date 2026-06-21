@@ -39,6 +39,32 @@ switch (`hasNprr ? <RuleProfileCard cat="NPRR" num={ctx.nprr} /> : ...`).
 | 8 | Date Posted | `date_posted_decision` | |
 | 9 | Reason for Revision | `reason_for_revision` | String **or** array — always wrap in `asList()` |
 | 10 | Timeline | `timeline` (`[{date, event, doc}]`) | NPRR-style dotted vertical timeline (see below) |
+| 11 | Documents Submitted | `source_documents` | One row per submitted document: **title link** + **download button** (see below) |
+
+## Documents Submitted (block 11)
+
+Lists the files submitted so far for the revision request, from
+`source_documents` in `Profile.json` (newest first; exclude `.zip`). Each row has:
+
+- **Title link** — the document name as a hyperlink. Clicking it opens that
+  document's **summary in the center content window** (not the right panel) —
+  the summary is produced by the `Set-Paper-Trails-Document-Summary` skill and
+  fetched from
+  `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick runs/Doc Summaries/<safe-name>.json`.
+  Wire the click through `app.jsx` state (e.g. `activeRuleDoc = {cat, issue,
+  file}`) so `illustration.jsx` renders the Document Summary view in the content
+  window (see `Set-Paper-Trails-Homepage`).
+- **Download button** — a small control on the **same title line**; it is an
+  `<a download href={doc.download_url || originalFileURL}>` pointing at the
+  **original** file under `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<filename>`
+  (%-encoded). It downloads the original to the user's machine and must not
+  navigate the SPA (use the `download` attribute; `e.stopPropagation()` so it
+  doesn't also trigger the title-link summary).
+
+Render the list even when sparse; if `source_documents` is empty, show `—`. A
+document with no generated summary yet still shows its title (the content window
+shows a "run the Document Summary skill" hint on 404) and a working download
+button.
 
 > **Governing-document sections are intentionally NOT on this card** (removed
 > 2026-06-12 by request) — do not re-add a "Protocol Sections" block. The
@@ -107,5 +133,7 @@ the Profile skill.
 | Hiding empty fields | All labels always render; missing values show `—` |
 | Calling `.map` on `reason_for_revision` directly | It may be a string — use `asList()` |
 | Fetching `Summary.json` for the Quick runs card | The card reads `Profile.json` for every category (Summary.json feeds the center detail view) |
+| Document title link opening in the right panel | The title link renders the document summary in the **center content window**; only the download button acts on the title line itself |
+| Download button navigating the SPA | Use `<a download href=…>` to the original file + `e.stopPropagation()`; never route it through the issue/summary click handlers |
 | Forgetting COPMGRR zero-padding | `RULE_CARD_CFG.COPMGRR.pad = 3` drives both the URL and the displayed ID |
 | Editing src without rebundling | Run `html/rebuild_standalone.py` after every change |

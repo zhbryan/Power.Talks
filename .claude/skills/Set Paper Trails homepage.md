@@ -69,12 +69,35 @@ All URLs are relative to the WAMP docroot; spaces are %-encoded:
 ```
 /Power.Talks/Documents%20Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick%20runs/<ISSUE_ID>%20Profile.json
 /Power.Talks/Documents%20Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick%20runs/<ISSUE_ID>%20Summary.json
+/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/Quick%20runs/Doc%20Summaries/<safe-name>.json
+/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<original document>   ← download target
 ```
 
 | View | Fetches |
 |---|---|
 | Center detail view (`illustration.jsx`) | `Summary.json` for all 6 categories |
-| Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for NPRR, COPMGRR, PGRR; `Summary.json` for SCR, NOGRR, RMGRR |
+| Center **Document Summary view** (`illustration.jsx`) | a `Doc Summaries/<safe-name>.json` when a document title is clicked |
+| Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for NPRR, COPMGRR, PGRR; `Summary.json` for SCR, NOGRR, RMGRR; plus the `source_documents` list (title link + download button) |
+
+## Content Window — Document Summary view
+
+The center pane has two modes: the issue **Summary detail view** (default) and a
+**Document Summary view** shown when a document title is clicked in the Quick
+runs "Documents Submitted" list (block 11 of `Set-Paper-Trails-Item-Rule-Homepage`).
+
+- **State:** add `activeRuleDoc = { cat, issue, file }` in `app.jsx`; clicking a
+  document title sets it, clicking the issue/another rule clears it. When set,
+  `PaperTrailsIllustration` renders the Document Summary view instead of (or
+  above) the issue Summary.
+- **Fetch:** the per-document JSON written by the `Set-Paper-Trails-Document-Summary`
+  skill at the `Doc Summaries/<safe-name>.json` URL above (`<safe-name>` =
+  original filename with extension → `.json`, sanitized, %-encoded). Render
+  `doc_type`, `date`, `author`, `summary`, and `key_points`; a 404 shows a
+  "run the Document Summary skill" hint.
+- **Download:** the original file is served directly by WAMP — the download
+  button is `<a download href={download_url}>` to
+  `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<original document>` (%-encoded). No JSON,
+  no rebuild — the file just downloads.
 
 COPMGRR issue IDs are zero-padded to 3 digits (`COPMGRR015`); all others are
 plain integers.
@@ -117,6 +140,9 @@ Artifact items in the right panel's Artifacts tab are handled by
 1. Regenerate Profile.json and Summary.json first (see the
    `ERCOT-Market-Rules-Profile` and `ERCOT-Market-Rules-Summarization-and-Timeline`
    skills). Detail views and Quick runs pick these up with no UI change.
+   Also (re)generate per-document summaries for any new `source_documents` via
+   the `Set-Paper-Trails-Document-Summary` skill so the Document Summary view and
+   download links resolve.
 2. If issue lists changed (new issues, status moves Pending→Approved, new
    titles): run `python "html/regen_paper_trails_data.py"` to rewrite the
    `const <CAT>_<STATUS>` arrays in `html/src/data.jsx`.
@@ -152,3 +178,5 @@ Artifact items in the right panel's Artifacts tab are handled by
 | Adding list entries with `"` in titles | Breaks the JS string — replace with `'` |
 | Assuming every category has a Pending list | SCR currently ships only Approved/Withdrawn/Rejected arrays; PGRR/RMGRR/NPRR/COPMGRR have no Rejected |
 | Stale browser cache after rebundle | Hard-refresh (Ctrl+F5); the bundle is one big HTML file |
+| Document title link 404s in the content window | The `Doc Summaries/<safe-name>.json` wasn't generated — run `Set-Paper-Trails-Document-Summary` for that file |
+| Download button serves the JSON, not the file | Point `download_url` at the original document under the issue folder, not the summary JSON |
