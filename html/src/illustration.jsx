@@ -181,7 +181,7 @@ function DocumentsSubmittedSection({ cat, issueId, onDocClick }) {
                 <a href="#" onClick={(e) => { e.preventDefault(); onDocClick && onDocClick(d, issueId, cat); }}
                    title={d.file}
                    style={{ flex: 1, fontSize: "13px", color: "var(--accent-2)", textDecoration: "none", cursor: "pointer", lineHeight: 1.45 }}>
-                  {d.doc_type || d.file}{d.date ? <span style={{ color: "var(--muted)" }}> · {d.date}</span> : null}
+                  {d.title || (d.file || "").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ")}
                 </a>
                 {d.download_url &&
                   <a href={d.download_url} download onClick={(e) => e.stopPropagation()}
@@ -1250,7 +1250,7 @@ function DocumentSummaryView({ doc, onBack }) {
         {doc.issueId} · Document Summary
       </div>
       <div style={{ fontFamily: "var(--serif)", fontSize: 22, lineHeight: 1.15, margin: "2px 0 10px", color: "var(--ink)" }}>
-        {doc.doc_type || doc.file}
+        {doc.title || (doc.file || "").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ")}
       </div>
       <Row label="File" value={doc.file} />
       <Row label="Type" value={doc.doc_type} />

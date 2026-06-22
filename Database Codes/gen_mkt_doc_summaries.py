@@ -113,8 +113,13 @@ def summarize_file(fname, issue_id, seq):
     if date:
         bits.append(f"(dated {date})")
     summary = " ".join(bits).strip() + "."
+    # Title Name = the filename interpreted as "[Title Name].[file format]" — the
+    # stem before the extension, with separators turned into spaces for display.
+    stem = os.path.splitext(fname)[0]
+    title_name = re.sub(r"\s+", " ", re.sub(r"[_-]+", " ", stem)).strip()
     return {
         "file": fname,
+        "title": title_name,
         "doc_type": doc_type,
         "date": date,
         "author": author,
