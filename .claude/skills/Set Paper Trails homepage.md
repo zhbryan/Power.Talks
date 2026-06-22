@@ -74,27 +74,35 @@ All URLs are relative to the WAMP docroot; spaces are %-encoded:
 
 | View | Fetches |
 |---|---|
-| Center detail view (`illustration.jsx`) | `Summary.json` for all 6 categories |
+| Center detail view (`illustration.jsx`) | `Summary.json` (issue summary) **and** `Profile.json` (its `source_documents` for the Documents Submitted section) |
 | Center **Document Summary view** (`illustration.jsx`) | nothing — renders the clicked `source_documents` entry passed via `activeRuleDoc` |
-| Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for NPRR, COPMGRR, PGRR; `Summary.json` for SCR, NOGRR, RMGRR. The card's "Documents Submitted" list reads `Profile.json["source_documents"]` |
+| Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for NPRR, COPMGRR, PGRR; `Summary.json` for SCR, NOGRR, RMGRR (no document list — it lives in the center) |
 
-## Content Window — Document Summary view
+## Content Window — Documents Submitted + Document Summary
 
-The center pane has two modes: the issue **Summary detail view** (default) and a
-**Document Summary view** shown when a document title is clicked in the Quick
-runs "Documents Submitted" list (block 11 of `Set-Paper-Trails-Item-Rule-Homepage`).
+The **center content window** owns the submitted-documents feature (the right
+panel does not).
 
-- **State:** `activeRuleDoc` in `app.jsx` holds the clicked `source_documents`
-  entry plus `{issueId, cat}` (set by `onRuleDocClick`; an effect clears it when
-  the section/category/selected issue changes). It's passed to
-  `PaperTrailsIllustration` as `ruleDoc` (+ `onRuleDocClose`).
-- **Render:** `DocumentSummaryView` in `illustration.jsx` shows the entry's
-  `doc_type`, `file`, `date`, `author`, `summary`, `key_points` plus a back link
-  and a download button — **no fetch** (the entry already has everything). While
-  `ruleDoc` is set, the category panels/issue detail are hidden.
-- **Download:** WAMP serves the original directly — `<a download
-  href={download_url}>` to `…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<original
-  document>` (%-encoded). No JSON, no rebuild — the file just downloads.
+**1. Documents Submitted section** — a `DocumentsSubmittedSection({ cat,
+issueId, onDocClick })` rendered in every `<Cat>DetailView` **below Current
+Status**. It fetches the issue `Profile.json`, reads `source_documents`
+(`.zip` excluded), and **sorts by the sequence number after `[rule#][CAT]-`**
+(e.g. `1340NPRR-01` → 1, `…-02` → 2; regex `^\d+[a-z]+[-_ ]+(\d+)`). Each row:
+a **title link** (`doc_type · date`, filename as tooltip) + a **download button**
+(`<a download href={download_url}>`, `e.stopPropagation()`).
+
+**2. Document Summary view** — clicking a title calls `onDocClick(doc, issueId,
+cat)` → `onRuleDocClick` in `app.jsx`, which sets `activeRuleDoc = {...doc,
+issueId, cat}` (passed to `PaperTrailsIllustration` as `ruleDoc`). When set,
+`DocumentSummaryView` renders the entry's `doc_type`, `file`, `date`, `author`,
+`summary`, `key_points` + a back link and a Download-original button — **no
+fetch** (the entry carries everything); the category panels/issue detail hide
+while it's open. An effect clears `activeRuleDoc` when the section/category/issue
+changes. `onRuleDocClick` is threaded app → `PaperTrailsIllustration` → each
+`<Cat>DetailView` → `DocumentsSubmittedSection`.
+
+**Download:** WAMP serves the original directly via `download_url`
+(`…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<original document>`, %-encoded) — no rebuild.
 
 COPMGRR issue IDs are zero-padded to 3 digits (`COPMGRR015`); all others are
 plain integers.

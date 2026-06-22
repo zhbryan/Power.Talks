@@ -262,7 +262,7 @@ function App() {
               activeSection === "market-home"
                 ? <ERCOTHome onSectionChange={setActiveSection}/>
                 : activeSection === "paper-trails"
-                ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick} onPgrrClick={onPgrrClick} onScrClick={onScrClick} onNogrClick={onNogrClick} onRmgrClick={onRmgrClick} ruleDoc={activeRuleDoc} onRuleDocClose={() => setActiveRuleDoc(null)}/>
+                ? <PaperTrailsIllustration active={activePaperCode} onActiveChange={onPaperCodeClick} onNprrClick={onNprrClick} onCopmgrrClick={onCopmgrrClick} onPgrrClick={onPgrrClick} onScrClick={onScrClick} onNogrClick={onNogrClick} onRmgrClick={onRmgrClick} ruleDoc={activeRuleDoc} onRuleDocClick={onRuleDocClick} onRuleDocClose={() => setActiveRuleDoc(null)}/>
                 : activeSection === "meeting-tracks"
                 ? (activeMeetingDoc
                     ? <MeetingTracksItemHome {...activeMeetingDoc} groupName={activeMeetingGroupName} onBack={() => setActiveMeetingDoc(null)}/>
@@ -315,7 +315,6 @@ function App() {
         onClose={() => setRightOpen(false)}
         onRunPrompt={onRunPrompt}
         onArtifactClick={onArtifactClick}
-        onRuleDocClick={onRuleDocClick}
         context={{ section: activeSection, code: activePaperCode, meetingGroup: activeMeetingGroup, meetingGroupName: activeMeetingGroupName, meetingDate: activeMeetingDate, meetingDoc: activeMeetingDoc, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr }}
       />
 

@@ -153,7 +153,48 @@ const PAPER_TRAIL_CODES = [
   { code: "RMGRR",  name: "Retail Market Guide Revision Request",   count: 203 },
 ];
 
-function NprrDetailView({ nprr, onBack }) {
+// "Documents Submitted" section for the center detail view — lists the issue's
+// source_documents (from Profile.json), sorted by the sequence number after
+// "[rule#][CAT]-". Title opens the document summary (content window); the
+// download button fetches the original.
+function DocumentsSubmittedSection({ cat, issueId, onDocClick }) {
+  const [docs, setDocs] = React.useState(null);
+  React.useEffect(() => {
+    setDocs(null);
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${cat}/${issueId}/Quick%20runs/${issueId}%20Profile.json`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => setDocs((d.source_documents || []).filter(x => x && !/\.zip$/i.test(x.file || ""))))
+      .catch(() => setDocs([]));
+  }, [cat, issueId]);
+  const seqOf = (f) => { const m = (f || "").match(/^\d+[a-z]+[-_ ]+(\d+)/i); return m ? parseInt(m[1], 10) : 9999; };
+  const list = (docs || []).slice().sort((a, b) => seqOf(a.file) - seqOf(b.file) || ((a.file || "") > (b.file || "") ? 1 : -1));
+  return (
+    <>
+      <div className="nd-sec-hd">Documents Submitted</div>
+      {docs === null
+        ? <div className="nd-body" style={{ color: "var(--muted)" }}>Loading documents…</div>
+        : list.length === 0
+        ? <div className="nd-body">—</div>
+        : <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {list.map((d, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+                <a href="#" onClick={(e) => { e.preventDefault(); onDocClick && onDocClick(d, issueId, cat); }}
+                   title={d.file}
+                   style={{ flex: 1, fontSize: "13px", color: "var(--accent-2)", textDecoration: "none", cursor: "pointer", lineHeight: 1.45 }}>
+                  {d.doc_type || d.file}{d.date ? <span style={{ color: "var(--muted)" }}> · {d.date}</span> : null}
+                </a>
+                {d.download_url &&
+                  <a href={d.download_url} download onClick={(e) => e.stopPropagation()}
+                     title="Download original document"
+                     style={{ flexShrink: 0, fontSize: "12px", color: "var(--muted)", textDecoration: "none" }}>⬇ download</a>}
+              </div>
+            ))}
+          </div>}
+    </>
+  );
+}
+
+function NprrDetailView({ nprr, onBack, onDocClick }) {
   const [summary, setSummary] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error,   setError]   = React.useState(null);
@@ -329,6 +370,7 @@ function NprrDetailView({ nprr, onBack }) {
           )}
         </>}
       </>}
+      <DocumentsSubmittedSection cat="NPRR" issueId={`NPRR${nprr}`} onDocClick={onDocClick} />
     </div>
   );
 }
@@ -454,7 +496,7 @@ function NprrPanels({ onNprrClick }) {
   );
 }
 
-function CopmgrrDetailView({ copmgrr, onBack }) {
+function CopmgrrDetailView({ copmgrr, onBack, onDocClick }) {
   const [summary, setSummary] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error,   setError]   = React.useState(null);
@@ -615,6 +657,7 @@ function CopmgrrDetailView({ copmgrr, onBack }) {
           )}
         </>}
       </>}
+      <DocumentsSubmittedSection cat="COPMGRR" issueId={`COPMGRR${String(copmgrr).padStart(3, "0")}`} onDocClick={onDocClick} />
     </div>
   );
 }
@@ -630,7 +673,7 @@ function CopmgrrPanels({ onCopmgrrClick }) {
   );
 }
 
-function PgrrDetailView({ pgrr, onBack }) {
+function PgrrDetailView({ pgrr, onBack, onDocClick }) {
   const [summary, setSummary] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error,   setError]   = React.useState(null);
@@ -787,6 +830,7 @@ function PgrrDetailView({ pgrr, onBack }) {
           )}
         </>}
       </>}
+      <DocumentsSubmittedSection cat="PGRR" issueId={`PGRR${pgrr}`} onDocClick={onDocClick} />
     </div>
   );
 }
@@ -802,7 +846,7 @@ function PgrrPanels({ onPgrrClick }) {
   );
 }
 
-function ScrDetailView({ scr, onBack }) {
+function ScrDetailView({ scr, onBack, onDocClick }) {
   const [summary, setSummary] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error,   setError]   = React.useState(null);
@@ -959,6 +1003,7 @@ function ScrDetailView({ scr, onBack }) {
           )}
         </>}
       </>}
+      <DocumentsSubmittedSection cat="SCR" issueId={`SCR${scr}`} onDocClick={onDocClick} />
     </div>
   );
 }
@@ -974,7 +1019,7 @@ function ScrPanels({ onScrClick }) {
   );
 }
 
-function NogrDetailView({ nogrr, onBack }) {
+function NogrDetailView({ nogrr, onBack, onDocClick }) {
   const [summary, setSummary] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error,   setError]   = React.useState(null);
@@ -1061,6 +1106,7 @@ function NogrDetailView({ nogrr, onBack }) {
         {summary.timeline?.length > 0 && <><div className="nd-sec-hd">Stakeholder Discussion Timeline</div><table className="nd-tl-table"><thead><tr><th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th></tr></thead><tbody>{summary.timeline.map((t, i) => (<tr key={i}><td className="nd-tl-date-cell">{t.date}</td><td className="nd-tl-body-cell">{t.body}</td><td className="nd-tl-action-cell">{t.action}</td><td>{t.notes}</td></tr>))}</tbody></table></>}
         {summary.current_status?.length > 0 && <><div className="nd-sec-hd">Current Status</div>{summary.current_status.map((p, i) => <div key={i} className="nd-body">{p}</div>)}</>}
       </>}
+      <DocumentsSubmittedSection cat="NOGRR" issueId={`NOGRR${nogrr}`} onDocClick={onDocClick} />
     </div>
   );
 }
@@ -1077,7 +1123,7 @@ function NogrPanels({ onNogrClick }) {
   );
 }
 
-function RmgrDetailView({ rmgrr, onBack }) {
+function RmgrDetailView({ rmgrr, onBack, onDocClick }) {
   const [summary, setSummary] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error,   setError]   = React.useState(null);
@@ -1164,6 +1210,7 @@ function RmgrDetailView({ rmgrr, onBack }) {
         {summary.timeline?.length > 0 && <><div className="nd-sec-hd">Stakeholder Discussion Timeline</div><table className="nd-tl-table"><thead><tr><th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th></tr></thead><tbody>{summary.timeline.map((t, i) => (<tr key={i}><td className="nd-tl-date-cell">{t.date}</td><td className="nd-tl-body-cell">{t.body}</td><td className="nd-tl-action-cell">{t.action}</td><td>{t.notes}</td></tr>))}</tbody></table></>}
         {summary.current_status?.length > 0 && <><div className="nd-sec-hd">Current Status</div>{summary.current_status.map((p, i) => <div key={i} className="nd-body">{p}</div>)}</>}
       </>}
+      <DocumentsSubmittedSection cat="RMGRR" issueId={`RMGRR${rmgrr}`} onDocClick={onDocClick} />
     </div>
   );
 }
@@ -1222,7 +1269,7 @@ function DocumentSummaryView({ doc, onBack }) {
   );
 }
 
-function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgrrClick, onPgrrClick, onScrClick, onNogrClick, onRmgrClick, ruleDoc, onRuleDocClose }) {
+function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgrrClick, onPgrrClick, onScrClick, onNogrClick, onRmgrClick, ruleDoc, onRuleDocClick, onRuleDocClose }) {
   const activeItem = PAPER_TRAIL_CODES.find(c => c.code === active) || PAPER_TRAIL_CODES[0];
   const [selectedNprr, setSelectedNprr] = React.useState(null);
   const [selectedCopmgrr, setSelectedCopmgrr] = React.useState(null);
@@ -1401,7 +1448,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
       {!ruleDoc && active === "NPRR" && (
         selectedNprr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
-              <NprrDetailView nprr={selectedNprr} onBack={handleBack} />
+              <NprrDetailView nprr={selectedNprr} onBack={handleBack} onDocClick={onRuleDocClick} />
             </div>
           : <NprrPanels onNprrClick={handleNprrClick} />
       )}
@@ -1409,7 +1456,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
       {!ruleDoc && active === "COPMGRR" && (
         selectedCopmgrr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
-              <CopmgrrDetailView copmgrr={selectedCopmgrr} onBack={handleCopmgrrBack} />
+              <CopmgrrDetailView copmgrr={selectedCopmgrr} onBack={handleCopmgrrBack} onDocClick={onRuleDocClick} />
             </div>
           : <CopmgrrPanels onCopmgrrClick={handleCopmgrrClick} />
       )}
@@ -1417,7 +1464,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
       {!ruleDoc && active === "PGRR" && (
         selectedPgrr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
-              <PgrrDetailView pgrr={selectedPgrr} onBack={handlePgrrBack} />
+              <PgrrDetailView pgrr={selectedPgrr} onBack={handlePgrrBack} onDocClick={onRuleDocClick} />
             </div>
           : <PgrrPanels onPgrrClick={handlePgrrClick} />
       )}
@@ -1425,7 +1472,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
       {!ruleDoc && active === "SCR" && (
         selectedScr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
-              <ScrDetailView scr={selectedScr} onBack={handleScrBack} />
+              <ScrDetailView scr={selectedScr} onBack={handleScrBack} onDocClick={onRuleDocClick} />
             </div>
           : <ScrPanels onScrClick={handleScrClick} />
       )}
@@ -1433,7 +1480,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
       {!ruleDoc && active === "NOGRR" && (
         selectedNogrr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
-              <NogrDetailView nogrr={selectedNogrr} onBack={handleNogrBack} />
+              <NogrDetailView nogrr={selectedNogrr} onBack={handleNogrBack} onDocClick={onRuleDocClick} />
             </div>
           : <NogrPanels onNogrClick={handleNogrClick} />
       )}
@@ -1441,7 +1488,7 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
       {!ruleDoc && active === "RMGRR" && (
         selectedRmgrr
           ? <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
-              <RmgrDetailView rmgrr={selectedRmgrr} onBack={handleRmgrBack} />
+              <RmgrDetailView rmgrr={selectedRmgrr} onBack={handleRmgrBack} onDocClick={onRuleDocClick} />
             </div>
           : <RmgrPanels onRmgrClick={handleRmgrClick} />
       )}

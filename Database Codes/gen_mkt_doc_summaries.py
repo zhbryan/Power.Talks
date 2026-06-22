@@ -124,13 +124,20 @@ def summarize_file(fname, issue_id, seq):
     }
 
 
+def seq_key(fname):
+    """Sort key: the sequence number that follows '[rule#][CAT]-' / '_NN_',
+    e.g. '1264NPRR-19 …' -> 19, '100nprr_01_…' -> 1. Unmatched files sort last."""
+    m = re.match(r"^\d+[a-z]+[-_ ]+(\d+)", fname, re.I)
+    return (int(m.group(1)) if m else 9999, fname.lower())
+
+
 def build_source_documents(cat, issue_id, folder):
-    qr = os.path.join(folder, "Quick runs")
     files = sorted(
-        f for f in os.listdir(folder)
-        if os.path.isfile(os.path.join(folder, f))
-        and f.lower().endswith(DOC_EXTS)
-        and not f.lower().endswith((".zip", ".tmp"))
+        (f for f in os.listdir(folder)
+         if os.path.isfile(os.path.join(folder, f))
+         and f.lower().endswith(DOC_EXTS)
+         and not f.lower().endswith((".zip", ".tmp"))),
+        key=seq_key,
     )
     docs = []
     for i, f in enumerate(files, 1):

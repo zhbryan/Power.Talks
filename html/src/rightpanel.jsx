@@ -34,7 +34,7 @@ const RULE_CARD_CFG = {
   COPMGRR: { pad: 3 },
 };
 
-function RuleProfileCard({ cat, num, onDocClick }) {
+function RuleProfileCard({ cat, num }) {
   const cfg = RULE_CARD_CFG[cat] || {};
   const idStr = cfg.pad ? String(num).padStart(cfg.pad, "0") : String(num);
   const issueId = `${cat}${idStr}`;
@@ -80,7 +80,6 @@ function RuleProfileCard({ cat, num, onDocClick }) {
 
   const reasons = asList(profile.reason_for_revision);
   const timeline = profile.timeline || [];
-  const docs = (profile.source_documents || []).filter(d => d && !/\.zip$/i.test(d.file || ""));
 
   return (
     <div>
@@ -116,33 +115,6 @@ function RuleProfileCard({ cat, num, onDocClick }) {
                 <div className={`np-tl-dot ${i === timeline.length - 1 ? "last" : ""}`} />
                 <span className="np-tl-date">{t.date || "—"}</span>
                 <span className="np-tl-ev"><b>{t.event}</b></span>
-              </div>
-            ))}
-          </div>
-        : <div style={{ fontSize: "12.5px", color: "var(--ink-2)" }}>—</div>}
-
-      <hr className="np-divider" />
-      <div className="np-sec-lbl">Documents Submitted</div>
-      {docs.length > 0
-        ? <div>
-            {docs.map((d, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 7 }}>
-                <a
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); onDocClick && onDocClick(d, issueId, cat); }}
-                  title={d.file}
-                  style={{ flex: 1, fontSize: "12px", color: "var(--accent-2)", lineHeight: 1.35, cursor: "pointer", textDecoration: "none" }}
-                >
-                  {d.doc_type || d.file}{d.date ? <span style={{ color: "var(--muted)" }}> · {d.date}</span> : null}
-                </a>
-                {d.download_url &&
-                  <a
-                    href={d.download_url}
-                    download
-                    onClick={(e) => e.stopPropagation()}
-                    title="Download original document"
-                    style={{ flexShrink: 0, fontSize: "12px", color: "var(--muted)", textDecoration: "none" }}
-                  >⬇ download</a>}
               </div>
             ))}
           </div>
@@ -380,7 +352,7 @@ const ERCOT_HOME_ARTIFACTS = [
 // ARTIFACTS list from window.DATA.
 const CATEGORY_HIDDEN_ARTIFACT_IDS = ["a2", "a5", "a7", "a8"];
 
-function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, onRuleDocClick, context }) {
+function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const { SUGGESTED_RUNS, ARTIFACTS } = window.DATA;
   const [tab, setTab] = React.useState("runs"); // runs | artifacts | profile
 
@@ -586,17 +558,17 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, onRuleDocClic
           isMeetingGroup
             ? <MeetingProfileCard committee={ctx.meetingGroup || (ctx.meetingDoc && ctx.meetingDoc.committee)} date={ctx.meetingDate} />
             : hasNprr
-            ? <RuleProfileCard cat="NPRR" num={ctx.nprr} onDocClick={onRuleDocClick} />
+            ? <RuleProfileCard cat="NPRR" num={ctx.nprr} />
             : hasCopmgrr
-            ? <RuleProfileCard cat="COPMGRR" num={ctx.copmgrr} onDocClick={onRuleDocClick} />
+            ? <RuleProfileCard cat="COPMGRR" num={ctx.copmgrr} />
             : hasPgrr
-            ? <RuleProfileCard cat="PGRR" num={ctx.pgrr} onDocClick={onRuleDocClick} />
+            ? <RuleProfileCard cat="PGRR" num={ctx.pgrr} />
             : hasScr
-            ? <RuleProfileCard cat="SCR" num={ctx.scr} onDocClick={onRuleDocClick} />
+            ? <RuleProfileCard cat="SCR" num={ctx.scr} />
             : hasNogrr
-            ? <RuleProfileCard cat="NOGRR" num={ctx.nogrr} onDocClick={onRuleDocClick} />
+            ? <RuleProfileCard cat="NOGRR" num={ctx.nogrr} />
             : hasRmgrr
-            ? <RuleProfileCard cat="RMGRR" num={ctx.rmgrr} onDocClick={onRuleDocClick} />
+            ? <RuleProfileCard cat="RMGRR" num={ctx.rmgrr} />
             : ctx.section === "paper-trails" && ctx.code
             ? <CategoryIntroCard code={ctx.code} />
             : <>

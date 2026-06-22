@@ -103,11 +103,13 @@ It only rewrites the `source_documents` field of each `Profile.json`.
 
 ## How it surfaces (cross-skill)
 
-- **`Set-Paper-Trails-Item-Rule-Homepage`** — block 11 "Documents Submitted"
-  renders `source_documents`: each row is the title link + download button.
-- **`Set-Paper-Trails-Homepage`** — clicking a title sets `activeRuleDoc` (the
-  clicked entry) in `app.jsx`; the center **content window** renders that entry's
-  summary directly (no extra fetch). The download button uses `download_url`.
+- **`Set-Paper-Trails-Homepage`** — the **center content window** owns this: a
+  "Documents Submitted" section in each issue detail view (below Current Status)
+  lists `source_documents` **sorted by the sequence number after `[rule#][CAT]-`**
+  (`1340NPRR-01`, `…-02`, …), each row a title link + download button. Clicking a
+  title sets `activeRuleDoc` and renders that entry's summary in the same content
+  window (no extra fetch).
+- It is **not** on the right-panel Quick-runs card (`Set-Paper-Trails-Item-Rule-Homepage`).
 
 ## Common mistakes
 
