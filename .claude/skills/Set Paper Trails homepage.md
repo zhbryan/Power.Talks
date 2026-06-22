@@ -88,7 +88,10 @@ issueId, onDocClick })` rendered in every `<Cat>DetailView` **below Current
 Status**. It fetches the issue `Profile.json`, reads `source_documents`
 (`.zip` excluded), and **sorts by the sequence number after `[rule#][CAT]-`**
 (e.g. `1340NPRR-01` → 1, `…-02` → 2; regex `^\d+[a-z]+[-_ ]+(\d+)`). Each row:
-a **title link** (`doc_type · date`, filename as tooltip) + a **download button**
+a **title link** showing the document's **Title Name** — the filename read as
+`[Title Name].[file format]`, i.e. the stem with the extension dropped and
+`-`/`_` turned into spaces (entry `title`, with a UI fallback that derives it
+from `file`; raw filename is the tooltip) — plus a **download button**
 (`<a download href={download_url}>`, `e.stopPropagation()`).
 
 **2. Document Summary view** — clicking a title calls `onDocClick(doc, issueId,

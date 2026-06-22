@@ -62,6 +62,7 @@ extra fetch. The batch implementation is `Database Codes/gen_mkt_doc_summaries.p
 ```json
 {
   "file": "1264NPRR-19 ERCOT Comments 031125.docx",
+  "title": "1264NPRR 19 ERCOT Comments 031125",
   "doc_type": "Comments",
   "date": "2025-03-11",
   "author": "ERCOT",
@@ -71,9 +72,13 @@ extra fetch. The batch implementation is `Database Codes/gen_mkt_doc_summaries.p
 }
 ```
 
-`Profile.json["source_documents"]` is the array of these (newest/seq order,
+`Profile.json["source_documents"]` is the array of these (sequence order,
 `.zip` excluded).
 
+- `title` — **the Title Name shown in the Documents Submitted list.** Interpret
+  the filename as `[Title Name].[file format]`: take the stem (drop the
+  extension) and turn `-`/`_` into spaces. This is the link label users see; the
+  raw `file` is the tooltip. (The UI also derives this from `file` as a fallback.)
 - `doc_type` — infer from filename/content: `Impact Analysis` · `Comments` ·
   `Report` (PRS/ROS/TAC/Board) · `Ballot` · `Markup/Redline` · `Presentation` ·
   `Revision Request` · `As-Built` · `Other`.
