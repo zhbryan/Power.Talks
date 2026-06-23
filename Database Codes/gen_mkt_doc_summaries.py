@@ -122,10 +122,17 @@ def summarize_file(fname, issue_id, seq):
         "title": title_name,
         "doc_type": doc_type,
         "date": date,
+        "date_posted": date,        # the document's own date (right-panel card)
         "author": author,
+        "submitter": author,        # who filed it; AI mode may refine
         "summary": summary,
         "key_points": [],
-        "download_url": None,   # set by build_source_documents (needs cat/issue)
+        # Per-document report fields (filled by --ai mode reading the document).
+        "revision_reason": None,
+        "description": None,
+        "justification": None,
+        "detailed_background": None,
+        "download_url": None,        # set by build_source_documents (needs cat/issue)
     }
 
 
@@ -136,7 +143,129 @@ def seq_key(fname):
     return (int(m.group(1)) if m else 9999, fname.lower())
 
 
-def build_source_documents(cat, issue_id, folder):
+# ── AI per-document report (--ai): read the document, ask Claude ─────────────
+AI_MODEL = "claude-haiku-4-5-20251001"
+AI_MAX_TOKENS = 1200
+_REPORT_KEYS = ("revision_reason", "description", "justification",
+                "detailed_background", "submitter")
+_SUMM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "summarize_MKT_Rules")
+_ai_client = None
+_word_app = None
+_ai_usage = {"calls": 0, "in": 0, "out": 0}
+
+
+def _get_ai():
+    global _ai_client
+    if _ai_client is None:
+        import anthropic
+        if _SUMM_DIR not in sys.path:
+            sys.path.insert(0, _SUMM_DIR)
+        from anthropic_key import get_anthropic_key
+        _ai_client = anthropic.Anthropic(api_key=get_anthropic_key())
+    return _ai_client
+
+
+def _quit_word():
+    global _word_app
+    if _word_app is not None:
+        try:
+            _word_app.Quit()
+        except Exception:
+            pass
+        _word_app = None
+
+
+def extract_text_any(path):
+    """Best-effort plain text from a document (.docx/.doc/.pdf/.xls/.xlsx)."""
+    global _word_app
+    ext = os.path.splitext(path)[1].lower()
+    try:
+        if ext == ".docx":
+            from docx import Document
+            d = Document(path)
+            parts = [p.text for p in d.paragraphs if p.text.strip()]
+            for tbl in d.tables:
+                for row in tbl.rows:
+                    parts.append(" | ".join(c.text.strip() for c in row.cells if c.text.strip()))
+            return "\n".join(parts)
+        if ext == ".doc":
+            import win32com.client
+            if _word_app is None:
+                _word_app = win32com.client.Dispatch("Word.Application")
+                _word_app.Visible = False
+            doc = _word_app.Documents.Open(os.path.abspath(path), ReadOnly=True)
+            t = doc.Content.Text
+            doc.Close(False)
+            return t
+        if ext == ".pdf":
+            import pdfplumber
+            with pdfplumber.open(path) as pdf:
+                return "\n".join((pg.extract_text() or "") for pg in pdf.pages)
+        if ext == ".xlsx":
+            from openpyxl import load_workbook
+            wb = load_workbook(path, read_only=True, data_only=True)
+            rows = []
+            for ws in wb.worksheets:
+                for row in ws.iter_rows(values_only=True):
+                    cells = [str(c).strip() for c in row if c is not None and str(c).strip()]
+                    if cells:
+                        rows.append(" | ".join(cells))
+            return "\n".join(rows)
+        if ext == ".xls":
+            import xlrd
+            bk = xlrd.open_workbook(path)
+            rows = []
+            for sh in bk.sheets():
+                for r in range(sh.nrows):
+                    cells = [str(sh.cell_value(r, c)).strip() for c in range(sh.ncols)
+                             if str(sh.cell_value(r, c)).strip()]
+                    if cells:
+                        rows.append(" | ".join(cells))
+            return "\n".join(rows)
+    except Exception as e:
+        print(f"    [READ-ERR] {os.path.basename(path)}: {e}")
+    return ""
+
+
+def ai_document_report(text, issue_id, fname, doc_type):
+    """Ask Claude to summarize ONE document into the per-document report fields.
+    Returns a dict over _REPORT_KEYS (values or None); {} if nothing usable."""
+    text = (text or "").strip()
+    if len(text) < 40:
+        return {}
+    prompt = (
+        f"You are reading ONE document submitted in the ERCOT stakeholder process "
+        f"for revision request {issue_id}.\n"
+        f"Document file: {fname}\nDocument type: {doc_type}\n\n"
+        "Using ONLY this document's text, return a JSON object with these keys:\n"
+        '- "revision_reason": why the revision is needed, per this document (or null)\n'
+        '- "description": what this document describes or proposes (or null)\n'
+        '- "justification": the business case / justification (or null)\n'
+        '- "detailed_background": one or two short paragraphs of plain-English '
+        "background on the change this document covers (or null)\n"
+        '- "submitter": who authored or filed this document — person and/or company '
+        "— if stated (or null)\n\n"
+        "Use null for any field this particular document does not contain. Do not "
+        "invent facts. Return ONLY the JSON object, no markdown.\n\n"
+        f"DOCUMENT TEXT:\n{text[:12000]}"
+    )
+    try:
+        msg = _get_ai().messages.create(
+            model=AI_MODEL, max_tokens=AI_MAX_TOKENS,
+            messages=[{"role": "user", "content": prompt}])
+        _ai_usage["calls"] += 1
+        _ai_usage["in"] += msg.usage.input_tokens
+        _ai_usage["out"] += msg.usage.output_tokens
+        raw = msg.content[0].text.strip()
+        m = re.search(r"\{.*\}", raw, re.S)
+        data = json.loads(m.group(0) if m else raw)
+        return {k: (data.get(k) or None) for k in _REPORT_KEYS}
+    except Exception as e:
+        print(f"    [AI-ERR] {fname}: {e}")
+        return {}
+
+
+def build_source_documents(cat, issue_id, folder, ai=False):
     files = sorted(
         (f for f in os.listdir(folder)
          if os.path.isfile(os.path.join(folder, f))
@@ -148,39 +277,62 @@ def build_source_documents(cat, issue_id, folder):
     for i, f in enumerate(files, 1):
         entry = summarize_file(f, issue_id, i)
         entry["download_url"] = f"{WEB_BASE}/{quote(cat)}/{quote(issue_id)}/{quote(f)}"
+        if ai:
+            rep = ai_document_report(extract_text_any(os.path.join(folder, f)),
+                                     issue_id, f, entry["doc_type"])
+            for k in _REPORT_KEYS:
+                if rep.get(k):
+                    entry[k] = rep[k]
+            if rep.get("submitter"):
+                entry["submitter"] = rep["submitter"]
+            print(f"    [AI] {f}")
         docs.append(entry)
     return docs
 
 
 def main():
-    only = [a for a in sys.argv[1:] if not a.startswith("--")]
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    ai = "--ai" in sys.argv
+    # Positional args that look like an issue id (e.g. NPRR1340) target single
+    # issues; bare category names (e.g. NPRR) limit to a category.
+    issue_targets = {a.upper() for a in args if re.match(r"^[A-Za-z]+\d+$", a)}
+    cat_only = {a.upper() for a in args if not re.match(r"^[A-Za-z]+\d+$", a)}
     updated = skipped = 0
-    for cat in sorted(os.listdir(ROOT)):
-        if only and cat not in only:
-            continue
-        cdir = os.path.join(ROOT, cat)
-        if not os.path.isdir(cdir):
-            continue
-        for issue_id in sorted(os.listdir(cdir)):
-            folder = os.path.join(cdir, issue_id)
-            if not os.path.isdir(folder):
+    try:
+        for cat in sorted(os.listdir(ROOT)):
+            if cat_only and cat.upper() not in cat_only:
                 continue
-            profile = os.path.join(folder, "Quick runs", f"{issue_id} Profile.json")
-            if not os.path.exists(profile):
-                skipped += 1
+            cdir = os.path.join(ROOT, cat)
+            if not os.path.isdir(cdir):
                 continue
-            try:
-                with open(profile, encoding="utf-8") as fh:
-                    data = json.load(fh)
-                data["source_documents"] = build_source_documents(cat, issue_id, folder)
-                with open(profile, "w", encoding="utf-8") as fh:
-                    json.dump(data, fh, indent=2, ensure_ascii=False)
-                updated += 1
-                if updated % 200 == 0:
-                    print(f"  ... {updated} profiles updated")
-            except Exception as e:
-                print(f"  ERROR {cat}/{issue_id}: {e}")
+            for issue_id in sorted(os.listdir(cdir)):
+                if issue_targets and issue_id.upper() not in issue_targets:
+                    continue
+                folder = os.path.join(cdir, issue_id)
+                if not os.path.isdir(folder):
+                    continue
+                profile = os.path.join(folder, "Quick runs", f"{issue_id} Profile.json")
+                if not os.path.exists(profile):
+                    skipped += 1
+                    continue
+                try:
+                    with open(profile, encoding="utf-8") as fh:
+                        data = json.load(fh)
+                    if ai:
+                        print(f"  {issue_id} …")
+                    data["source_documents"] = build_source_documents(cat, issue_id, folder, ai=ai)
+                    with open(profile, "w", encoding="utf-8") as fh:
+                        json.dump(data, fh, indent=2, ensure_ascii=False)
+                    updated += 1
+                    if not ai and updated % 200 == 0:
+                        print(f"  ... {updated} profiles updated")
+                except Exception as e:
+                    print(f"  ERROR {cat}/{issue_id}: {e}")
+    finally:
+        _quit_word()
     print(f"\nDone. profiles updated={updated}  (no profile){skipped}")
+    if _ai_usage["calls"]:
+        print(f"AI: {_ai_usage['calls']} calls, in={_ai_usage['in']} out={_ai_usage['out']} tokens ({AI_MODEL})")
 
 
 if __name__ == "__main__":

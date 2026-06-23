@@ -78,31 +78,40 @@ All URLs are relative to the WAMP docroot; spaces are %-encoded:
 | Center **Document Summary view** (`illustration.jsx`) | nothing — renders the clicked `source_documents` entry passed via `activeRuleDoc` |
 | Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for NPRR, COPMGRR, PGRR; `Summary.json` for SCR, NOGRR, RMGRR (no document list — it lives in the center) |
 
-## Content Window — Documents Submitted + Document Summary
-
-The **center content window** owns the submitted-documents feature (the right
-panel does not).
+## Documents Submitted + per-document report (both panels)
 
 **1. Documents Submitted section** — a `DocumentsSubmittedSection({ cat,
-issueId, onDocClick })` rendered in every `<Cat>DetailView` **below Current
-Status**. It fetches the issue `Profile.json`, reads `source_documents`
+issueId, onDocClick })` rendered in every `<Cat>DetailView` (center) **below
+Current Status**. It fetches the issue `Profile.json`, reads `source_documents`
 (`.zip` excluded), and **sorts by the sequence number after `[rule#][CAT]-`**
-(e.g. `1340NPRR-01` → 1, `…-02` → 2; regex `^\d+[a-z]+[-_ ]+(\d+)`). Each row:
-a **title link** showing the document's **Title Name** — the filename read as
-`[Title Name].[file format]`, i.e. the stem with the extension dropped and
-`-`/`_` turned into spaces (entry `title`, with a UI fallback that derives it
-from `file`; raw filename is the tooltip) — plus a **download button**
+(e.g. `1340NPRR-01` → 1; regex `^\d+[a-z]+[-_ ]+(\d+)`). Each row: a **title
+link** showing the document's **Title Name** (entry `title`; filename stem with
+`-`/`_`→spaces, UI fallback derives it from `file`) + a **download button**
 (`<a download href={download_url}>`, `e.stopPropagation()`).
 
-**2. Document Summary view** — clicking a title calls `onDocClick(doc, issueId,
-cat)` → `onRuleDocClick` in `app.jsx`, which sets `activeRuleDoc = {...doc,
-issueId, cat}` (passed to `PaperTrailsIllustration` as `ruleDoc`). When set,
-`DocumentSummaryView` renders the entry's `doc_type`, `file`, `date`, `author`,
-`summary`, `key_points` + a back link and a Download-original button — **no
-fetch** (the entry carries everything); the category panels/issue detail hide
-while it's open. An effect clears `activeRuleDoc` when the section/category/issue
-changes. `onRuleDocClick` is threaded app → `PaperTrailsIllustration` → each
-`<Cat>DetailView` → `DocumentsSubmittedSection`.
+**2. Per-document report — opens in BOTH panels.** Clicking a title calls
+`onDocClick(doc, issueId, cat)` → `onRuleDocClick` in `app.jsx`, which sets
+`activeRuleDoc = {...doc, issueId, cat}`. That state is passed to **both**
+`PaperTrailsIllustration` (as `ruleDoc`) **and** the `RightPanel` context (as
+`ctx.ruleDoc`). An effect clears it when the section/category/selected issue
+changes.
+- **Center content window** → `DocumentSummaryView` renders **Revision Reason /
+  Description / Justification / Detailed Background** (from the entry; "—" when
+  absent) + back link + Download original. No timeline. Category panels/issue
+  detail hide while it's open.
+- **Right panel "For the talk"** → `DocumentProfileCard` (rightpanel.jsx) renders
+  **number / title / date posted / submitter / requested resolution / related
+  market sections**. Doc-level fields come from the entry; **requested resolution
+  + related market sections** are fetched from the issue `Profile.json`
+  (`timeline_requested_resolution`, `governing_document_sections`). In
+  `RightPanel`'s card switch, `ctx.ruleDoc` takes precedence over the issue
+  `RuleProfileCard`.
+
+The report fields (`revision_reason`/`description`/`justification`/
+`detailed_background`/`submitter`) are produced by `gen_mkt_doc_summaries.py --ai`
+reading each document (see `Set-Paper-Trails-Document-Summary`); `onRuleDocClick`
+is threaded app → `PaperTrailsIllustration` → each `<Cat>DetailView` →
+`DocumentsSubmittedSection`.
 
 **Download:** WAMP serves the original directly via `download_url`
 (`…/ERCOT.MKT.RULES/<CAT>/<ISSUE_ID>/<original document>`, %-encoded) — no rebuild.

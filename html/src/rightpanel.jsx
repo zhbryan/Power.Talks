@@ -123,6 +123,51 @@ function RuleProfileCard({ cat, num }) {
   );
 }
 
+// Shown in the right panel when a single submitted document is open (a row in
+// the center "Documents Submitted" list was clicked). Doc-level fields come from
+// the clicked entry (`doc`); issue-level fields (requested resolution, related
+// market sections) are read from the issue Profile.json.
+function DocumentProfileCard({ doc }) {
+  const [issue, setIssue] = React.useState(null);
+  React.useEffect(() => {
+    if (!doc || !doc.cat || !doc.issueId) { setIssue(null); return; }
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${doc.cat}/${encodeURIComponent(doc.issueId)}/Quick%20runs/${encodeURIComponent(doc.issueId)}%20Profile.json`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(setIssue).catch(() => setIssue({}));
+  }, [doc && doc.cat, doc && doc.issueId]);
+  if (!doc) return null;
+
+  const Field = ({ label, value }) => (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4 }}>{value || "—"}</div>
+    </div>
+  );
+  const sections = (issue && issue.governing_document_sections) || [];
+  const title = doc.title || (doc.file || "").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
+  return (
+    <div>
+      <style>{NP_CARD_CSS}</style>
+      <div className="np-status-row">
+        <span className="np-num">{doc.issueId}</span>
+        <span className="np-badge" style={{ background: "var(--accent-soft)", color: "var(--accent-2)" }}>{doc.doc_type || "Document"}</span>
+      </div>
+      <div className="np-title">{title}</div>
+
+      <Field label="Number" value={doc.issueId} />
+      <Field label="Date Posted" value={doc.date_posted || doc.date} />
+      <Field label="Submitter" value={doc.submitter || doc.author} />
+      <Field label="Requested Resolution" value={issue && issue.timeline_requested_resolution} />
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Related Market Sections</div>
+      {sections.length > 0
+        ? <div>{sections.map((s, i) => <span key={i} className="np-proto-tag">{s}</span>)}</div>
+        : <div className="np-body">—</div>}
+    </div>
+  );
+}
+
 // Shown under "For the talk" when a Paper Trails category homepage is open
 // and no issue is selected. Content comes from window.DATA.CATEGORY_INTROS.
 // Formatting mirrors RuleProfileCard (shared NP_CARD_CSS): status row with
@@ -557,6 +602,8 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
         {tab === "runs" && !isErcotHome && !onMeetingTree && (
           isMeetingGroup
             ? <MeetingProfileCard committee={ctx.meetingGroup || (ctx.meetingDoc && ctx.meetingDoc.committee)} date={ctx.meetingDate} />
+            : ctx.ruleDoc
+            ? <DocumentProfileCard doc={ctx.ruleDoc} />
             : hasNprr
             ? <RuleProfileCard cat="NPRR" num={ctx.nprr} />
             : hasCopmgrr

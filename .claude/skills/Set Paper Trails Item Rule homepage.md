@@ -44,6 +44,11 @@ switch (`hasNprr ? <RuleProfileCard cat="NPRR" num={ctx.nprr} /> : ...`).
 > list lives in the **center content window** (the issue detail view), as a
 > "Documents Submitted" section **below Current Status** — see
 > `Set-Paper-Trails-Homepage`. Do not re-add it to `RuleProfileCard`.
+>
+> **When a document is opened, this card is replaced by `DocumentProfileCard`**
+> (the per-document metadata: number, title, date posted, submitter, requested
+> resolution, related market sections). `RuleProfileCard` shows only when an
+> issue is selected but no document is open (`ctx.ruleDoc` takes precedence).
 
 > **Governing-document sections are intentionally NOT on this card** (removed
 > 2026-06-12 by request) — do not re-add a "Protocol Sections" block. The

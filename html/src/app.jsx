@@ -315,7 +315,7 @@ function App() {
         onClose={() => setRightOpen(false)}
         onRunPrompt={onRunPrompt}
         onArtifactClick={onArtifactClick}
-        context={{ section: activeSection, code: activePaperCode, meetingGroup: activeMeetingGroup, meetingGroupName: activeMeetingGroupName, meetingDate: activeMeetingDate, meetingDoc: activeMeetingDoc, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr }}
+        context={{ section: activeSection, code: activePaperCode, meetingGroup: activeMeetingGroup, meetingGroupName: activeMeetingGroupName, meetingDate: activeMeetingDate, meetingDoc: activeMeetingDoc, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr, ruleDoc: activeRuleDoc }}
       />
 
       <TweaksPanel

@@ -1228,13 +1228,13 @@ function RmgrPanels({ onRmgrClick }) {
 
 function DocumentSummaryView({ doc, onBack }) {
   if (!doc) return null;
-  const Row = ({ label, value }) => value ? (
-    <div style={{ marginBottom: 8 }}>
+  // Always render the label; show an em dash when the field wasn't extracted.
+  const Row = ({ label, value }) => (
+    <div style={{ marginBottom: 10 }}>
       <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.45 }}>{value}</div>
+      <div style={{ fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.5 }}>{value || "—"}</div>
     </div>
-  ) : null;
-  const kp = doc.key_points || [];
+  );
   return (
     <div style={{ marginTop: 16, borderTop: "1px dashed var(--rule-2)", paddingTop: 14 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
@@ -1252,19 +1252,10 @@ function DocumentSummaryView({ doc, onBack }) {
       <div style={{ fontFamily: "var(--serif)", fontSize: 22, lineHeight: 1.15, margin: "2px 0 10px", color: "var(--ink)" }}>
         {doc.title || (doc.file || "").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ")}
       </div>
-      <Row label="File" value={doc.file} />
-      <Row label="Type" value={doc.doc_type} />
-      <Row label="Date" value={doc.date} />
-      <Row label="Author / Filer" value={doc.author} />
-      <Row label="Summary" value={doc.summary} />
-      {kp.length > 0 && (
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 2 }}>Key Points</div>
-          <ul style={{ margin: "2px 0", paddingLeft: 18, fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.5 }}>
-            {kp.map((k, i) => <li key={i}>{k}</li>)}
-          </ul>
-        </div>
-      )}
+      <Row label="Revision Reason" value={doc.revision_reason} />
+      <Row label="Description" value={doc.description || doc.summary} />
+      <Row label="Justification of Revision" value={doc.justification} />
+      <Row label="Detailed Background of Changes" value={doc.detailed_background} />
     </div>
   );
 }
