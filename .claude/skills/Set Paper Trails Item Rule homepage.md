@@ -46,7 +46,7 @@ switch (`hasNprr ? <RuleProfileCard cat="NPRR" num={ctx.nprr} /> : ...`).
 > `Set-Paper-Trails-Homepage`. Do not re-add it to `RuleProfileCard`.
 >
 > **When a document is opened, this card is replaced by `DocumentProfileCard`**
-> (the per-document metadata: number, title, date posted, submitter, requested
+> (the per-document metadata: number, title, date posted, Sponsor, requested
 > resolution, related market sections). `RuleProfileCard` shows only when an
 > issue is selected but no document is open (`ctx.ruleDoc` takes precedence).
 

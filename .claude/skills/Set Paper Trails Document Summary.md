@@ -15,7 +15,9 @@ across **both panels** (every document gets the same full template; fields a
 document lacks render as "—"):
 
 - **Right panel "For the talk"** → the document card: **number, title, date
-  posted, submitter, requested resolution, related market sections**.
+  posted, Sponsor (name · company, email, phone), requested resolution, related
+  market sections**. Sponsor / requested resolution / related market sections are
+  read from the issue `Profile.json` (issue-level).
 - **Center content window** → the document report: **Revision Reason,
   Description, Justification of Revision, Detailed Background of Changes** — read
   from *that one document*. Plus a back link and a **Download original** button.
@@ -112,6 +114,10 @@ Use `null` for unknown scalars, `[]` for empty arrays.
 3. With **`--ai`**: read each document's text (`.docx`/`.doc`/`.pdf`/`.xls`/`.xlsx`)
    and ask Claude for `{revision_reason, description, justification,
    detailed_background, submitter}` about that single document; merge into the entry.
+   For the **primary submission** (`-01` / `Revision Request`), backfill any blank
+   `revision_reason`/`description`/`justification` from the issue Profile's
+   `reason_for_revision`/`revision_description`/`business_case` (those were
+   extracted from this same document by the profile generator).
 4. Set `Profile.json["source_documents"]` to the array and write the profile back
    (2-space indent). Leave the rest of the profile untouched.
 5. Report counts (and AI token usage when `--ai`).
@@ -139,8 +145,8 @@ rewrites the `source_documents` field of each `Profile.json`.
   - center content window → `DocumentSummaryView` renders Revision Reason /
     Description / Justification / Detailed Background + Download (no fetch).
   - right panel → `DocumentProfileCard` renders number / title / date posted /
-    submitter / requested resolution / related market sections (issue-level
-    fields fetched from the issue `Profile.json`).
+    Sponsor / requested resolution / related market sections (Sponsor + the last
+    two are issue-level, fetched from the issue `Profile.json`).
 - See `Set-Paper-Trails-Homepage` for the wiring (`onRuleDocClick`,
   `ctx.ruleDoc`).
 

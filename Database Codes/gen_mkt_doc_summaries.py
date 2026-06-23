@@ -237,17 +237,21 @@ def ai_document_report(text, issue_id, fname, doc_type):
         f"You are reading ONE document submitted in the ERCOT stakeholder process "
         f"for revision request {issue_id}.\n"
         f"Document file: {fname}\nDocument type: {doc_type}\n\n"
-        "Using ONLY this document's text, return a JSON object with these keys:\n"
-        '- "revision_reason": why the revision is needed, per this document (or null)\n'
-        '- "description": what this document describes or proposes (or null)\n'
-        '- "justification": the business case / justification (or null)\n'
-        '- "detailed_background": one or two short paragraphs of plain-English '
-        "background on the change this document covers (or null)\n"
-        '- "submitter": who authored or filed this document — person and/or company '
-        "— if stated (or null)\n\n"
-        "Use null for any field this particular document does not contain. Do not "
-        "invent facts. Return ONLY the JSON object, no markdown.\n\n"
-        f"DOCUMENT TEXT:\n{text[:12000]}"
+        "ERCOT revision-request forms label their sections explicitly — look for "
+        "headings/table rows such as 'Reason for Revision', 'Revision Description', "
+        "'Justification', 'Business Case', 'Impact Analysis'. Extract from those "
+        "wherever present.\n\n"
+        "Return a JSON object with these keys, drawn from THIS document's text:\n"
+        '- "revision_reason": why the revision is needed (the Reason for Revision)\n'
+        '- "description": what the document revises/proposes (the Revision Description)\n'
+        '- "justification": the business case / justification for the change\n'
+        '- "detailed_background": one or two plain-English paragraphs giving the '
+        "background of the changes this document covers — what is changing and why\n"
+        '- "submitter": person and/or company that authored/filed this document, if stated\n\n'
+        "Fill every field the document supports; use null ONLY when the document "
+        "genuinely has nothing for it. Do not invent facts. Plain text, no markdown. "
+        "Return ONLY the JSON object.\n\n"
+        f"DOCUMENT TEXT:\n{text[:14000]}"
     )
     try:
         msg = _get_ai().messages.create(
@@ -265,7 +269,22 @@ def ai_document_report(text, issue_id, fname, doc_type):
         return {}
 
 
-def build_source_documents(cat, issue_id, folder, ai=False):
+def _aslist(v):
+    if isinstance(v, list):
+        return "; ".join(str(x) for x in v if x)
+    return v or None
+
+
+def build_source_documents(cat, issue_id, folder, ai=False, profile=None):
+    profile = profile or {}
+    # The primary revision-request submission carries the issue's own
+    # Reason/Description/Business Case — already extracted into the Profile by the
+    # profile generator. Use them to fill the -01's report fields the AI leaves blank.
+    prof_fallback = {
+        "revision_reason": _aslist(profile.get("reason_for_revision")),
+        "description": profile.get("revision_description"),
+        "justification": profile.get("business_case"),
+    }
     files = sorted(
         (f for f in os.listdir(folder)
          if os.path.isfile(os.path.join(folder, f))
@@ -286,6 +305,12 @@ def build_source_documents(cat, issue_id, folder, ai=False):
             if rep.get("submitter"):
                 entry["submitter"] = rep["submitter"]
             print(f"    [AI] {f}")
+        # Primary submission (-01 / Revision Request): backfill any blank
+        # Reason/Description/Justification from the issue Profile.
+        if i == 1 or entry["doc_type"] == "Revision Request":
+            for k, v in prof_fallback.items():
+                if not entry.get(k) and v:
+                    entry[k] = v
         docs.append(entry)
     return docs
 
@@ -320,7 +345,7 @@ def main():
                         data = json.load(fh)
                     if ai:
                         print(f"  {issue_id} …")
-                    data["source_documents"] = build_source_documents(cat, issue_id, folder, ai=ai)
+                    data["source_documents"] = build_source_documents(cat, issue_id, folder, ai=ai, profile=data)
                     with open(profile, "w", encoding="utf-8") as fh:
                         json.dump(data, fh, indent=2, ensure_ascii=False)
                     updated += 1

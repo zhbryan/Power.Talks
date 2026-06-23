@@ -100,12 +100,13 @@ changes.
   absent) + back link + Download original. No timeline. Category panels/issue
   detail hide while it's open.
 - **Right panel "For the talk"** → `DocumentProfileCard` (rightpanel.jsx) renders
-  **number / title / date posted / submitter / requested resolution / related
-  market sections**. Doc-level fields come from the entry; **requested resolution
-  + related market sections** are fetched from the issue `Profile.json`
-  (`timeline_requested_resolution`, `governing_document_sections`). In
-  `RightPanel`'s card switch, `ctx.ruleDoc` takes precedence over the issue
-  `RuleProfileCard`.
+  **number / title / date posted / Sponsor (+ email + phone) / requested
+  resolution / related market sections**. `number`/`title`/`date posted` come
+  from the entry; **Sponsor, requested resolution, and related market sections**
+  are fetched from the issue `Profile.json` (`sponsor_name`/`sponsor_company`/
+  `sponsor_email`/`sponsor_phone`, `timeline_requested_resolution`,
+  `governing_document_sections`). In `RightPanel`'s card switch, `ctx.ruleDoc`
+  takes precedence over the issue `RuleProfileCard`.
 
 The report fields (`revision_reason`/`description`/`justification`/
 `detailed_background`/`submitter`) are produced by `gen_mkt_doc_summaries.py --ai`

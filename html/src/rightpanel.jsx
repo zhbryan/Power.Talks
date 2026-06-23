@@ -156,7 +156,9 @@ function DocumentProfileCard({ doc }) {
 
       <Field label="Number" value={doc.issueId} />
       <Field label="Date Posted" value={doc.date_posted || doc.date} />
-      <Field label="Submitter" value={doc.submitter || doc.author} />
+      <Field label="Sponsor" value={issue && (issue.sponsor_name && (issue.sponsor_company ? `${issue.sponsor_name} · ${issue.sponsor_company}` : issue.sponsor_name))} />
+      <Field label="Email" value={issue && issue.sponsor_email} />
+      <Field label="Phone" value={issue && issue.sponsor_phone} />
       <Field label="Requested Resolution" value={issue && issue.timeline_requested_resolution} />
 
       <hr className="np-divider" />
