@@ -151,6 +151,8 @@ _REPORT_KEYS = ("revision_reason", "description", "justification",
 _SUMM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "summarize_MKT_Rules")
 _ai_client = None
 _word_app = None
+_word_count = 0
+_WORD_RECYCLE = 40   # restart Word every N .doc opens — long-lived instances truncate
 _ai_usage = {"calls": 0, "in": 0, "out": 0}
 
 
@@ -166,18 +168,19 @@ def _get_ai():
 
 
 def _quit_word():
-    global _word_app
+    global _word_app, _word_count
     if _word_app is not None:
         try:
             _word_app.Quit()
         except Exception:
             pass
         _word_app = None
+        _word_count = 0
 
 
 def extract_text_any(path):
     """Best-effort plain text from a document (.docx/.doc/.pdf/.xls/.xlsx)."""
-    global _word_app
+    global _word_app, _word_count
     ext = os.path.splitext(path)[1].lower()
     try:
         if ext == ".docx":
@@ -190,9 +193,13 @@ def extract_text_any(path):
             return "\n".join(parts)
         if ext == ".doc":
             import win32com.client
+            if _word_app is not None and _word_count >= _WORD_RECYCLE:
+                _quit_word()
             if _word_app is None:
                 _word_app = win32com.client.Dispatch("Word.Application")
                 _word_app.Visible = False
+                _word_count = 0
+            _word_count += 1
             doc = _word_app.Documents.Open(os.path.abspath(path), ReadOnly=True)
             t = doc.Content.Text
             doc.Close(False)
@@ -343,6 +350,14 @@ def main():
                 try:
                     with open(profile, encoding="utf-8") as fh:
                         data = json.load(fh)
+                    # Resume: skip issues already AI-processed (unless --force) so a
+                    # long run can be restarted without re-spending on done issues.
+                    if ai and "--force" not in sys.argv:
+                        sd = data.get("source_documents") or []
+                        if sd and any(e.get("detailed_background") or e.get("revision_reason")
+                                      or e.get("justification") for e in sd):
+                            skipped += 1
+                            continue
                     if ai:
                         print(f"  {issue_id} …")
                     data["source_documents"] = build_source_documents(cat, issue_id, folder, ai=ai, profile=data)
