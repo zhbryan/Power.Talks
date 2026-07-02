@@ -9,7 +9,9 @@ __pycache__/
 
 # Logs
 Database Codes/*.log
+Database Codes/logs/
 download_log.txt
+html/paper_trails_run_log.txt
 
 # Processed files index (local state)
 Database Codes/processed_files.json
