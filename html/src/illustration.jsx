@@ -1609,3 +1609,345 @@ function ERCOTHome({ onSectionChange }) {
 }
 
 window.ERCOTHome = ERCOTHome;
+
+// ── Hot Topics home ─────────────────────────────────────────────────────────
+// Center view for the "hot-topics" section. It reads the daily reports produced
+// under  Documents Database/HOT.TOPICS/<date>/hot_topics_<date>.md  (see the
+// "Hot Topics Generator" skill). A date dropdown picks which day's report to
+// show — the most recent date is selected by default. Content is fetched live
+// from WAMP and rendered from Markdown in the browser, so a newly generated
+// daily report appears without rebuilding the bundle; only index.json (the list
+// of available dates, written by gen_hot_topics.py) needs refreshing.
+const HT_BASE = "/Power.Talks/Documents%20Database/HOT.TOPICS";
+
+function htEscape(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+// Inline Markdown → HTML: code spans, links, bold, italic. Content is escaped
+// first so raw HTML in the source can never inject.
+function htInline(s) {
+  let t = htEscape(s);
+  t = t.replace(/`([^`]+)`/g, (m, c) => `<code>${c}</code>`);
+  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,
+        (m, txt, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${txt}</a>`);
+  t = t.replace(/\*\*([^*]+)\*\*/g, (m, c) => `<strong>${c}</strong>`);
+  t = t.replace(/\*([^*]+)\*/g, (m, c) => `<em>${c}</em>`);
+  return t;
+}
+// One (optionally nested) bullet list. Returns [html, nextIndex].
+function htParseList(lines, start) {
+  let i = start;
+  const items = [];
+  while (i < lines.length && /^-\s+/.test(lines[i])) {
+    let content = lines[i].replace(/^-\s+/, "");
+    i++;
+    const children = [];
+    while (i < lines.length && /^\s{2,}-\s+/.test(lines[i])) {
+      children.push(lines[i].replace(/^\s*-\s+/, ""));
+      i++;
+    }
+    let li = `<li>${htInline(content)}`;
+    if (children.length) li += `<ul>${children.map(c => `<li>${htInline(c)}</li>`).join("")}</ul>`;
+    items.push(li + "</li>");
+  }
+  return [`<ul>${items.join("")}</ul>`, i];
+}
+// Block Markdown → HTML. Supports headings, GFM tables (with alignment),
+// bullet lists (one nesting level), blockquotes, hr, and paragraphs — the
+// constructs the daily reports use. The first H1 is dropped because the date is
+// already shown in the header/dropdown.
+function htMarkdownToHtml(md) {
+  const lines = String(md).replace(/\r\n/g, "\n").split("\n");
+  const out = [];
+  let para = [];
+  let i = 0, strippedH1 = false;
+  const flush = () => { if (para.length) { out.push(`<p>${htInline(para.join(" "))}</p>`); para = []; } };
+  while (i < lines.length) {
+    const line = lines[i];
+    const t = line.trim();
+    if (!strippedH1 && /^#\s+/.test(t)) { strippedH1 = true; i++; continue; }
+    if (t === "") { flush(); i++; continue; }
+    // GFM table: a pipe row immediately followed by a separator row
+    if (/^\|.*\|$/.test(t) && i + 1 < lines.length && /^\|[\s:|-]+\|$/.test(lines[i + 1].trim())) {
+      flush();
+      const cells = (row) => row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(c => c.trim());
+      const header = cells(t);
+      const align = cells(lines[i + 1]).map(c => {
+        const l = c.startsWith(":"), r = c.endsWith(":");
+        return (l && r) ? "center" : r ? "right" : l ? "left" : "";
+      });
+      i += 2;
+      const body = [];
+      while (i < lines.length && /^\|.*\|$/.test(lines[i].trim())) { body.push(cells(lines[i])); i++; }
+      const sty = (k) => align[k] ? ` style="text-align:${align[k]}"` : "";
+      let tbl = "<table class=\"ht-table\"><thead><tr>";
+      header.forEach((h, k) => tbl += `<th${sty(k)}>${htInline(h)}</th>`);
+      tbl += "</tr></thead><tbody>";
+      body.forEach(r => { tbl += "<tr>"; r.forEach((c, k) => tbl += `<td${sty(k)}>${htInline(c)}</td>`); tbl += "</tr>"; });
+      out.push(tbl + "</tbody></table>");
+      continue;
+    }
+    const h = t.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { flush(); out.push(`<h${h[1].length}>${htInline(h[2])}</h${h[1].length}>`); i++; continue; }
+    if (/^---+$/.test(t)) { flush(); out.push("<hr/>"); i++; continue; }
+    if (/^>\s?/.test(t)) {
+      flush();
+      const buf = [];
+      while (i < lines.length && /^>\s?/.test(lines[i].trim())) { buf.push(lines[i].trim().replace(/^>\s?/, "")); i++; }
+      out.push(`<blockquote>${htInline(buf.join(" "))}</blockquote>`);
+      continue;
+    }
+    if (/^-\s+/.test(line)) { flush(); const [html, ni] = htParseList(lines, i); out.push(html); i = ni; continue; }
+    para.push(t); i++;
+  }
+  flush();
+  return out.join("\n");
+}
+
+// Drop whole `##`-level sections whose heading matches any of `titles` (emoji
+// and punctuation ignored), including their `###` subsections. Used to hide the
+// "Source Summaries" and "Sources checked" sections from the website while the
+// database .md files keep them in full.
+function htStripSections(md, titles) {
+  const norm = (s) => String(s).replace(/[^a-z0-9 ]/gi, " ").replace(/\s+/g, " ").trim().toLowerCase();
+  const drop = titles.map(norm);
+  const lines = String(md).replace(/\r\n/g, "\n").split("\n");
+  const out = [];
+  let skip = false;
+  for (const line of lines) {
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if (h && h[1].length <= 2) skip = drop.some(d => norm(h[2]).includes(d));
+    if (!skip) out.push(line);
+  }
+  return out.join("\n");
+}
+const HT_HIDDEN_SECTIONS = ["Source Summaries", "Sources checked"];
+
+// Calendar date picker for the Hot Topics section. `dates` is the index.json
+// list (newest-first) of days that have a report; only those days are
+// selectable. Renders a button showing the current date that opens a month grid
+// popover; month navigation is clamped to the range of available reports.
+function HotTopicsDatePicker({ dates, value, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  const avail = React.useMemo(() => new Set(dates.map(d => d.date)), [dates]);
+  const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const iso = (y, m, d) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  const fmtLong = (s) => parse(s).toLocaleDateString("en-US", { weekday: "short", year: "numeric", month: "short", day: "numeric" });
+
+  const anchor = value ? parse(value) : (dates[0] ? parse(dates[0].date) : new Date());
+  const [view, setView] = React.useState({ y: anchor.getFullYear(), m: anchor.getMonth() });
+
+  // Reset the visible month to the selected date each time the popover opens.
+  React.useEffect(() => { if (open) setView({ y: anchor.getFullYear(), m: anchor.getMonth() }); }, [open, value]);
+
+  // Close on outside click / Escape.
+  React.useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const maxD = dates.length ? parse(dates[0].date) : anchor;                 // newest
+  const minD = dates.length ? parse(dates[dates.length - 1].date) : anchor;  // oldest
+  const viewYm = view.y * 12 + view.m;
+  const atMax = viewYm >= maxD.getFullYear() * 12 + maxD.getMonth();
+  const atMin = viewYm <= minD.getFullYear() * 12 + minD.getMonth();
+  const shift = (delta) => setView(v => { const d = new Date(v.y, v.m + delta, 1); return { y: d.getFullYear(), m: d.getMonth() }; });
+
+  const monthLabel = new Date(view.y, view.m, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const firstDow = new Date(view.y, view.m, 1).getDay();
+  const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div className="ht-cal" ref={ref}>
+      <button className="ht-cal-btn" onClick={() => setOpen(o => !o)} aria-haspopup="dialog" aria-expanded={open}>
+        <I.Calendar size={14}/>
+        <span>{value ? fmtLong(value) : "Select date"}</span>
+        <span className="ht-cal-caret"><I.ChevD size={12}/></span>
+      </button>
+      {open && (
+        <div className="ht-cal-pop" role="dialog" aria-label="Choose report date">
+          <div className="ht-cal-nav">
+            <button className="ht-cal-arrow" onClick={() => shift(-1)} disabled={atMin} aria-label="Previous month"><I.ChevL size={15}/></button>
+            <div className="ht-cal-month">{monthLabel}</div>
+            <button className="ht-cal-arrow" onClick={() => shift(1)} disabled={atMax} aria-label="Next month"><I.ChevR size={15}/></button>
+          </div>
+          <div className="ht-cal-week">
+            {["S", "M", "T", "W", "T", "F", "S"].map((w, i) => <div key={i} className="ht-cal-wd">{w}</div>)}
+          </div>
+          <div className="ht-cal-days">
+            {cells.map((d, i) => {
+              if (d === null) return <div key={i} className="ht-cal-blank"/>;
+              const ds = iso(view.y, view.m, d);
+              const has = avail.has(ds);
+              const isSel = ds === value;
+              return (
+                <button key={i} type="button" disabled={!has}
+                  className={"ht-cal-day" + (has ? " has" : "") + (isSel ? " sel" : "")}
+                  title={has ? fmtLong(ds) : "No report"}
+                  onClick={() => { onChange(ds); setOpen(false); }}>
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+          {dates.length > 0 && (
+            <button className="ht-cal-latest" onClick={() => { onChange(dates[0].date); setOpen(false); }}>
+              Jump to latest report
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HotTopicsHome() {
+  const [index, setIndex]       = React.useState(null);       // { dates: [{date,file,title}] }
+  const [sel, setSel]           = React.useState(null);       // selected date string
+  const [bodyHtml, setBodyHtml] = React.useState("");
+  const [state, setState]       = React.useState("loading");  // loading | ready | error | empty
+  const [docState, setDocState] = React.useState("idle");     // idle | loading | ready | error
+
+  // Load the list of available dates once.
+  React.useEffect(() => {
+    setState("loading");
+    fetch(`${HT_BASE}/index.json`, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => {
+        const dates = (d.dates || []).slice();
+        if (!dates.length) { setState("empty"); return; }
+        setIndex({ ...d, dates });
+        setSel(dates[0].date);   // most recent (index.json is newest-first)
+        setState("ready");
+      })
+      .catch(() => setState("error"));
+  }, []);
+
+  // Load the selected date's report whenever the selection changes.
+  React.useEffect(() => {
+    if (!sel || !index) return;
+    const entry = (index.dates || []).find(x => x.date === sel);
+    if (!entry) return;
+    setDocState("loading"); setBodyHtml("");
+    fetch(`${HT_BASE}/${encodeURIComponent(sel)}/${encodeURIComponent(entry.file)}`, { cache: "no-store" })
+      .then(r => r.ok ? r.text() : Promise.reject(`HTTP ${r.status}`))
+      .then(md => { setBodyHtml(htMarkdownToHtml(htStripSections(md, HT_HIDDEN_SECTIONS))); setDocState("ready"); })
+      .catch(() => setDocState("error"));
+  }, [sel, index]);
+
+  return (
+    <div className="ht-home">
+      <style>{`
+        .ht-home { padding: 24px 28px 40px; max-width: 860px; margin: 0 auto; }
+        .ht-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+        .ht-logo {
+          width: 44px; height: 44px; border-radius: 11px; background: var(--accent);
+          display: grid; place-items: center; color: #fff; flex: 0 0 auto;
+        }
+        .ht-h1 { font-family: var(--serif); font-size: 30px; font-weight: 700; color: var(--ink); margin: 0; line-height: 1.15; }
+        .ht-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+        .ht-cal { margin-left: auto; position: relative; }
+        .ht-cal-btn {
+          display: flex; align-items: center; gap: 8px;
+          font-family: var(--sans); font-size: 13px; color: var(--ink);
+          background: var(--panel); border: 1px solid var(--rule-2); border-radius: 8px;
+          padding: 7px 10px 7px 12px; cursor: pointer;
+        }
+        .ht-cal-btn:hover { border-color: var(--accent); }
+        .ht-cal-btn > span:first-of-type { min-width: 0; }
+        .ht-cal-caret { color: var(--muted); display: inline-flex; }
+        .ht-cal-pop {
+          position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; width: 268px;
+          background: var(--panel); border: 1px solid var(--rule-2); border-radius: 12px;
+          box-shadow: var(--shadow-1); padding: 12px;
+        }
+        .ht-cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .ht-cal-month { font-family: var(--sans); font-size: 13.5px; font-weight: 600; color: var(--ink); }
+        .ht-cal-arrow {
+          width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center;
+          background: transparent; border: 1px solid var(--rule-2); color: var(--ink-2); cursor: pointer;
+        }
+        .ht-cal-arrow:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-2); }
+        .ht-cal-arrow:disabled { opacity: .35; cursor: default; }
+        .ht-cal-week, .ht-cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .ht-cal-wd {
+          text-align: center; font-family: var(--mono); font-size: 10px; color: var(--muted);
+          padding: 4px 0; text-transform: uppercase;
+        }
+        .ht-cal-blank { aspect-ratio: 1; }
+        .ht-cal-day {
+          aspect-ratio: 1; display: grid; place-items: center; border: none; border-radius: 7px;
+          font-family: var(--sans); font-size: 12.5px; color: var(--muted);
+          background: transparent; cursor: default;
+        }
+        .ht-cal-day.has { color: var(--ink); background: var(--accent-soft); cursor: pointer; font-weight: 500; }
+        .ht-cal-day.has:hover { background: var(--accent); color: #fff; }
+        .ht-cal-day.sel { background: var(--accent); color: #fff; font-weight: 600; }
+        .ht-cal-day:disabled { opacity: .5; }
+        .ht-cal-latest {
+          margin-top: 10px; width: 100%; padding: 7px; border-radius: 8px;
+          border: 1px solid var(--rule-2); background: transparent; cursor: pointer;
+          font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2);
+        }
+        .ht-cal-latest:hover { border-color: var(--accent); color: var(--accent-2); }
+        .ht-status { color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center; }
+        .ht-md { font-size: 13.5px; color: var(--ink-2); line-height: 1.7; }
+        .ht-md h1 { font-family: var(--serif); font-size: 26px; color: var(--ink); margin: 22px 0 10px; }
+        .ht-md h2 { font-size: 18px; color: var(--ink); margin: 26px 0 10px; font-weight: 600; }
+        .ht-md h3 {
+          font-size: 12px; font-family: var(--mono); letter-spacing: .06em; text-transform: uppercase;
+          color: var(--muted); margin: 20px 0 8px; font-weight: 500;
+        }
+        .ht-md p { margin: 10px 0; }
+        .ht-md ul { margin: 8px 0; padding-left: 20px; }
+        .ht-md li { margin: 4px 0; }
+        .ht-md a { color: var(--accent-2); text-decoration: none; }
+        .ht-md a:hover { text-decoration: underline; }
+        .ht-md strong { color: var(--ink); font-weight: 600; }
+        .ht-md code { font-family: var(--mono); font-size: 12px; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+        .ht-md hr { border: none; border-top: 1px dashed var(--rule-2); margin: 20px 0; }
+        .ht-md blockquote {
+          margin: 12px 0; padding: 8px 14px; border-left: 3px solid var(--accent);
+          background: var(--accent-soft); border-radius: 0 6px 6px 0; color: var(--ink-2);
+        }
+        .ht-md .ht-table {
+          border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 12.5px; display: block; overflow-x: auto;
+        }
+        .ht-md .ht-table th, .ht-md .ht-table td {
+          border: 1px solid var(--rule-2); padding: 7px 10px; vertical-align: top; text-align: left;
+        }
+        .ht-md .ht-table th { background: var(--panel); color: var(--ink); font-weight: 600; }
+      `}</style>
+
+      <div className="ht-hdr">
+        <div className="ht-logo"><I.Flame size={20}/></div>
+        <div>
+          <h1 className="ht-h1">Hot Topics</h1>
+          <div className="ht-sub">Daily ERCOT market intelligence — ranked by cross-source frequency</div>
+        </div>
+        {state === "ready" && index && (
+          <HotTopicsDatePicker dates={index.dates} value={sel} onChange={setSel}/>
+        )}
+      </div>
+
+      {state === "loading" && <div className="ht-status">Loading Hot Topics…</div>}
+      {state === "empty"   && <div className="ht-status">No Hot Topics reports yet. Run the Hot Topics Generator skill to create today's report.</div>}
+      {state === "error"   && <div className="ht-status">Couldn't load the Hot Topics index. Is WAMP serving <code>Documents Database/HOT.TOPICS/index.json</code>?</div>}
+
+      {state === "ready" && (
+        docState === "loading" ? <div className="ht-status">Loading report…</div>
+        : docState === "error" ? <div className="ht-status">Couldn't load this date's report.</div>
+        : <div className="ht-md" dangerouslySetInnerHTML={{ __html: bodyHtml }}/>
+      )}
+    </div>
+  );
+}
+window.HotTopicsHome = HotTopicsHome;

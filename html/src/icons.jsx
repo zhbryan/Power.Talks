@@ -36,6 +36,7 @@ const I = {
   Close:   (p) => <Icon {...p}><path d="M6 6l12 12M18 6 6 18"/></Icon>,
   Stage:   (p) => <Icon {...p}><path d="M3 20h18M6 20V9h12v11M9 9V5h6v4M12 13v4"/></Icon>,
   Clock:   (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></Icon>,
+  Calendar:(p) => <Icon {...p}><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></Icon>,
   Target:  (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></Icon>,
   Flame:   (p) => <Icon {...p}><path d="M12 3c1 4 5 5 5 10a5 5 0 1 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-6 1-9z"/></Icon>,
   Lightning:(p)=> <Icon {...p}><path d="M13 3 4 14h6l-1 7 9-11h-6l1-7z"/></Icon>,

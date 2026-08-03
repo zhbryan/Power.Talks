@@ -1,0 +1,108 @@
+{
+  "_comment": "Maintained registry of information sources for the daily Hot Topics report. Edit this file to add/remove/re-prioritize sources. The Hot Topics skill reads this and checks every enabled source. 'within_days' scopes how recent an item must be to count. Set 'enabled' to false to skip a source without deleting it.",
+  "within_days": 7,
+  "ercot_market_focus": "Only count topics relevant to the ERCOT wholesale/retail power market: real-time & day-ahead energy, ancillary services (RRS, ECRS, Non-Spin, Reg), RTC+B (real-time co-optimization + batteries), ORDC/scarcity pricing, reliability standards (PRC, reserve margin), interconnection & GINR, transmission (RIOP, CCN, 765kV), DER/aggregation, large load / data centers, market rules (NPRR/NOGRR/PGRR/etc.), congestion & CRR, weather/grid conditions, capacity/PCM, and PUCT policy affecting ERCOT. Drop anything not tied to the ERCOT footprint.",
+
+  "sources": {
+    "ercot_official": [
+      {
+        "id": "ercot-market-notices",
+        "name": "ERCOT Market Notices & Announcements",
+        "url": "https://www.ercot.com/services/comm/mkt_notices",
+        "kind": "primary",
+        "enabled": true,
+        "notes": "Official market notices, alerts, and operational messages."
+      },
+      {
+        "id": "ercot-news",
+        "name": "ERCOT News / Press Releases",
+        "url": "https://www.ercot.com/about/news",
+        "kind": "primary",
+        "enabled": true,
+        "notes": "Grid conditions, records, board/company announcements."
+      }
+    ],
+
+    "stakeholder_meetings": [
+      {
+        "id": "ercot-stkhdr-ondisk",
+        "name": "ERCOT stakeholder meetings (recent, on disk)",
+        "path": "Documents Database/ERCOT.STKHDR.MEETS",
+        "kind": "local",
+        "enabled": true,
+        "notes": "gen_hot_topics.py auto-discovers any committee meeting dated within 'within_days'. Summarize the agendas/materials of those meetings. Live fallback: https://www.ercot.com/committees"
+      }
+    ],
+
+    "puct": [
+      {
+        "id": "puct-open-meetings",
+        "name": "PUCT Open Meeting (agendas & orders)",
+        "url": "https://www.puc.texas.gov/agency/about/commissioners/meetings.aspx",
+        "kind": "primary",
+        "enabled": true,
+        "notes": "Most recent PUCT open meeting affecting ERCOT: agenda items, orders, rulemakings. Interchange filings search: https://interchange.puc.texas.gov/"
+      }
+    ],
+
+    "news_sites": [
+      {
+        "id": "rto-insider",
+        "name": "RTO Insider — ERCOT",
+        "url": "https://www.rtoinsider.com/ercot",
+        "rank": 1,
+        "enabled": true,
+        "notes": "Gold standard for ISO/RTO market & stakeholder coverage."
+      },
+      {
+        "id": "utility-dive",
+        "name": "Utility Dive",
+        "url": "https://www.utilitydive.com/topic/generation/",
+        "rank": 2,
+        "enabled": true,
+        "notes": "Broad U.S. power-sector news; strong ERCOT/Texas coverage."
+      },
+      {
+        "id": "spglobal-ci",
+        "name": "S&P Global Commodity Insights — Electric Power",
+        "url": "https://www.spglobal.com/commodityinsights/en/market-insights/latest-news/electric-power",
+        "rank": 3,
+        "enabled": true,
+        "notes": "Platts pricing, market fundamentals, ERCOT price/analysis."
+      },
+      {
+        "id": "power-magazine",
+        "name": "POWER Magazine",
+        "url": "https://www.powermag.com/",
+        "rank": 4,
+        "enabled": true,
+        "notes": "Generation, grid reliability, technology; Texas/ERCOT features."
+      },
+      {
+        "id": "reuters-energy",
+        "name": "Reuters — U.S. Energy",
+        "url": "https://www.reuters.com/business/energy/",
+        "rank": 5,
+        "enabled": true,
+        "notes": "Wire coverage of Texas grid, prices, policy, large loads."
+      }
+    ],
+
+    "news_sites_alternates": [
+      {
+        "id": "texas-tribune-energy",
+        "name": "Texas Tribune — Energy",
+        "url": "https://www.texastribune.org/series/electric-grid/",
+        "enabled": false,
+        "notes": "Texas-specific grid/policy; swap in if a core site is paywalled."
+      },
+      {
+        "id": "eenews-energywire",
+        "name": "E&E News — Energywire",
+        "url": "https://www.eenews.net/publication/energywire/",
+        "enabled": false,
+        "notes": "Deep policy/regulatory reporting."
+      }
+    ]
+  }
+}

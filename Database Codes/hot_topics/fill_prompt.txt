@@ -1,0 +1,41 @@
+Produce today's ERCOT "Hot Topics" report end-to-end. Use the project skill
+"Hot-Topics-Generator" as your guide. Work from the project root
+E:\wamp64\www\Power.Talks. Be autonomous — do not ask questions; if a source is
+paywalled or empty, note it and move on (swap in a registry alternate if needed).
+
+Steps:
+1. Run:  py -3 "Database Codes/hot_topics/gen_hot_topics.py"
+   This scaffolds Documents Database/HOT.TOPICS/<today>/ (creating _prep.json +
+   a skeleton) for the current system date and refreshes index.json. Use that
+   date as "today".
+2. Read Documents Database/HOT.TOPICS/<today>/_prep.json — it lists the enabled
+   web sources and the stakeholder meetings found within the last 7 days (with
+   their document lists) plus the ERCOT-market topic-scope filter.
+3. Gather and summarize, using ONLY items published/updated within the last 7
+   days and relevant to the ERCOT power market:
+   - ERCOT.com market notices + news (WebFetch/WebSearch).
+   - Each recent stakeholder meeting: summarize from its documents on disk at
+     the listed path (agendas, minutes, presentations) — do NOT re-download.
+   - PUCT: the latest open-meeting agenda/orders and any ERCOT-relevant rulemaking.
+   - The five electricity-market news sites (RTO Insider, Utility Dive, S&P
+     Global Commodity Insights, POWER Magazine, Reuters). Write a 2-4 sentence
+     summary per item; skip items with no ERCOT nexus.
+4. Rank the hot topics by CROSS-SOURCE frequency (number of distinct sources
+   mentioning each), ERCOT footprint only — drop non-ERCOT items (PJM, CAISO,
+   national-only news, etc.).
+5. Overwrite Documents Database/HOT.TOPICS/<today>/hot_topics_<today>.md with the
+   full report: title + scope line; a "🔥 Top Hot Topics" ranked table
+   (# | Topic | Mentions | Sources | Why it matters), then a 2-3 sentence
+   "Hottest theme" paragraph; then "📋 Source Summaries" grouped by ERCOT.com /
+   Recent stakeholder meetings / PUCT / News sites; then "🗂️ Sources checked".
+   KEEP all sections — the website hides Source Summaries and Sources checked but
+   the database file must retain them. Match the structure/formatting of the
+   existing reports in that folder.
+6. Write Documents Database/HOT.TOPICS/<today>/sources_checked.json (id, url,
+   status, item count, newest item date per source).
+7. Run:  py -3 "Database Codes/hot_topics/gen_hot_topics.py" --index-only
+   to refresh the website's date index.
+
+Keep the tone factual and tight — a market-intelligence brief, not prose. When
+done, print a one-line summary: the date, the number of ranked topics, and the
+top topic.

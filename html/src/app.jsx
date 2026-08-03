@@ -269,6 +269,8 @@ function App() {
                     : activeMeetingGroup
                     ? <MeetingTracksGroupHome committee={activeMeetingGroup} groupName={activeMeetingGroupName} onBack={() => { setActiveMeetingGroup(null); setActiveMeetingDate(null); }} onDocClick={onMeetingDocClick} onMeetingFocus={setActiveMeetingDate}/>
                     : <MeetingTracksOrgChart onGroupClick={onMeetingGroupClick}/>)
+                : activeSection === "hot-topics"
+                ? <HotTopicsHome/>
                 : <TalkIllustration title={CURRENT_TALK_TITLE} meta={CURRENT_TALK_META}/>
             }
           />

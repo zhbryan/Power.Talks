@@ -15,8 +15,15 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
     6. profiles   — per-meeting Profile.json (group + meeting summaries)
     7. manifest   — per-committee _manifest.json for the group homepages
 
+  HOT TOPICS  (daily brief)
+    8. scaffold   — create HOT.TOPICS/<date>/ (_prep.json + report skeleton)
+                    from the week's meetings + source registry, and refresh
+                    index.json (the website's date dropdown). Deterministic /
+                    headless — the AI summaries + topic ranking are filled in
+                    afterward by the Hot Topics Generator skill.
+
   BUILD
-    8. rebuild    — patch the standalone Power.Talks home page bundle
+    9. rebuild    — patch the standalone Power.Talks home page bundle
 
 Each step runs as its own subprocess with the correct working directory so the
 scripts' relative imports and paths resolve. A failing step is logged and the
@@ -107,7 +114,16 @@ def build_steps(args):
                       [os.path.join(stk, "gen_stkhdr_manifest.py")],
                       stk))
 
-    # 8. Rebuild the standalone web bundle (once, at the end)
+        # 8. Hot Topics scaffold — reads the stakeholder meetings just
+        #    downloaded above to find "within the week" meetings, writes
+        #    HOT.TOPICS/<date>/{_prep.json, skeleton}, and refreshes index.json
+        #    (the website's date dropdown). No web/AI calls; the summaries and
+        #    ranking are filled later by the Hot Topics Generator skill.
+        steps.append(("HOT TOPICS scaffold + index",
+                      [os.path.join(DB, "hot_topics", "gen_hot_topics.py")],
+                      PROJECT_ROOT))
+
+    # 9. Rebuild the standalone web bundle (once, at the end)
     if not args.no_rebuild:
         steps.append(("BUILD rebuild standalone page",
                       [os.path.join(HTML, "rebuild_standalone.py")],
