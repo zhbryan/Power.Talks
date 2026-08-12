@@ -12,6 +12,8 @@ from docx import Document
 import openpyxl
 import win32com.client
 
+from reason_checkbox import extract_checked_reasons
+
 CATEGORY = "SCR"
 
 # ─── TIMELINE PATTERNS ───────────────────────────────────────────────────────
@@ -313,6 +315,10 @@ def build_profile(folder, issue_num, status):
             profile.update({k: v for k, v in fields.items() if v})
         except Exception as e:
             print(f"  Warning parsing {os.path.basename(path)}: {e}")
+
+    # Keep ONLY the checked Reason-for-Revision option(s), read from the
+    # ActiveX checkboxes — not every option the table lists.
+    profile["reason_for_revision"] = extract_checked_reasons(path) if path else []
 
     profile["timeline"] = build_profile_timeline(folder, profile.get("date_posted_decision"))
     return profile
