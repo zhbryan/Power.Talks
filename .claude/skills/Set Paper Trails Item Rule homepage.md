@@ -37,8 +37,13 @@ switch (`hasNprr ? <RuleProfileCard cat="NPRR" num={ctx.nprr} /> : ...`).
 | 6 | Market Segment | `market_segment` | |
 | 7 | Requested Resolution | `timeline_requested_resolution` | |
 | 8 | Date Posted | `date_posted_decision` | |
-| 9 | Reason for Revision | `reason_for_revision` | String **or** array — always wrap in `asList()` |
-| 10 | Timeline | `timeline` (`[{date, event, doc}]`) | NPRR-style dotted vertical timeline (see below) |
+| 9 | Timeline | `timeline` (`[{date, event, doc}]`) | NPRR-style dotted vertical timeline (see below) |
+
+> **Reason for Revision was removed from this Quick-runs card (2026-08-12).**
+> The checked reason now surfaces in the **center** issue detail as the
+> "Background" section (from `Summary.json` `background`, fed by the profile's
+> checked `reason_for_revision`). Do not re-add a Reason section to
+> `RuleProfileCard`.
 
 > **Documents Submitted is NOT on this Quick-runs card.** The submitted-document
 > list lives in the **center content window** (the issue detail view), as a

@@ -108,6 +108,7 @@ const NPRR_PENDING = [
   { n: 1342, title: "Mitigated Offer Caps for Contract for Capacity Resources" },
   { n: 1343, title: "Introduction of PTP Obligation Bid Fee in DAM" },
   { n: 1344, title: "Move OBD to Section 19 – Texas Market Test Plan" },
+  { n: 1345, title: "Extend NPRR1279 Sunset Date for Exceptional Fuel Cost Process" },
 ];
 
 const NPRR_APPROVED = [

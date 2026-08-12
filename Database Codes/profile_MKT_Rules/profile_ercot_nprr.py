@@ -6,10 +6,12 @@ Reads each -01 document, extracts 18 profile fields, saves JSON to
 <ISSUE_ID>/Quick runs/<ISSUE_ID> Profile.json
 """
 
-import os, re, json
+import os, re, json, io, zipfile
 from datetime import datetime
 from docx import Document
+from docx.oxml.ns import qn
 import openpyxl
+import olefile
 import win32com.client
 
 CATEGORY = "NPRR"
@@ -122,6 +124,86 @@ def parse_reason_list(text):
         if p and len(p) > 3:
             result.append(p)
     return result
+
+# ─── REASON FOR REVISION — CHECKED OPTION(S) ─────────────────────────────────
+# The "Reason for Revision" options are ActiveX Forms.TextBox controls; the
+# sponsor types an "X" into the chosen one(s). python-docx cannot see that "X"
+# (it is not text), and Word will not instantiate the controls headlessly. We
+# read the state from each control's embedded OLE stream: a control is CHECKED
+# iff its `contents` stream carries a stored 1-character value, which the
+# MorphData format records as the Value-count DWORD 0x80000001 (little-endian
+# b"\x01\x00\x00\x80"). Empty (unchecked) controls have no Value property.
+#
+# This replaces parse_reason_list()'s behavior of listing *every* option: we
+# keep only the box(es) the sponsor actually marked. Works across both ERCOT
+# reason templates (older "Addresses current operational issues / Meets
+# Strategic goals / …" and newer "Strategic Plan Objective 1-3 / …") because we
+# read the actual paragraph text sitting next to each checked control.
+_REASON_NOTE_PAT = re.compile(r'please select', re.IGNORECASE)
+
+def _reason_ctrl_checked(z, relmap, rid):
+    tgt = relmap.get(rid)
+    if not tgt:
+        return False
+    try:
+        ole = olefile.OleFileIO(io.BytesIO(z.read('word/' + tgt.replace('.xml', '.bin'))))
+        data = ole.openstream('contents').read()
+        ole.close()
+    except Exception:
+        return False
+    return b'\x01\x00\x00\x80' in data
+
+def _clean_reason(text):
+    text = re.sub(r'\s+', ' ', text).replace('�', '-').strip()
+    return text.rstrip('.').strip()
+
+def extract_checked_reasons(docx_path):
+    """Return the Reason-for-Revision option(s) the sponsor checked, as the
+    paragraph text next to each marked ActiveX control. Returns [] when the
+    file is a legacy .doc (no readable controls), nothing is checked, or the
+    reason table cannot be located."""
+    if not docx_path or not docx_path.lower().endswith('.docx'):
+        return []
+    try:
+        z = zipfile.ZipFile(docx_path)
+        rels = z.read('word/_rels/document.xml.rels').decode('utf-8')
+    except Exception:
+        return []
+    relmap = dict(re.findall(
+        r'Id="(rId\d+)"[^>]*?Target="(activeX/activeX\d+\.xml)"', rels))
+    if not relmap:
+        return []
+    try:
+        doc = Document(docx_path)
+    except Exception:
+        return []
+    for tbl in doc.tables:
+        for row in tbl.rows:
+            if 'reason for revision' not in ' '.join(c.text for c in row.cells).lower():
+                continue
+            # Dedupe merged cells; the options cell is the one bearing controls.
+            seen, cells = set(), []
+            for c in row.cells:
+                if id(c._tc) in seen:
+                    continue
+                seen.add(id(c._tc)); cells.append(c)
+            ctrl_cells = [c for c in cells
+                          if any(True for _ in c._tc.iter(qn('w:control')))]
+            if not ctrl_cells:
+                continue
+            cell = max(ctrl_cells, key=lambda c: len(c.text))
+            checked = []
+            for para in cell.paragraphs:
+                t = para.text.strip()
+                if not t or _REASON_NOTE_PAT.search(t):
+                    continue
+                rid = None
+                for ctrl in para._p.iter(qn('w:control')):
+                    rid = ctrl.get(qn('r:id'))
+                if rid and _reason_ctrl_checked(z, relmap, rid):
+                    checked.append(_clean_reason(t))
+            return checked
+    return []
 
 def build_profile_timeline(folder, date_posted):
     events = []
@@ -310,6 +392,10 @@ def build_profile(folder, issue_num, status):
             profile.update({k: v for k, v in fields.items() if v})
         except Exception as e:
             print(f"  Warning parsing {os.path.basename(path)}: {e}")
+
+    # Keep ONLY the checked Reason-for-Revision option(s), read from the
+    # ActiveX checkboxes — not every option the table lists.
+    profile["reason_for_revision"] = extract_checked_reasons(path) if path else []
 
     profile["timeline"] = build_profile_timeline(folder, profile.get("date_posted_decision"))
     return profile

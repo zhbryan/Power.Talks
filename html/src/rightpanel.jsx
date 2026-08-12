@@ -27,8 +27,9 @@ const NP_CARD_CSS = `
 // One Quick runs card for all market rules categories. Fetches the issue's
 // Profile.json (unified skill schema) and renders the standard field set:
 // Sponsor (name, email, phone), Market Segment, Requested Resolution,
-// Date Posted, Reason for Revision, Timeline. (Governing-document sections
-// were removed from this card by request, 2026-06-12.)
+// Date Posted, Timeline. (Governing-document sections were removed from this
+// card 2026-06-12; the Reason for Revision section was removed 2026-08-12 —
+// the checked reason now lives in the center "Background" section instead.)
 // Every field label is always shown; missing values render as an em dash.
 const RULE_CARD_CFG = {
   COPMGRR: { pad: 3 },
@@ -45,7 +46,7 @@ function RuleProfileCard({ cat, num }) {
 
   React.useEffect(() => {
     setLoading(true); setError(null); setProfile(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${cat}/${issueId}/Quick%20runs/${issueId}%20Profile.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${cat}/${issueId}/Quick%20runs/${issueId}%20Profile.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setProfile(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
@@ -78,7 +79,6 @@ function RuleProfileCard({ cat, num }) {
     </div>
   );
 
-  const reasons = asList(profile.reason_for_revision);
   const timeline = profile.timeline || [];
 
   return (
@@ -99,12 +99,6 @@ function RuleProfileCard({ cat, num }) {
       <Field label="Market Segment"       value={profile.market_segment} />
       <Field label="Requested Resolution" value={profile.timeline_requested_resolution} />
       <Field label="Date Posted"          value={profile.date_posted_decision} />
-
-      <hr className="np-divider" />
-      <div className="np-sec-lbl">Reason for Revision</div>
-      {reasons.length > 0
-        ? <div>{reasons.map((r, i) => <span key={i} className="np-reason-chip">{r}</span>)}</div>
-        : <div style={{ fontSize: "12.5px", color: "var(--ink-2)", marginBottom: 10 }}>—</div>}
 
       <hr className="np-divider" />
       <div className="np-sec-lbl">Timeline</div>
@@ -131,7 +125,7 @@ function DocumentProfileCard({ doc }) {
   const [issue, setIssue] = React.useState(null);
   React.useEffect(() => {
     if (!doc || !doc.cat || !doc.issueId) { setIssue(null); return; }
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${doc.cat}/${encodeURIComponent(doc.issueId)}/Quick%20runs/${encodeURIComponent(doc.issueId)}%20Profile.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${doc.cat}/${encodeURIComponent(doc.issueId)}/Quick%20runs/${encodeURIComponent(doc.issueId)}%20Profile.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(setIssue).catch(() => setIssue({}));
   }, [doc && doc.cat, doc && doc.issueId]);

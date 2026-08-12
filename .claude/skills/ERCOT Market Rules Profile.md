@@ -69,7 +69,7 @@ Extract the following fields from the issue documents. Use `null` for any field 
 | 9 | `governing_document_sections` | Array of section identifiers in the governing document (see category notes below) |
 | 10 | `related_documents_requiring_revision` | Array of related document names or IDs also requiring change |
 | 11 | `revision_description` | Plain-text summary of what is being revised |
-| 12 | `reason_for_revision` | Why the revision is needed |
+| 12 | `reason_for_revision` | The **checked** "Reason for Revision" option(s) only — an array. In the source form these are ActiveX checkbox controls; `profile_ercot_nprr.py` reads each control's OLE stream and keeps only the box(es) the sponsor marked (a control is checked iff its `contents` stream carries a stored value, count DWORD `0x80000001`), preserving the actual option label text. Do **not** list every option. Legacy `.doc` filings expose no readable control state → `[]`. (NPRR implements this today; other categories still list all options via `parse_reason_list`.) |
 | 13 | `business_case` | Business justification or impact statement |
 | 14 | `sponsor_name` | Full name of the sponsor |
 | 15 | `sponsor_email` | Sponsor email address |

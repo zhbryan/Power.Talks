@@ -26,7 +26,7 @@ never `file://`, because issue data is fetched from the WAMP server at runtime.
 | `html/src/app.jsx` | Top-level state: `activeSection` (`"paper-trails"`), `activePaperCode`, and one `active<Cat>` state + click handler per category. Passes `context={{ section, code, nprr, copmgrr, pgrr, scr, nogrr, rmgrr }}` to `RightPanel`. |
 | `html/src/data.jsx` | **Static list data**: `const <CAT>_<STATUS> = [ { n, title }, ... ]` arrays, exported via `window.DATA`. This is what the category homepages list. |
 | `html/src/illustration.jsx` | `PaperTrailsIllustration`: category grid (`PAPER_TRAIL_CODES`, exported as `window.PAPER_TRAIL_CODES`), per-category homepage list panels, and per-category `<Cat>DetailView` that fetches the issue's `Summary.json`. |
-| `html/src/rightpanel.jsx` | "Quick runs" cards shown in the right panel per selected issue: `<Cat>ProfileCard` / `<Cat>SummaryCard`. Contains the `asList()` normalizer for profile schema differences. |
+| `html/src/rightpanel.jsx` | "Quick runs" card shown in the right panel per selected issue: a **single `RuleProfileCard`** used by all six categories, fetching the issue's `Profile.json`. Contains the `asList()` normalizer for the `reason_for_revision` string-or-array difference. |
 
 ## Data Sources — two kinds
 
@@ -76,7 +76,7 @@ All URLs are relative to the WAMP docroot; spaces are %-encoded:
 |---|---|
 | Center detail view (`illustration.jsx`) | `Summary.json` (issue summary) **and** `Profile.json` (its `source_documents` for the Documents Submitted section) |
 | Center **Document Summary view** (`illustration.jsx`) | nothing — renders the clicked `source_documents` entry passed via `activeRuleDoc` |
-| Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for NPRR, COPMGRR, PGRR; `Summary.json` for SCR, NOGRR, RMGRR (no document list — it lives in the center) |
+| Right panel Quick runs (`rightpanel.jsx`) | `Profile.json` for **all six categories** (single `RuleProfileCard`; no document list — it lives in the center) |
 
 ## Documents Submitted + per-document report (both panels)
 
@@ -120,15 +120,21 @@ is threaded app → `PaperTrailsIllustration` → each `<Cat>DetailView` →
 COPMGRR issue IDs are zero-padded to 3 digits (`COPMGRR015`); all others are
 plain integers.
 
-**Schema compatibility:** profiles use the unified skill schema
-(`issue_number`, `governing_document_sections`, `reason_for_revision` as
-string *or* array). The right-panel cards read the unified keys with
-legacy fallbacks (`nprr_number`, `protocol_sections_requiring_revision`,
-`agreement_sections_requiring_revision`) and wrap reason values in
-`asList()`. Keep that pattern when touching the cards.
-`Summary.json` keys are per-category (`nprr_number` / `protocol_sections`,
+**Schema compatibility:** `Profile.json` uses one unified schema across all
+categories (`issue_number`, `title`, `status`, `sponsor_name`/`sponsor_email`/
+`sponsor_phone`/`sponsor_company`, `market_segment`,
+`timeline_requested_resolution`, `date_posted_decision`,
+`governing_document_sections`, `reason_for_revision` (array), and
+`timeline`). Because the keys are identical for every category, the single
+`RuleProfileCard` reads them directly — no per-category branching. (The card
+renders Sponsor/Email/Phone, Market Segment, Requested Resolution, Date Posted,
+and Timeline. `reason_for_revision` is **not** shown here as of 2026-08-12 — the
+checked reason appears in the center "Background" section instead; see
+`Set-Paper-Trails-Item-Rule-Homepage`.)
+`Summary.json` (read by the **center** detail view in `illustration.jsx`, not
+the right panel) has per-category keys (`nprr_number` / `protocol_sections`,
 `nogrr_number` / `guide_sections`, etc.) — match what the corresponding
-`summarize_ercot_<cat>.py` script writes.
+`summarize_ercot_<cat>.py` script writes when editing the center view.
 
 ## Right Panel — Artifacts Behavior
 
@@ -178,9 +184,10 @@ Artifact items in the right panel's Artifacts tab are handled by
    closest existing homepage panel (NOGRR for 4-status categories, PGRR for
    3-status) and the `<Cat>DetailView` (adjust the fetch URL and JSON keys);
    wire them into the `active === "<CAT>"` branch.
-3. **rightpanel.jsx** — clone a Quick runs card (ProfileCard or SummaryCard),
-   adjust fetch URL, keys, and section label; add the case to the panel's
-   context switch.
+3. **rightpanel.jsx** — usually **nothing to clone**: add the category to the
+   `RuleProfileCard` branch in the panel's context switch (and a `pad` entry in
+   `RULE_CARD_CFG` only if the issue ID is zero-padded, like COPMGRR). The one
+   card serves every category off `Profile.json`.
 4. **app.jsx** — add `active<Cat>` state, reset effect, click handler, prop
    to `PaperTrailsIllustration`, and the key in the `RightPanel` context.
 5. Rebundle and verify (steps 3–4 above).

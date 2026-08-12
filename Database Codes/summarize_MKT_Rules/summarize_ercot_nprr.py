@@ -248,6 +248,34 @@ Write 3–5 sentences covering: (1) what Nodal Protocol rule is changing, (2) wh
                 f"{', '.join(sections) or 'Nodal Protocol sections'}. "
                 f"{revision_desc or ''}")
 
+def ai_impacts_summary(issue_id, title, business_case, sections):
+    """Summarize the 'Justification of Reason for Revision and Market Impacts'
+    section into a concise Potential Impacts paragraph. Returns "" when there is
+    no justification text; falls back to a trimmed excerpt if the API fails."""
+    if not business_case or not business_case.strip():
+        return ""
+    prompt = f"""Summarize the potential market impacts of this ERCOT Nodal Protocol Revision Request (NPRR) in 2-4 sentences of plain English.
+
+Issue: {issue_id}
+Title: {title or 'N/A'}
+Nodal Protocol Sections: {', '.join(sections) if sections else 'Not specified'}
+
+Justification of Reason for Revision and Market Impacts:
+{business_case}
+
+Write 2-4 sentences describing the concrete impacts on the ERCOT market and Market Participants (operational, financial, reliability, or process effects). Focus on consequences, not background. Do not use markdown. Do not repeat the issue number."""
+    try:
+        msg = get_ai().messages.create(
+            model=AI_MODEL, max_tokens=AI_MAX_TOKENS,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        _ai_usage["input_tokens"]  += msg.usage.input_tokens
+        _ai_usage["output_tokens"] += msg.usage.output_tokens
+        _ai_usage["calls"]         += 1
+        return msg.content[0].text.strip()
+    except Exception:
+        return business_case[:500]
+
 # ─── DOCX REPORT WRITER ──────────────────────────────────────────────────────
 def write_summary_docx(out_path, issue_id, title, exec_summary, issue_details,
                         impact_items, timeline, current_status):
@@ -408,7 +436,8 @@ def process_issue(folder, n):
     company  = profile.get('sponsor_company')
     mkt_seg  = profile.get('market_segment')
 
-    exec_summary = ai_executive_summary(issue_id, title, rev_desc, reason, biz_case, sections, status)
+    exec_summary    = ai_executive_summary(issue_id, title, rev_desc, reason, biz_case, sections, status)
+    impacts_summary = ai_impacts_summary(issue_id, title, biz_case, sections)
 
     issue_details = [
         ("Status",                            status),
@@ -441,7 +470,7 @@ def process_issue(folder, n):
         "executive_summary": exec_summary,
         "background":        reason,
         "key_change":        rev_desc or "",
-        "impacts":           [{"category": "Business Case / Justification", "text": biz_case[:500]}] if biz_case else [],
+        "impacts_summary":   impacts_summary,
         "impact_analysis":   [{"label": "Impact Analysis", "rows": [[l, v] for l, v in impact_items]}] if impact_items else [],
         "timeline":          [{"date": ev["date"], "body": ev["body"], "action": ev["action"], "notes": ev["outcome"]} for ev in timeline],
         "current_status":    [current_status],

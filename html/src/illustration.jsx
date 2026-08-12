@@ -161,7 +161,7 @@ function DocumentsSubmittedSection({ cat, issueId, onDocClick }) {
   const [docs, setDocs] = React.useState(null);
   React.useEffect(() => {
     setDocs(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${cat}/${issueId}/Quick%20runs/${issueId}%20Profile.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${cat}/${issueId}/Quick%20runs/${issueId}%20Profile.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(d => setDocs((d.source_documents || []).filter(x => x && !/\.zip$/i.test(x.file || ""))))
       .catch(() => setDocs([]));
@@ -201,7 +201,7 @@ function NprrDetailView({ nprr, onBack, onDocClick }) {
 
   React.useEffect(() => {
     setLoading(true); setError(null); setSummary(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NPRR/NPRR${nprr}/Quick%20runs/NPRR${nprr}%20Summary.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NPRR/NPRR${nprr}/Quick%20runs/NPRR${nprr}%20Summary.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setSummary(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
@@ -294,9 +294,9 @@ function NprrDetailView({ nprr, onBack, onDocClick }) {
         <div className="nd-sec-hd">Executive Summary</div>
         <div className="nd-body">{summary.executive_summary}</div>
 
-        {/* 2. Background */}
+        {/* 2. Reason for Revision */}
         {summary.background && <>
-          <div className="nd-sec-hd">Background</div>
+          <div className="nd-sec-hd">Reason for Revision</div>
           <div className="nd-body">{summary.background}</div>
         </>}
 
@@ -307,16 +307,9 @@ function NprrDetailView({ nprr, onBack, onDocClick }) {
         </>}
 
         {/* 4. Potential Impacts */}
-        {summary.impacts?.length > 0 && <>
+        {summary.impacts_summary && <>
           <div className="nd-sec-hd">Potential Impacts</div>
-          <div className="nd-impact-list">
-            {summary.impacts.map((imp, i) => (
-              <div key={i} className="nd-impact-row">
-                <span className="nd-impact-cat">{imp.category}</span>
-                <span className="nd-impact-txt">{imp.text}</span>
-              </div>
-            ))}
-          </div>
+          <div className="nd-body">{summary.impacts_summary}</div>
         </>}
 
         {/* 5. Impact Analysis tables */}
@@ -504,7 +497,7 @@ function CopmgrrDetailView({ copmgrr, onBack, onDocClick }) {
   React.useEffect(() => {
     setLoading(true); setError(null); setSummary(null);
     const n = String(copmgrr).padStart(3, "0");
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/COPMGRR/COPMGRR${n}/Quick%20runs/COPMGRR${n}%20Summary.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/COPMGRR/COPMGRR${n}/Quick%20runs/COPMGRR${n}%20Summary.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setSummary(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
@@ -680,7 +673,7 @@ function PgrrDetailView({ pgrr, onBack, onDocClick }) {
 
   React.useEffect(() => {
     setLoading(true); setError(null); setSummary(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/PGRR/PGRR${pgrr}/Quick%20runs/PGRR${pgrr}%20Summary.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/PGRR/PGRR${pgrr}/Quick%20runs/PGRR${pgrr}%20Summary.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setSummary(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
@@ -853,7 +846,7 @@ function ScrDetailView({ scr, onBack, onDocClick }) {
 
   React.useEffect(() => {
     setLoading(true); setError(null); setSummary(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/SCR/SCR${scr}/Quick%20runs/SCR${scr}%20Summary.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/SCR/SCR${scr}/Quick%20runs/SCR${scr}%20Summary.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setSummary(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
@@ -1026,7 +1019,7 @@ function NogrDetailView({ nogrr, onBack, onDocClick }) {
 
   React.useEffect(() => {
     setLoading(true); setError(null); setSummary(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NOGRR/NOGRR${nogrr}/Quick%20runs/NOGRR${nogrr}%20Summary.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/NOGRR/NOGRR${nogrr}/Quick%20runs/NOGRR${nogrr}%20Summary.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setSummary(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
@@ -1130,7 +1123,7 @@ function RmgrDetailView({ rmgrr, onBack, onDocClick }) {
 
   React.useEffect(() => {
     setLoading(true); setError(null); setSummary(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/RMGRR/RMGRR${rmgrr}/Quick%20runs/RMGRR${rmgrr}%20Summary.json`)
+    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/RMGRR/RMGRR${rmgrr}/Quick%20runs/RMGRR${rmgrr}%20Summary.json`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setSummary(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
