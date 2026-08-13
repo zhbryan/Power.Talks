@@ -176,6 +176,21 @@ def _seq(fname):
     return int(m.group(1)) if m else 9999
 
 
+def folder_docs(base):
+    """Document filenames in the issue folder — the source of truth. (Profile
+    source_documents is only populated for some categories.)"""
+    try:
+        return [f for f in os.listdir(base)
+                if f.lower().endswith(('.docx', '.doc')) and not f.startswith('~')]
+    except OSError:
+        return []
+
+
+def _date_from(fname):
+    m = re.search(r'[-_ ](\d{6}|\d{8})(?:\D|$)', fname or "")
+    return m.group(1) if m else ""
+
+
 def doc_table_rows(path):
     ext = os.path.splitext(path)[1].lower()
     rows = []
@@ -245,18 +260,17 @@ def process_issue(cat, folder, dry=False, force=False):
         if 'stakeholder_key_debates' in done:
             return
     profile = json.load(open(prof_path, encoding='utf-8'))
-    sd = profile.get('source_documents') or []
+    sd = folder_docs(base)
 
     # Stakeholder Key Debates — AI over market-participant comment documents.
     sh = []
-    for doc in sd:
-        fname = (doc.get('file') if isinstance(doc, dict) else doc) or ""
+    for fname in sd:
         if classify(fname) != 'stakeholder':
             continue
         text = read_doc_text(os.path.join(base, fname))
         if not text.strip():
             continue
-        sh.append((party_of(fname), (doc.get('date') if isinstance(doc, dict) else "") or "", text))
+        sh.append((party_of(fname), _date_from(fname), text))
 
     title = profile.get('title')
     issue_id = folder
@@ -283,15 +297,10 @@ def process_issue(cat, folder, dry=False, force=False):
 def has_source(cat, folder):
     """True if the issue has anything to extract from: a participant comment
     (debates) or a Report doc (opinions). Others are left untouched -> 'n/a'."""
-    prof = os.path.join(ROOT, cat, folder, "Quick runs", f"{folder} Profile.json")
-    if not os.path.exists(prof):
-        return False
-    sd = json.load(open(prof, encoding='utf-8')).get('source_documents') or []
-    for d in sd:
-        f = (d.get('file') if isinstance(d, dict) else d) or ""
+    for f in folder_docs(os.path.join(ROOT, cat, folder)):
         if classify(f) == 'stakeholder':
             return True
-        if 'report' in f.lower() and f.lower().endswith(('.docx', '.doc')):
+        if 'report' in f.lower():
             return True
     return False
 
