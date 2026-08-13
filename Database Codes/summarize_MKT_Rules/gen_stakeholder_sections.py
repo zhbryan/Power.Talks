@@ -230,7 +230,7 @@ def extract_opinions(base, sd):
     return ercot.strip(), imm.strip()
 
 
-def process_issue(cat, folder, dry=False):
+def process_issue(cat, folder, dry=False, force=False):
     base = os.path.join(ROOT, cat, folder)
     quick = os.path.join(base, "Quick runs")
     prof_path = os.path.join(quick, f"{folder} Profile.json")
@@ -238,6 +238,12 @@ def process_issue(cat, folder, dry=False):
     if not (os.path.exists(prof_path) and os.path.exists(summ_path)):
         print(f"  {folder}: no profile/summary, skipped")
         return
+    # Resumable: skip issues already processed (the three fields are written
+    # together, so their presence marks completion — even when blank).
+    if not force and not dry:
+        done = json.load(open(summ_path, encoding='utf-8'))
+        if 'stakeholder_key_debates' in done:
+            return
     profile = json.load(open(prof_path, encoding='utf-8'))
     sd = profile.get('source_documents') or []
 
@@ -304,6 +310,7 @@ def main():
         return
     cat = args[0].upper()
     dry = '--dry' in args
+    force = '--force' in args
     base = os.path.join(ROOT, cat)
 
     if '--all' in args:
@@ -318,7 +325,7 @@ def main():
     print(f"{cat}: processing {len(picked)} issue(s){' (dry run)' if dry else ''}\n")
     try:
         for folder in picked:
-            process_issue(cat, folder, dry=dry)
+            process_issue(cat, folder, dry=dry, force=force)
     finally:
         quit_word()
     print(f"\nAI: {_ai['calls']} calls, {_ai['input']:,} in / {_ai['output']:,} out tokens.")

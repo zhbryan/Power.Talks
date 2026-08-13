@@ -1054,12 +1054,6 @@ function PaperTrailsIllustration({ active, onActiveChange, onNprrClick, onCopmgr
           box-shadow: var(--shadow-1);
           position: relative; overflow: hidden;
         }
-        .pt-paper::before {
-          content: ""; position: absolute; inset: 0;
-          background-image:
-            repeating-linear-gradient(0deg, rgba(27,26,23,.04) 0 1px, transparent 1px 28px);
-          pointer-events: none;
-        }
         .pt-paper-head {
           display: flex; align-items: baseline; gap: 10px; position: relative;
           margin-bottom: 16px;
