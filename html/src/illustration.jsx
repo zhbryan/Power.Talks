@@ -174,7 +174,7 @@ function DocumentsSubmittedSection({ cat, issueId, onDocClick }) {
       {docs === null
         ? <div className="nd-body" style={{ color: "var(--muted)" }}>Loading documents…</div>
         : list.length === 0
-        ? <div className="nd-body">—</div>
+        ? <div className="nd-body">n/a</div>
         : <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {list.map((d, i) => (
               <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
@@ -190,6 +190,96 @@ function DocumentsSubmittedSection({ cat, issueId, onDocClick }) {
               </div>
             ))}
           </div>}
+    </>
+  );
+}
+
+// Shared body for every market-rule detail view. All six categories render the
+// same 11 sections in the same order; they differ only in the key-change title,
+// the "changed sections" field name, and the category/issue id. Empty sections
+// show "n/a" (never a bare header). List of Changed Sections is a two-column
+// table (section number | name) built from the flat [num, name, num, name, ...]
+// array, sized to match body text.
+function RuleDetailSections({ summary, cat, issueId, keyTitle, sectionsField, onDocClick }) {
+  const NA = "n/a";
+  const sections = summary[sectionsField] || [];
+  const impacts = summary.impacts_summary || (summary.impacts || []).map(x => x.text).join(" ");
+  const ia = summary.impact_analysis || [];
+  const tl = summary.timeline || [];
+  const cs = summary.current_status || [];
+  return (
+    <>
+      <style>{`
+        .nd-sections { width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:10px; }
+        .nd-sections td { padding:2px 10px 2px 0; color:var(--ink-2); vertical-align:top; line-height:1.6; }
+        .nd-sections td:first-child { color:var(--ink); white-space:nowrap; width:1%; padding-right:16px; }
+      `}</style>
+
+      <h2 className="nd-title">{summary.title}</h2>
+
+      <div className="nd-sec-hd">Executive Summary</div>
+      <div className="nd-body">{summary.executive_summary || NA}</div>
+
+      <div className="nd-sec-hd">Revision Type</div>
+      <div className="nd-body">{summary.background || NA}</div>
+
+      <div className="nd-sec-hd">{keyTitle}</div>
+      <div className="nd-body">{summary.key_change || NA}</div>
+
+      <div className="nd-sec-hd">Potential Impacts</div>
+      <div className="nd-body">{impacts || NA}</div>
+
+      <div className="nd-sec-hd">Impact Analysis</div>
+      {ia.length > 0
+        ? ia.map((x, i) => (
+            <table key={i} className="nd-table">
+              <thead><tr><th>Category</th><th>Detail</th></tr></thead>
+              <tbody>{x.rows.map((row, j) => (<tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>))}</tbody>
+            </table>
+          ))
+        : <div className="nd-body">{NA}</div>}
+
+      <div className="nd-sec-hd">ERCOT/IMM Opinions</div>
+      {(summary.ercot_opinion || summary.imm_opinion)
+        ? <div className="nd-body">
+            {summary.ercot_opinion && <div style={{ marginBottom: 6 }}><b>ERCOT Opinion:</b> {summary.ercot_opinion}</div>}
+            {summary.imm_opinion && <div><b>Independent Market Monitor Opinion:</b> {summary.imm_opinion}</div>}
+          </div>
+        : <div className="nd-body">{NA}</div>}
+
+      <div className="nd-sec-hd">Stakeholder Discussion Timeline</div>
+      {tl.length > 0
+        ? <table className="nd-tl-table">
+            <thead><tr><th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th></tr></thead>
+            <tbody>{tl.map((t, i) => (
+              <tr key={i}>
+                <td className="nd-tl-date-cell">{t.date}</td>
+                <td className="nd-tl-body-cell">{t.body}</td>
+                <td className="nd-tl-action-cell">{t.action}</td>
+                <td>{t.notes}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        : <div className="nd-body">{NA}</div>}
+
+      <div className="nd-sec-hd">Stakeholder Key Debates</div>
+      <div className="nd-body">{summary.stakeholder_key_debates || NA}</div>
+
+      <div className="nd-sec-hd">Current Status</div>
+      {cs.length > 0
+        ? cs.map((p, i) => <div key={i} className="nd-body">{p}</div>)
+        : <div className="nd-body">{NA}</div>}
+
+      <DocumentsSubmittedSection cat={cat} issueId={issueId} onDocClick={onDocClick} />
+
+      <div className="nd-sec-hd">List of Changed Sections</div>
+      {sections.length > 0
+        ? <table className="nd-sections"><tbody>
+            {Array.from({ length: Math.ceil(sections.length / 2) }, (_, i) => (
+              <tr key={i}><td>{sections[2 * i]}</td><td>{sections[2 * i + 1] || ""}</td></tr>
+            ))}
+          </tbody></table>
+        : <div className="nd-body">{NA}</div>}
     </>
   );
 }
@@ -227,9 +317,11 @@ function NprrDetailView({ nprr, onBack, onDocClick }) {
         .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
         .nd-sec-hd {
           font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
-          border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px;
+          padding-top:2px; margin:16px 0 8px;
         }
         .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-bullets { margin:4px 0 10px; padding-left:20px; font-size:13px; color:var(--ink-2); line-height:1.7; }
+        .nd-bullets li { margin-bottom:3px; }
         .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
         .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
         .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
@@ -276,94 +368,7 @@ function NprrDetailView({ nprr, onBack, onDocClick }) {
         );
       })()}
 
-      {summary && <>
-        <h2 className="nd-title">{summary.title}</h2>
-        <div className="nd-eyebrow">
-          Posted {summary.date_posted}
-          {summary.effective_date ? `  ·  Effective: ${summary.effective_date}` : ""}
-          {summary.sponsor ? `  ·  Sponsor: ${summary.sponsor}` : ""}
-        </div>
-
-        {summary.protocol_sections?.length > 0 && <>
-          <div>{summary.protocol_sections.map((s, i) =>
-            <span key={i} className="nd-proto-tag">{s}</span>
-          )}</div>
-        </>}
-
-        {/* 1. Executive Summary */}
-        <div className="nd-sec-hd">Executive Summary</div>
-        <div className="nd-body">{summary.executive_summary}</div>
-
-        {/* 2. Reason for Revision */}
-        {summary.background && <>
-          <div className="nd-sec-hd">Reason for Revision</div>
-          <div className="nd-body">{summary.background}</div>
-        </>}
-
-        {/* 3. Key Protocol Change */}
-        {summary.key_change && <>
-          <div className="nd-sec-hd">Key Protocol Change</div>
-          <div className="nd-body">{summary.key_change}</div>
-        </>}
-
-        {/* 4. Potential Impacts */}
-        {summary.impacts_summary && <>
-          <div className="nd-sec-hd">Potential Impacts</div>
-          <div className="nd-body">{summary.impacts_summary}</div>
-        </>}
-
-        {/* 5. Impact Analysis tables */}
-        {summary.impact_analysis?.length > 0 && <>
-          <div className="nd-sec-hd">Impact Analysis</div>
-          {summary.impact_analysis.map((ia, i) => (
-            <div key={i}>
-              <div className="nd-ia-lbl">{ia.label}</div>
-              <table className="nd-table">
-                <thead><tr><th>Category</th><th>Detail</th></tr></thead>
-                <tbody>
-                  {ia.rows.map((row, j) => (
-                    <tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </>}
-
-        {/* 6. Stakeholder Timeline */}
-        {summary.timeline?.length > 0 && <>
-          <div className="nd-sec-hd">Stakeholder Discussion Timeline</div>
-          <table className="nd-tl-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Body</th>
-                <th>Action / Vote</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.timeline.map((t, i) => (
-                <tr key={i}>
-                  <td className="nd-tl-date-cell">{t.date}</td>
-                  <td className="nd-tl-body-cell">{t.body}</td>
-                  <td className="nd-tl-action-cell">{t.action}</td>
-                  <td>{t.notes}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>}
-
-        {/* 7. Current Status */}
-        {summary.current_status?.length > 0 && <>
-          <div className="nd-sec-hd">Current Status</div>
-          {summary.current_status.map((p, i) =>
-            <div key={i} className="nd-body">{p}</div>
-          )}
-        </>}
-      </>}
-      <DocumentsSubmittedSection cat="NPRR" issueId={`NPRR${nprr}`} onDocClick={onDocClick} />
+      {summary && <RuleDetailSections summary={summary} cat="NPRR" issueId={`NPRR${nprr}`} keyTitle="Key Protocol Change" sectionsField="protocol_sections" onDocClick={onDocClick} />}
     </div>
   );
 }
@@ -517,8 +522,10 @@ function CopmgrrDetailView({ copmgrr, onBack, onDocClick }) {
         .nd-badge { padding:2px 10px; border-radius:99px; font-size:10.5px; font-weight:600; font-family:var(--mono); letter-spacing:.06em; }
         .nd-title { font-family:var(--serif); font-size:22px; font-weight:400; color:var(--ink); line-height:1.2; margin:0 0 6px; }
         .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
-        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px; }
+        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding-top:2px; margin:16px 0 8px; }
         .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-bullets { margin:4px 0 10px; padding-left:20px; font-size:13px; color:var(--ink-2); line-height:1.7; }
+        .nd-bullets li { margin-bottom:3px; }
         .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
         .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
         .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
@@ -564,93 +571,7 @@ function CopmgrrDetailView({ copmgrr, onBack, onDocClick }) {
         );
       })()}
 
-      {summary && <>
-        <h2 className="nd-title">{summary.title}</h2>
-        <div className="nd-eyebrow">
-          Posted {summary.date_posted}
-          {summary.effective_date ? `  ·  Effective: ${summary.effective_date}` : ""}
-          {summary.sponsor ? `  ·  Sponsor: ${summary.sponsor}` : ""}
-        </div>
-
-        {summary.agreement_sections?.length > 0 && <>
-          <div>{summary.agreement_sections.map((s, i) =>
-            <span key={i} className="nd-proto-tag">{s}</span>
-          )}</div>
-        </>}
-
-        {summary.executive_summary && <>
-          <div className="nd-sec-hd">Executive Summary</div>
-          <div className="nd-body">{summary.executive_summary}</div>
-        </>}
-
-        {summary.background && <>
-          <div className="nd-sec-hd">Background</div>
-          <div className="nd-body">{summary.background}</div>
-        </>}
-
-        {summary.key_change && <>
-          <div className="nd-sec-hd">Key Change</div>
-          <div className="nd-body">{summary.key_change}</div>
-        </>}
-
-        {summary.impacts?.length > 0 && <>
-          <div className="nd-sec-hd">Potential Impacts</div>
-          <div className="nd-impact-list">
-            {summary.impacts.map((imp, i) => (
-              <div key={i} className="nd-impact-row">
-                <span className="nd-impact-cat">{imp.category}</span>
-                <span className="nd-impact-txt">{imp.text}</span>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {summary.impact_analysis?.length > 0 && <>
-          <div className="nd-sec-hd">Impact Analysis</div>
-          {summary.impact_analysis.map((ia, i) => (
-            <div key={i}>
-              <div className="nd-ia-lbl">{ia.label}</div>
-              <table className="nd-table">
-                <thead><tr><th>Category</th><th>Detail</th></tr></thead>
-                <tbody>
-                  {ia.rows.map((row, j) => (
-                    <tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </>}
-
-        {summary.timeline?.length > 0 && <>
-          <div className="nd-sec-hd">Stakeholder Discussion Timeline</div>
-          <table className="nd-tl-table">
-            <thead>
-              <tr>
-                <th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.timeline.map((t, i) => (
-                <tr key={i}>
-                  <td className="nd-tl-date-cell">{t.date}</td>
-                  <td className="nd-tl-body-cell">{t.body}</td>
-                  <td className="nd-tl-action-cell">{t.action}</td>
-                  <td>{t.notes}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>}
-
-        {summary.current_status?.length > 0 && <>
-          <div className="nd-sec-hd">Current Status</div>
-          {summary.current_status.map((p, i) =>
-            <div key={i} className="nd-body">{p}</div>
-          )}
-        </>}
-      </>}
-      <DocumentsSubmittedSection cat="COPMGRR" issueId={`COPMGRR${String(copmgrr).padStart(3, "0")}`} onDocClick={onDocClick} />
+      {summary && <RuleDetailSections summary={summary} cat="COPMGRR" issueId={`COPMGRR${String(copmgrr).padStart(3, "0")}`} keyTitle="Key Change" sectionsField="agreement_sections" onDocClick={onDocClick} />}
     </div>
   );
 }
@@ -692,8 +613,10 @@ function PgrrDetailView({ pgrr, onBack, onDocClick }) {
         .nd-badge { padding:2px 10px; border-radius:99px; font-size:10.5px; font-weight:600; font-family:var(--mono); letter-spacing:.06em; }
         .nd-title { font-family:var(--serif); font-size:22px; font-weight:400; color:var(--ink); line-height:1.2; margin:0 0 6px; }
         .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
-        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px; }
+        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding-top:2px; margin:16px 0 8px; }
         .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-bullets { margin:4px 0 10px; padding-left:20px; font-size:13px; color:var(--ink-2); line-height:1.7; }
+        .nd-bullets li { margin-bottom:3px; }
         .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
         .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
         .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
@@ -739,91 +662,7 @@ function PgrrDetailView({ pgrr, onBack, onDocClick }) {
         );
       })()}
 
-      {summary && <>
-        <h2 className="nd-title">{summary.title}</h2>
-        <div className="nd-eyebrow">
-          Posted {summary.date_posted}
-          {summary.effective_date ? `  ·  Effective: ${summary.effective_date}` : ""}
-          {summary.sponsor ? `  ·  Sponsor: ${summary.sponsor}` : ""}
-        </div>
-
-        {summary.planning_sections?.length > 0 && <>
-          <div>{summary.planning_sections.map((s, i) =>
-            <span key={i} className="nd-proto-tag">{s}</span>
-          )}</div>
-        </>}
-
-        {summary.executive_summary && <>
-          <div className="nd-sec-hd">Executive Summary</div>
-          <div className="nd-body">{summary.executive_summary}</div>
-        </>}
-
-        {summary.background && <>
-          <div className="nd-sec-hd">Reason for Revision</div>
-          <div className="nd-body">{summary.background}</div>
-        </>}
-
-        {summary.key_change && <>
-          <div className="nd-sec-hd">Revision Description</div>
-          <div className="nd-body">{summary.key_change}</div>
-        </>}
-
-        {summary.impacts?.length > 0 && <>
-          <div className="nd-sec-hd">Potential Impacts</div>
-          <div className="nd-impact-list">
-            {summary.impacts.map((imp, i) => (
-              <div key={i} className="nd-impact-row">
-                <span className="nd-impact-cat">{imp.category}</span>
-                <span className="nd-impact-txt">{imp.text}</span>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {summary.impact_analysis?.length > 0 && <>
-          <div className="nd-sec-hd">Impact Analysis</div>
-          {summary.impact_analysis.map((ia, i) => (
-            <div key={i}>
-              <div className="nd-ia-lbl">{ia.label}</div>
-              <table className="nd-table">
-                <thead><tr><th>Category</th><th>Detail</th></tr></thead>
-                <tbody>
-                  {ia.rows.map((row, j) => (
-                    <tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </>}
-
-        {summary.timeline?.length > 0 && <>
-          <div className="nd-sec-hd">Stakeholder Discussion Timeline</div>
-          <table className="nd-tl-table">
-            <thead>
-              <tr><th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              {summary.timeline.map((t, i) => (
-                <tr key={i}>
-                  <td className="nd-tl-date-cell">{t.date}</td>
-                  <td className="nd-tl-body-cell">{t.body}</td>
-                  <td className="nd-tl-action-cell">{t.action}</td>
-                  <td>{t.notes}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>}
-
-        {summary.current_status?.length > 0 && <>
-          <div className="nd-sec-hd">Current Status</div>
-          {summary.current_status.map((p, i) =>
-            <div key={i} className="nd-body">{p}</div>
-          )}
-        </>}
-      </>}
-      <DocumentsSubmittedSection cat="PGRR" issueId={`PGRR${pgrr}`} onDocClick={onDocClick} />
+      {summary && <RuleDetailSections summary={summary} cat="PGRR" issueId={`PGRR${pgrr}`} keyTitle="Revision Description" sectionsField="planning_sections" onDocClick={onDocClick} />}
     </div>
   );
 }
@@ -865,8 +704,10 @@ function ScrDetailView({ scr, onBack, onDocClick }) {
         .nd-badge { padding:2px 10px; border-radius:99px; font-size:10.5px; font-weight:600; font-family:var(--mono); letter-spacing:.06em; }
         .nd-title { font-family:var(--serif); font-size:22px; font-weight:400; color:var(--ink); line-height:1.2; margin:0 0 6px; }
         .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
-        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px; }
+        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding-top:2px; margin:16px 0 8px; }
         .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-bullets { margin:4px 0 10px; padding-left:20px; font-size:13px; color:var(--ink-2); line-height:1.7; }
+        .nd-bullets li { margin-bottom:3px; }
         .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
         .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
         .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
@@ -912,91 +753,7 @@ function ScrDetailView({ scr, onBack, onDocClick }) {
         );
       })()}
 
-      {summary && <>
-        <h2 className="nd-title">{summary.title}</h2>
-        <div className="nd-eyebrow">
-          Posted {summary.date_posted}
-          {summary.effective_date ? `  ·  Effective: ${summary.effective_date}` : ""}
-          {summary.sponsor ? `  ·  Sponsor: ${summary.sponsor}` : ""}
-        </div>
-
-        {summary.systems_affected?.length > 0 && <>
-          <div>{summary.systems_affected.map((s, i) =>
-            <span key={i} className="nd-proto-tag">{s}</span>
-          )}</div>
-        </>}
-
-        {summary.executive_summary && <>
-          <div className="nd-sec-hd">Executive Summary</div>
-          <div className="nd-body">{summary.executive_summary}</div>
-        </>}
-
-        {summary.background && <>
-          <div className="nd-sec-hd">Reason for Change</div>
-          <div className="nd-body">{summary.background}</div>
-        </>}
-
-        {summary.key_change && <>
-          <div className="nd-sec-hd">Key System Change</div>
-          <div className="nd-body">{summary.key_change}</div>
-        </>}
-
-        {summary.impacts?.length > 0 && <>
-          <div className="nd-sec-hd">Potential Impacts</div>
-          <div className="nd-impact-list">
-            {summary.impacts.map((imp, i) => (
-              <div key={i} className="nd-impact-row">
-                <span className="nd-impact-cat">{imp.category}</span>
-                <span className="nd-impact-txt">{imp.text}</span>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {summary.impact_analysis?.length > 0 && <>
-          <div className="nd-sec-hd">Impact Analysis</div>
-          {summary.impact_analysis.map((ia, i) => (
-            <div key={i}>
-              <div className="nd-ia-lbl">{ia.label}</div>
-              <table className="nd-table">
-                <thead><tr><th>Category</th><th>Detail</th></tr></thead>
-                <tbody>
-                  {ia.rows.map((row, j) => (
-                    <tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </>}
-
-        {summary.timeline?.length > 0 && <>
-          <div className="nd-sec-hd">Stakeholder Discussion Timeline</div>
-          <table className="nd-tl-table">
-            <thead>
-              <tr><th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              {summary.timeline.map((t, i) => (
-                <tr key={i}>
-                  <td className="nd-tl-date-cell">{t.date}</td>
-                  <td className="nd-tl-body-cell">{t.body}</td>
-                  <td className="nd-tl-action-cell">{t.action}</td>
-                  <td>{t.notes}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>}
-
-        {summary.current_status?.length > 0 && <>
-          <div className="nd-sec-hd">Current Status</div>
-          {summary.current_status.map((p, i) =>
-            <div key={i} className="nd-body">{p}</div>
-          )}
-        </>}
-      </>}
-      <DocumentsSubmittedSection cat="SCR" issueId={`SCR${scr}`} onDocClick={onDocClick} />
+      {summary && <RuleDetailSections summary={summary} cat="SCR" issueId={`SCR${scr}`} keyTitle="Key System Change" sectionsField="systems_affected" onDocClick={onDocClick} />}
     </div>
   );
 }
@@ -1038,8 +795,10 @@ function NogrDetailView({ nogrr, onBack, onDocClick }) {
         .nd-badge { padding:2px 10px; border-radius:99px; font-size:10.5px; font-weight:600; font-family:var(--mono); letter-spacing:.06em; }
         .nd-title { font-family:var(--serif); font-size:22px; font-weight:400; color:var(--ink); line-height:1.2; margin:0 0 6px; }
         .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
-        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px; }
+        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding-top:2px; margin:16px 0 8px; }
         .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-bullets { margin:4px 0 10px; padding-left:20px; font-size:13px; color:var(--ink-2); line-height:1.7; }
+        .nd-bullets li { margin-bottom:3px; }
         .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
         .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
         .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
@@ -1083,23 +842,7 @@ function NogrDetailView({ nogrr, onBack, onDocClick }) {
           </div>
         );
       })()}
-      {summary && <>
-        <h2 className="nd-title">{summary.title}</h2>
-        <div className="nd-eyebrow">
-          Posted {summary.date_posted}
-          {summary.effective_date ? `  ·  Effective: ${summary.effective_date}` : ""}
-          {summary.sponsor ? `  ·  Sponsor: ${summary.sponsor}` : ""}
-        </div>
-        {summary.guide_sections?.length > 0 && <div>{summary.guide_sections.map((s, i) => <span key={i} className="nd-proto-tag">{s}</span>)}</div>}
-        {summary.executive_summary && <><div className="nd-sec-hd">Executive Summary</div><div className="nd-body">{summary.executive_summary}</div></>}
-        {summary.background && <><div className="nd-sec-hd">Reason for Revision</div><div className="nd-body">{summary.background}</div></>}
-        {summary.key_change && <><div className="nd-sec-hd">Key Operating Guide Change</div><div className="nd-body">{summary.key_change}</div></>}
-        {summary.impacts?.length > 0 && <><div className="nd-sec-hd">Potential Impacts</div><div className="nd-impact-list">{summary.impacts.map((imp, i) => (<div key={i} className="nd-impact-row"><span className="nd-impact-cat">{imp.category}</span><span className="nd-impact-txt">{imp.text}</span></div>))}</div></>}
-        {summary.impact_analysis?.length > 0 && <><div className="nd-sec-hd">Impact Analysis</div>{summary.impact_analysis.map((ia, i) => (<div key={i}><div className="nd-ia-lbl">{ia.label}</div><table className="nd-table"><thead><tr><th>Category</th><th>Detail</th></tr></thead><tbody>{ia.rows.map((row, j) => (<tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>))}</tbody></table></div>))}</>}
-        {summary.timeline?.length > 0 && <><div className="nd-sec-hd">Stakeholder Discussion Timeline</div><table className="nd-tl-table"><thead><tr><th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th></tr></thead><tbody>{summary.timeline.map((t, i) => (<tr key={i}><td className="nd-tl-date-cell">{t.date}</td><td className="nd-tl-body-cell">{t.body}</td><td className="nd-tl-action-cell">{t.action}</td><td>{t.notes}</td></tr>))}</tbody></table></>}
-        {summary.current_status?.length > 0 && <><div className="nd-sec-hd">Current Status</div>{summary.current_status.map((p, i) => <div key={i} className="nd-body">{p}</div>)}</>}
-      </>}
-      <DocumentsSubmittedSection cat="NOGRR" issueId={`NOGRR${nogrr}`} onDocClick={onDocClick} />
+      {summary && <RuleDetailSections summary={summary} cat="NOGRR" issueId={`NOGRR${nogrr}`} keyTitle="Key Operating Guide Change" sectionsField="guide_sections" onDocClick={onDocClick} />}
     </div>
   );
 }
@@ -1142,8 +885,10 @@ function RmgrDetailView({ rmgrr, onBack, onDocClick }) {
         .nd-badge { padding:2px 10px; border-radius:99px; font-size:10.5px; font-weight:600; font-family:var(--mono); letter-spacing:.06em; }
         .nd-title { font-family:var(--serif); font-size:22px; font-weight:400; color:var(--ink); line-height:1.2; margin:0 0 6px; }
         .nd-eyebrow { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
-        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px dashed var(--rule-2); padding-top:12px; margin:18px 0 8px; }
+        .nd-sec-hd { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding-top:2px; margin:16px 0 8px; }
         .nd-body { font-size:13px; color:var(--ink-2); line-height:1.7; margin-bottom:10px; }
+        .nd-bullets { margin:4px 0 10px; padding-left:20px; font-size:13px; color:var(--ink-2); line-height:1.7; }
+        .nd-bullets li { margin-bottom:3px; }
         .nd-impact-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
         .nd-impact-row { display:flex; gap:10px; font-size:12.5px; line-height:1.5; }
         .nd-impact-cat { font-weight:600; color:var(--ink); white-space:nowrap; min-width:160px; flex-shrink:0; }
@@ -1187,23 +932,7 @@ function RmgrDetailView({ rmgrr, onBack, onDocClick }) {
           </div>
         );
       })()}
-      {summary && <>
-        <h2 className="nd-title">{summary.title}</h2>
-        <div className="nd-eyebrow">
-          Posted {summary.date_posted}
-          {summary.effective_date ? `  ·  Effective: ${summary.effective_date}` : ""}
-          {summary.sponsor ? `  ·  Sponsor: ${summary.sponsor}` : ""}
-        </div>
-        {summary.guide_sections?.length > 0 && <div>{summary.guide_sections.map((s, i) => <span key={i} className="nd-proto-tag">{s}</span>)}</div>}
-        {summary.executive_summary && <><div className="nd-sec-hd">Executive Summary</div><div className="nd-body">{summary.executive_summary}</div></>}
-        {summary.background && <><div className="nd-sec-hd">Reason for Revision</div><div className="nd-body">{summary.background}</div></>}
-        {summary.key_change && <><div className="nd-sec-hd">Key Market Guide Change</div><div className="nd-body">{summary.key_change}</div></>}
-        {summary.impacts?.length > 0 && <><div className="nd-sec-hd">Potential Impacts</div><div className="nd-impact-list">{summary.impacts.map((imp, i) => (<div key={i} className="nd-impact-row"><span className="nd-impact-cat">{imp.category}</span><span className="nd-impact-txt">{imp.text}</span></div>))}</div></>}
-        {summary.impact_analysis?.length > 0 && <><div className="nd-sec-hd">Impact Analysis</div>{summary.impact_analysis.map((ia, i) => (<div key={i}><div className="nd-ia-lbl">{ia.label}</div><table className="nd-table"><thead><tr><th>Category</th><th>Detail</th></tr></thead><tbody>{ia.rows.map((row, j) => (<tr key={j}><td>{row[0]}</td><td>{row[1]}</td></tr>))}</tbody></table></div>))}</>}
-        {summary.timeline?.length > 0 && <><div className="nd-sec-hd">Stakeholder Discussion Timeline</div><table className="nd-tl-table"><thead><tr><th>Date</th><th>Body</th><th>Action / Vote</th><th>Notes</th></tr></thead><tbody>{summary.timeline.map((t, i) => (<tr key={i}><td className="nd-tl-date-cell">{t.date}</td><td className="nd-tl-body-cell">{t.body}</td><td className="nd-tl-action-cell">{t.action}</td><td>{t.notes}</td></tr>))}</tbody></table></>}
-        {summary.current_status?.length > 0 && <><div className="nd-sec-hd">Current Status</div>{summary.current_status.map((p, i) => <div key={i} className="nd-body">{p}</div>)}</>}
-      </>}
-      <DocumentsSubmittedSection cat="RMGRR" issueId={`RMGRR${rmgrr}`} onDocClick={onDocClick} />
+      {summary && <RuleDetailSections summary={summary} cat="RMGRR" issueId={`RMGRR${rmgrr}`} keyTitle="Key Market Guide Change" sectionsField="guide_sections" onDocClick={onDocClick} />}
     </div>
   );
 }
