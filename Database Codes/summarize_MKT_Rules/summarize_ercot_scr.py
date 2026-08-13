@@ -444,7 +444,19 @@ def process_issue(folder, n):
         "timeline":          [{"date": ev["date"], "body": ev["body"], "action": ev["action"], "notes": ev["outcome"]} for ev in timeline],
         "current_status":    [current_status],
     }
-    with open(os.path.join(quick, f"{issue_id} Summary.json"), 'w', encoding='utf-8') as f:
+    _summ_path = os.path.join(quick, f"{issue_id} Summary.json")
+    # Preserve comment-derived sections (ercot_opinion / imm_opinion /
+    # stakeholder_key_debates from gen_stakeholder_sections.py) so this nightly
+    # rebuild does not wipe them.
+    if os.path.exists(_summ_path):
+        try:
+            _prev = json.load(open(_summ_path, encoding='utf-8'))
+            for _k in ('ercot_opinion', 'imm_opinion', 'stakeholder_key_debates'):
+                if _prev.get(_k):
+                    summary_json[_k] = _prev[_k]
+        except Exception:
+            pass
+    with open(_summ_path, 'w', encoding='utf-8') as f:
         json.dump(summary_json, f, indent=2, ensure_ascii=False)
 
     return out_path
