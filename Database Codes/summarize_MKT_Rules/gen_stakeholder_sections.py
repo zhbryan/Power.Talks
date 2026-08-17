@@ -23,6 +23,7 @@ import os
 import re
 import sys
 import json
+import hashlib
 
 from docx import Document
 import win32com.client
@@ -92,8 +93,10 @@ def read_doc_text(path):
     return ""
 
 
-# Party name = text between the "<num><CAT>-<seq> " prefix and " Comments".
-_PARTY_PAT = re.compile(r'^\s*\d+[A-Za-z]+[-_ ]+\d+\s+(.*?)\s+comments\b', re.IGNORECASE)
+# Party name = text between the "<num><CAT>-<seq>" prefix and "Comments". The
+# separators around the party may be spaces ("1238NPRR-06 Luminant Comments")
+# or hyphens/underscores ("1344NPRR-04-RMS-Comments") — accept any mix.
+_PARTY_PAT = re.compile(r'^\s*\d+[A-Za-z]+[-_ ]+\d+[-_ ]+(.*?)[-_ ]+comments\b', re.IGNORECASE)
 _IMM_PAT = re.compile(r'\b(imm|independent market monitor|potomac)\b', re.IGNORECASE)
 
 
@@ -163,11 +166,14 @@ def ai_summarize(kind, issue_id, title, blocks):
         return ""
 
 
-# ── ERCOT / IMM opinions: extracted from the "Opinion" table in Report docs ──
-# PRS/TAC/Board/PUCT Reports carry rows "ERCOT Opinion" and "Independent Market
-# Monitor Opinion". Early reports say "To be determined"; the latest report with
-# a real value is authoritative, so scan in ascending sequence and let later
-# values overwrite. Deterministic — no AI.
+# ── ERCOT / IMM opinions: extracted from the "Opinion" table ─────────────────
+# The rows "ERCOT Opinion" and "Independent Market Monitor Opinion" live in the
+# base language document and in each PRS/TAC/Board/PUCT Report. Early filings say
+# "To be determined"; the most recently filed document carries the authoritative
+# value, so we scan doc/docx newest-first (by the sequence number in the name)
+# and keep the first real (non-"To be determined") value found for each field.
+# The two fields are taken independently, since a later filing may refresh only
+# one of them. Deterministic — no AI.
 _OPIN_SKIP = re.compile(r'to be determined|^tbd$|^n/?a$|^none$|^\s*$', re.IGNORECASE)
 
 
@@ -184,6 +190,22 @@ def folder_docs(base):
                 if f.lower().endswith(('.docx', '.doc')) and not f.startswith('~')]
     except OSError:
         return []
+
+
+def source_signature(base):
+    """A cheap fingerprint of the issue's source documents — the .doc/.docx files
+    that feed the two sections. Changes when a document is added, removed, or
+    modified, so a stale summary can be detected without re-reading contents. The
+    nightly run reprocesses an issue only when this differs from the value stored
+    when it was last summarized."""
+    parts = []
+    for f in sorted(folder_docs(base)):
+        try:
+            st = os.stat(os.path.join(base, f))
+        except OSError:
+            continue
+        parts.append(f"{f}:{int(st.st_mtime)}:{st.st_size}")
+    return hashlib.md5("|".join(parts).encode('utf-8')).hexdigest() if parts else ""
 
 
 def _date_from(fname):
@@ -223,14 +245,16 @@ def doc_table_rows(path):
 
 
 def extract_opinions(base, sd):
-    """Return (ercot_opinion, imm_opinion) from the latest Report doc that has
-    real (non-'To be determined') values."""
+    """Return (ercot_opinion, imm_opinion) taken from the most recent doc/docx
+    (by sequence number in the filename) that carries a real value — newest doc
+    wins, each field resolved independently."""
     ercot = imm = ""
-    docs = sorted(sd, key=lambda d: _seq((d.get('file') if isinstance(d, dict) else d) or ""))
-    for doc in docs:
-        fname = (doc.get('file') if isinstance(doc, dict) else doc) or ""
-        if 'report' not in fname.lower() or not fname.lower().endswith(('.docx', '.doc')):
-            continue
+    names = [(d.get('file') if isinstance(d, dict) else d) or "" for d in sd]
+    docs = sorted((f for f in names if f.lower().endswith(('.docx', '.doc'))),
+                  key=_seq, reverse=True)
+    for fname in docs:
+        if ercot and imm:
+            break
         for cells in doc_table_rows(os.path.join(base, fname)):
             if not cells:
                 continue
@@ -238,9 +262,9 @@ def extract_opinions(base, sd):
             value = next((c for c in cells[1:] if c and c.lower() != label), "")
             if _OPIN_SKIP.search(value):
                 continue
-            if 'ercot opinion' in label:
+            if 'ercot opinion' in label and not ercot:
                 ercot = value
-            elif 'market monitor opinion' in label:
+            elif 'market monitor opinion' in label and not imm:
                 imm = value
     return ercot.strip(), imm.strip()
 
@@ -253,11 +277,15 @@ def process_issue(cat, folder, dry=False, force=False):
     if not (os.path.exists(prof_path) and os.path.exists(summ_path)):
         print(f"  {folder}: no profile/summary, skipped")
         return
-    # Resumable: skip issues already processed (the three fields are written
-    # together, so their presence marks completion — even when blank).
+    # Resumable + refresh-aware: skip issues already processed UNLESS their
+    # source documents changed since. The stored signature captures the folder's
+    # doc set; a new comment/report (or an edit) shifts it and triggers a rerun,
+    # so a later filing that fills a previously-blank opinion is picked up. Issues
+    # summarized before the signature existed have none stored -> reprocess once.
+    cur_sig = source_signature(base)
     if not force and not dry:
         done = json.load(open(summ_path, encoding='utf-8'))
-        if 'stakeholder_key_debates' in done:
+        if 'stakeholder_key_debates' in done and done.get('stakeholder_sections_sig') == cur_sig:
             return
     profile = json.load(open(prof_path, encoding='utf-8'))
     sd = folder_docs(base)
@@ -275,7 +303,8 @@ def process_issue(cat, folder, dry=False, force=False):
     title = profile.get('title')
     issue_id = folder
     debates = ai_summarize('stakeholder', issue_id, title, sh)
-    # ERCOT / IMM Opinions — table extraction from Report docs (deterministic).
+    # ERCOT / IMM Opinions — opinion-table extraction from the most recent
+    # doc/docx (deterministic).
     ercot, imm = extract_opinions(base, sd)
 
     print(f"  {folder}: {len(sh)} participant comment doc(s)")
@@ -289,6 +318,7 @@ def process_issue(cat, folder, dry=False, force=False):
     summary['stakeholder_key_debates'] = debates
     summary['ercot_opinion'] = ercot
     summary['imm_opinion'] = imm
+    summary['stakeholder_sections_sig'] = cur_sig   # source fingerprint for refresh
     summary.pop('ercot_imm_opinions', None)   # retired field
     with open(summ_path, 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)

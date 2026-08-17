@@ -89,10 +89,11 @@ def build_steps(args):
             steps.append((f"MKT summarize {c.upper()}",
                           [_mkt("summarize_MKT_Rules", f"summarize_ercot_{c}.py")],
                           os.path.join(DB, "summarize_MKT_Rules")))
-        # 3b. Comment-derived sections: ERCOT/IMM Opinions (report-table
-        #     extraction) + Stakeholder Key Debates (AI). Runs after summarize;
-        #     summarize preserves existing values, so this only fills issues that
-        #     are new or still missing them (resume-skip inside the script).
+        # 3b. Comment-derived sections: ERCOT/IMM Opinions (opinion-table
+        #     extraction from the most recent doc/docx) + Stakeholder Key Debates
+        #     (AI over participant comment docs). Runs after summarize; summarize
+        #     preserves existing values, so this only fills issues that are new or
+        #     still missing them (resume-skip inside the script).
         for c in MKT_CATS:
             steps.append((f"MKT stakeholder sections {c.upper()}",
                           [_mkt("summarize_MKT_Rules", "gen_stakeholder_sections.py"),
