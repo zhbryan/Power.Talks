@@ -19,12 +19,13 @@ checked control, and across all six categories (NPRR/COPMGRR/PGRR/SCR/NOGRR/
 RMGRR), which share the same form. Legacy .doc filings expose no readable
 controls -> [].
 
-A newer template variant renders each checkbox as an embedded image (a WMF
-glyph) instead of an ActiveX control: every option carries the same empty-box
-image except the one the sponsor marked, which carries a different (checked)
-image. When no ActiveX controls are present we fall back to comparing those
-per-option images: the box image that repeats across most options is the
-unchecked state, so any option whose box image differs is the checked one.
+Newer template variants render each checkbox as an embedded image (a WMF
+glyph) instead of an ActiveX control -- either DrawingML (<a:blip>) or legacy
+VML (<v:imagedata>). Every option carries the same empty-box image except the
+one the sponsor marked, which carries a different (checked) image. When no
+ActiveX controls are present we fall back to comparing those per-option images:
+the box image that repeats across most options is the unchecked state, so any
+option whose box image differs is the checked one.
 """
 
 import hashlib
@@ -71,12 +72,36 @@ def _read_rel_blob(z, relmap, rid):
     return None
 
 
+_REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+
+
+def _localname(el):
+    t = el.tag
+    return t.rsplit('}', 1)[-1] if isinstance(t, str) else ''
+
+
+def _iter_box_images(el):
+    """Yield the relationship id of every embedded image under `el`, covering
+    both checkbox-image encodings: DrawingML <a:blip r:embed=".."> and legacy
+    VML <v:imagedata r:id="..">."""
+    for d in el.iter():
+        ln = _localname(d)
+        if ln == 'blip':
+            rid = d.get('{%s}embed' % _REL_NS) or d.get('{%s}link' % _REL_NS)
+        elif ln == 'imagedata':
+            rid = d.get('{%s}id' % _REL_NS)
+        else:
+            continue
+        if rid:
+            yield rid
+
+
 def _para_box_image_hash(z, relmap, para):
-    """md5 of the first embedded DrawingML image (a:blip) in the paragraph, or
-    None. In the image-checkbox template that image IS the option's checkbox."""
-    for blip in para._p.iter(qn('a:blip')):
-        rid = blip.get(qn('r:embed')) or blip.get(qn('r:link'))
-        blob = _read_rel_blob(z, relmap, rid) if rid else None
+    """md5 of the first embedded checkbox image in the paragraph, or None. In
+    the image-checkbox templates that image IS the option's checkbox (either a
+    DrawingML a:blip or a legacy VML v:imagedata reference)."""
+    for rid in _iter_box_images(para._p):
+        blob = _read_rel_blob(z, relmap, rid)
         if blob:
             return hashlib.md5(blob).hexdigest()
     return None
@@ -145,9 +170,10 @@ def extract_checked_reasons(docx_path):
                     if rid and _reason_ctrl_checked(z, relmap, rid):
                         checked.append(_clean_reason(t))
                 return checked
-            # No ActiveX controls: newer image-checkbox template.
+            # No ActiveX controls: image-checkbox templates (DrawingML a:blip
+            # or legacy VML v:imagedata).
             img_cells = [c for c in cells
-                         if any(True for _ in c._tc.iter(qn('a:blip')))]
+                         if next(_iter_box_images(c._tc), None) is not None]
             if img_cells:
                 cell = max(img_cells, key=lambda c: len(c.text))
                 return _image_checked_reasons(z, relmap, cell)
