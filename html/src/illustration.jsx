@@ -154,26 +154,26 @@ const PAPER_TRAIL_CODES = [
 ];
 
 // "Documents Submitted" section for the center detail view — lists the issue's
-// source_documents (from Profile.json), sorted by the sequence number after
+// source_documents (from Summary.json), sorted by the sequence number after
 // "[rule#][CAT]-". Title opens the document summary (content window); the
 // download button fetches the original.
-function DocumentsSubmittedSection({ cat, issueId, onDocClick }) {
-  const [docs, setDocs] = React.useState(null);
-  React.useEffect(() => {
-    setDocs(null);
-    fetch(`/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${cat}/${issueId}/Quick%20runs/${issueId}%20Profile.json`, { cache: "no-store" })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => setDocs((d.source_documents || []).filter(x => x && !/\.zip$/i.test(x.file || ""))))
-      .catch(() => setDocs([]));
-  }, [cat, issueId]);
+//
+// source_documents is a flat list of filenames (strings) that the summarizer
+// records by scanning the issue folder. We normalize each into a doc object,
+// deriving download_url from the file's location in the issue folder. Objects
+// (older schema, with title/download_url/summary fields) are passed through.
+function DocumentsSubmittedSection({ cat, issueId, docs, onDocClick }) {
+  const base = `/Power.Talks/Documents%20Database/ERCOT.MKT.RULES/${cat}/${issueId}`;
+  const normalized = (Array.isArray(docs) ? docs : [])
+    .map(x => (typeof x === "string" ? { file: x } : (x || {})))
+    .filter(x => x.file && !/\.zip$/i.test(x.file))
+    .map(x => ({ ...x, download_url: x.download_url || `${base}/${encodeURIComponent(x.file)}` }));
   const seqOf = (f) => { const m = (f || "").match(/^\d+[a-z]+[-_ ]+(\d+)/i); return m ? parseInt(m[1], 10) : 9999; };
-  const list = (docs || []).slice().sort((a, b) => seqOf(a.file) - seqOf(b.file) || ((a.file || "") > (b.file || "") ? 1 : -1));
+  const list = normalized.slice().sort((a, b) => seqOf(a.file) - seqOf(b.file) || ((a.file || "") > (b.file || "") ? 1 : -1));
   return (
     <>
       <div className="nd-sec-hd">Documents Submitted</div>
-      {docs === null
-        ? <div className="nd-body" style={{ color: "var(--muted)" }}>Loading documents…</div>
-        : list.length === 0
+      {list.length === 0
         ? <div className="nd-body">n/a</div>
         : <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {list.map((d, i) => (
@@ -270,7 +270,7 @@ function RuleDetailSections({ summary, cat, issueId, keyTitle, sectionsField, on
         ? cs.map((p, i) => <div key={i} className="nd-body">{p}</div>)
         : <div className="nd-body">{NA}</div>}
 
-      <DocumentsSubmittedSection cat={cat} issueId={issueId} onDocClick={onDocClick} />
+      <DocumentsSubmittedSection cat={cat} issueId={issueId} docs={summary.source_documents} onDocClick={onDocClick} />
 
       <div className="nd-sec-hd">List of Changed Sections</div>
       {sections.length > 0

@@ -18,11 +18,20 @@ Plan Objective 1-3 / ...") because it reads the paragraph text next to each
 checked control, and across all six categories (NPRR/COPMGRR/PGRR/SCR/NOGRR/
 RMGRR), which share the same form. Legacy .doc filings expose no readable
 controls -> [].
+
+A newer template variant renders each checkbox as an embedded image (a WMF
+glyph) instead of an ActiveX control: every option carries the same empty-box
+image except the one the sponsor marked, which carries a different (checked)
+image. When no ActiveX controls are present we fall back to comparing those
+per-option images: the box image that repeats across most options is the
+unchecked state, so any option whose box image differs is the checked one.
 """
 
+import hashlib
 import io
 import re
 import zipfile
+from collections import Counter
 
 import olefile
 from docx import Document
@@ -49,11 +58,54 @@ def _clean_reason(text):
     return text.rstrip('.').strip()
 
 
+def _read_rel_blob(z, relmap, rid):
+    """Bytes of the relationship target `rid` (relative to word/), or None."""
+    tgt = relmap.get(rid)
+    if not tgt:
+        return None
+    for name in ('word/' + tgt.replace('\\', '/'), tgt.lstrip('/')):
+        try:
+            return z.read(name)
+        except Exception:
+            continue
+    return None
+
+
+def _para_box_image_hash(z, relmap, para):
+    """md5 of the first embedded DrawingML image (a:blip) in the paragraph, or
+    None. In the image-checkbox template that image IS the option's checkbox."""
+    for blip in para._p.iter(qn('a:blip')):
+        rid = blip.get(qn('r:embed')) or blip.get(qn('r:link'))
+        blob = _read_rel_blob(z, relmap, rid) if rid else None
+        if blob:
+            return hashlib.md5(blob).hexdigest()
+    return None
+
+
+def _image_checked_reasons(z, relmap, cell):
+    """Detect the checked option(s) when checkboxes are embedded images rather
+    than ActiveX controls. The empty box is the image repeated across most
+    options; an option whose box image differs is the one that was marked."""
+    opts = []  # (label, image_md5)
+    for para in cell.paragraphs:
+        t = para.text.strip()
+        if not t or _REASON_NOTE_PAT.search(t):
+            continue
+        h = _para_box_image_hash(z, relmap, para)
+        if h:
+            opts.append((t, h))
+    if len(opts) < 2:
+        return []
+    modal, _ = Counter(h for _, h in opts).most_common(1)[0]
+    return [_clean_reason(t) for t, h in opts if h != modal]
+
+
 def extract_checked_reasons(docx_path):
     """Return the Reason-for-Revision option(s) the sponsor checked, as the
-    paragraph text next to each marked ActiveX control. Returns [] when the
-    file is a legacy .doc (no readable controls), nothing is checked, or the
-    reason table cannot be located."""
+    paragraph text next to each marked box. Handles both templates: ActiveX
+    checkbox controls and embedded-image checkboxes. Returns [] when the file
+    is a legacy .doc (no readable markers), nothing is checked, or the reason
+    table cannot be located."""
     if not docx_path or not docx_path.lower().endswith('.docx'):
         return []
     try:
@@ -61,10 +113,9 @@ def extract_checked_reasons(docx_path):
         rels = z.read('word/_rels/document.xml.rels').decode('utf-8')
     except Exception:
         return []
-    relmap = dict(re.findall(
-        r'Id="(rId\d+)"[^>]*?Target="(activeX/activeX\d+\.xml)"', rels))
-    if not relmap:
-        return []
+    # Full relationship map — activeX targets drive the control path, media
+    # (image) targets drive the image-checkbox fallback.
+    relmap = dict(re.findall(r'Id="(rId\d+)"[^>]*?Target="([^"]+)"', rels))
     try:
         doc = Document(docx_path)
     except Exception:
@@ -73,7 +124,7 @@ def extract_checked_reasons(docx_path):
         for row in tbl.rows:
             if 'reason for revision' not in ' '.join(c.text for c in row.cells).lower():
                 continue
-            # Dedupe merged cells; the options cell is the one bearing controls.
+            # Dedupe merged cells; the options cell bears the controls/images.
             seen, cells = set(), []
             for c in row.cells:
                 if id(c._tc) in seen:
@@ -81,18 +132,23 @@ def extract_checked_reasons(docx_path):
                 seen.add(id(c._tc)); cells.append(c)
             ctrl_cells = [c for c in cells
                           if any(True for _ in c._tc.iter(qn('w:control')))]
-            if not ctrl_cells:
-                continue
-            cell = max(ctrl_cells, key=lambda c: len(c.text))
-            checked = []
-            for para in cell.paragraphs:
-                t = para.text.strip()
-                if not t or _REASON_NOTE_PAT.search(t):
-                    continue
-                rid = None
-                for ctrl in para._p.iter(qn('w:control')):
-                    rid = ctrl.get(qn('r:id'))
-                if rid and _reason_ctrl_checked(z, relmap, rid):
-                    checked.append(_clean_reason(t))
-            return checked
+            if ctrl_cells:
+                cell = max(ctrl_cells, key=lambda c: len(c.text))
+                checked = []
+                for para in cell.paragraphs:
+                    t = para.text.strip()
+                    if not t or _REASON_NOTE_PAT.search(t):
+                        continue
+                    rid = None
+                    for ctrl in para._p.iter(qn('w:control')):
+                        rid = ctrl.get(qn('r:id'))
+                    if rid and _reason_ctrl_checked(z, relmap, rid):
+                        checked.append(_clean_reason(t))
+                return checked
+            # No ActiveX controls: newer image-checkbox template.
+            img_cells = [c for c in cells
+                         if any(True for _ in c._tc.iter(qn('a:blip')))]
+            if img_cells:
+                cell = max(img_cells, key=lambda c: len(c.text))
+                return _image_checked_reasons(z, relmap, cell)
     return []
