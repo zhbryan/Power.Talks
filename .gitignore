@@ -1,5 +1,6 @@
 # API keys — never commit
 html/config.js
+Database Codes/ercot_api/ercot_api_credentials.json
 
 # Python
 __pycache__/
