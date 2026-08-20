@@ -111,11 +111,19 @@ def get_id_token(username, password):
 
 def _extract_products(payload):
     """Pull the product list out of a page payload, tolerant of shape.
-    Returns a list of dicts. ERCOT wraps records under a list-valued key
-    (commonly 'products' / 'data' / 'reports'); some responses are a bare list."""
+    Returns a list of dicts. ERCOT returns HAL JSON: the catalog lives under
+    _embedded.products. Also accept a few other shapes / a bare list."""
     if isinstance(payload, list):
         return payload
     if isinstance(payload, dict):
+        emb = payload.get("_embedded")
+        if isinstance(emb, dict):
+            v = emb.get("products")
+            if isinstance(v, list):
+                return v
+            for v in emb.values():        # first list inside _embedded
+                if isinstance(v, list):
+                    return v
         for key in ("products", "data", "reports", "items", "results"):
             v = payload.get(key)
             if isinstance(v, list):
@@ -127,13 +135,14 @@ def _extract_products(payload):
     return []
 
 
-def _total_pages(payload):
+def _next_link(payload):
+    """HAL next-page URL, if the response advertises one."""
     if isinstance(payload, dict):
-        meta = payload.get("_meta") or payload.get("meta") or {}
-        try:
-            return int(meta.get("totalPages")) if meta.get("totalPages") else None
-        except (TypeError, ValueError):
-            return None
+        nxt = (payload.get("_links") or {}).get("next")
+        if isinstance(nxt, dict):
+            return nxt.get("href")
+        if isinstance(nxt, str):
+            return nxt
     return None
 
 
@@ -143,14 +152,10 @@ def fetch_all_products(token, subscription_key, quiet=False):
         "Authorization": f"Bearer {token}",
         "Ocp-Apim-Subscription-Key": subscription_key,
     }
-    products, page, pages = [], 1, None
+    products, page = [], 1
+    url, params = REPORTS_URL, {"page": 1, "size": PAGE_SIZE}
     while True:
-        resp = requests.get(
-            REPORTS_URL,
-            headers=headers,
-            params={"page": page, "size": PAGE_SIZE},
-            timeout=60,
-        )
+        resp = requests.get(url, headers=headers, params=params, timeout=60)
         if resp.status_code != 200:
             sys.exit(f"ERROR: reports request failed on page {page} "
                      f"({resp.status_code}): {resp.text[:500]}")
@@ -167,18 +172,13 @@ def fetch_all_products(token, subscription_key, quiet=False):
                          f"Raw payload written to {raw} for inspection.")
             break
         products.extend(batch)
-        if pages is None:
-            pages = _total_pages(payload)
         if not quiet:
-            print(f"  page {page}"
-                  f"{'/' + str(pages) if pages else ''}: +{len(batch)} "
-                  f"(total {len(products)})")
-        if pages is not None:
-            if page >= pages:
-                break
-        elif len(batch) < PAGE_SIZE:
-            break  # short page and no pagination metadata -> last page
-        page += 1
+            print(f"  page {page}: +{len(batch)} (total {len(products)})")
+        # ERCOT paginates via a HAL 'next' link; absent -> single/last page.
+        nxt = _next_link(payload)
+        if not nxt:
+            break
+        url, params, page = nxt, None, page + 1
     return products
 
 
