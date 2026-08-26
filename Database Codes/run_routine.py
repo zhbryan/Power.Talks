@@ -22,6 +22,13 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
                     headless — the AI summaries + topic ranking are filled in
                     afterward by the Hot Topics Generator skill.
 
+  ERCOT PUBLIC API
+    8b. emil      — refresh the EMIL product catalog (full run only), rewriting
+                    Documents Database/ERCOT.PUBAPI/emil_products_{<date>,latest}.
+    8c. checklist — rebuild the DATA-products -> table checklist from that
+                    catalog, labelling which products exist in stats_illustrator
+                    (data_products_table_checklist_{<date>,latest}.csv).
+
   BUILD
     9. rebuild    — patch the standalone Power.Talks home page bundle
 
@@ -56,6 +63,10 @@ HTML         = os.path.join(PROJECT_ROOT, "html")
 LOG_DIR      = os.path.join(DB, "logs")
 
 MKT_CATS = ["nprr", "nogrr", "pgrr", "rmgrr", "scr", "copmgrr"]
+
+# Suspend the nightly Hot Topics scaffold/index step without touching the Market
+# Rules or Stakeholder tracks. Set back to False to resume (suspended 2026-08-26).
+HOT_TOPICS_SUSPENDED = True
 
 PY = sys.executable  # the interpreter running this driver
 
@@ -129,8 +140,24 @@ def build_steps(args):
         #    HOT.TOPICS/<date>/{_prep.json, skeleton}, and refreshes index.json
         #    (the website's date dropdown). No web/AI calls; the summaries and
         #    ranking are filled later by the Hot Topics Generator skill.
-        steps.append(("HOT TOPICS scaffold + index",
-                      [os.path.join(DB, "hot_topics", "gen_hot_topics.py")],
+        if not HOT_TOPICS_SUSPENDED:
+            steps.append(("HOT TOPICS scaffold + index",
+                          [os.path.join(DB, "hot_topics", "gen_hot_topics.py")],
+                          PROJECT_ROOT))
+
+    # 8b. ERCOT Public API: refresh the EMIL product catalog (independent of the
+    #     market/stkhdr tracks, so only on a full run). Re-auths on its own and
+    #     rewrites Documents Database/ERCOT.PUBAPI/emil_products_{<date>,latest}.
+    if args.only is None:
+        steps.append(("PUBAPI refresh EMIL product list",
+                      [os.path.join(DB, "ercot_api", "list_emil_products.py"),
+                       "--quiet"],
+                      PROJECT_ROOT))
+        # Rebuild the DATA-products -> table checklist from the freshly written
+        # catalog, labelling which products already exist in stats_illustrator.
+        steps.append(("PUBAPI refresh DATA-products table checklist",
+                      [os.path.join(DB, "ercot_api", "gen_data_products_checklist.py"),
+                       "--quiet"],
                       PROJECT_ROOT))
 
     # 9. Rebuild the standalone web bundle (once, at the end)
