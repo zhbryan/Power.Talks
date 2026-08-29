@@ -29,6 +29,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -132,7 +133,14 @@ def load_data_products():
     with open(LATEST_JSON, encoding="utf-8") as f:
         doc = json.load(f)
     products = doc.get("products", [])
-    data = [p for p in products if p.get("contentType") == "DATA"]
+    # RTD products are excluded from the table program entirely, so they never
+    # appear in the checklist (matches seed_data_product_tables.py): excluded by
+    # posting frequency ("Per RTD Run") OR by an "RTD" token in the report name.
+    def _rtd(p):
+        freq = (p.get("generationFrequency") or "").lower()
+        return "per rtd run" in freq or re.search(r"\brtd\b", p.get("name") or "", re.IGNORECASE)
+    data = [p for p in products
+            if p.get("contentType") == "DATA" and not _rtd(p)]
     data.sort(key=lambda p: (str(p.get("reportTypeId")), str(p.get("emilId"))))
     return data
 

@@ -25,7 +25,10 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
   ERCOT PUBLIC API
     8b. emil      — refresh the EMIL product catalog (full run only), rewriting
                     Documents Database/ERCOT.PUBAPI/emil_products_{<date>,latest}.
-    8c. checklist — rebuild the DATA-products -> table checklist from that
+    8c. tables    — seed/create a stats_illustrator table for every DATA product
+                    (all frequencies, RTD excluded) and upload yesterday's rows
+                    (seed_data_product_tables.py --all --reseed-existing).
+    8d. checklist — rebuild the DATA-products -> table checklist from that
                     catalog, labelling which products exist in stats_illustrator
                     (data_products_table_checklist_{<date>,latest}.csv).
 
@@ -54,7 +57,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -153,6 +156,15 @@ def build_steps(args):
                       [os.path.join(DB, "ercot_api", "list_emil_products.py"),
                        "--quiet"],
                       PROJECT_ROOT))
+        # Seed/create a stats_illustrator table for every DATA product (all
+        # frequencies, RTD excluded) and upload the prior day's rows into it.
+        # --reseed-existing makes it idempotent AND incremental: missing tables
+        # are created, existing tables get yesterday's content-date (re)loaded.
+        seed_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        steps.append(("PUBAPI seed/upload DATA-product tables",
+                      [os.path.join(DB, "ercot_api", "seed_data_product_tables.py"),
+                       "--date", seed_date, "--all", "--reseed-existing"],
+                      os.path.join(DB, "ercot_api")))
         # Rebuild the DATA-products -> table checklist from the freshly written
         # catalog, labelling which products already exist in stats_illustrator.
         steps.append(("PUBAPI refresh DATA-products table checklist",
