@@ -63,8 +63,13 @@ rebuild:
    --all --reseed-existing`. `--all` covers every DATA product (RTD excluded);
    `--reseed-existing` makes it both **create** missing tables and **upload**
    the new day into tables that already exist. `<yesterday>` is computed in
-   `run_routine.py` as the most recently complete content day.
-3. **Rebuild the checklist** — `gen_data_products_checklist.py --quiet` rewrites
+   `run_routine.py` as the most recently complete content day. The **delayed
+   set** (see below) is skipped here (`delayed-skip`) so this pass doesn't waste
+   downloads failing on reports that never publish yesterday's data.
+3. **Refresh the delayed set** — `seed_data_product_tables.py --latest --delayed
+   --reseed-existing` reloads the disclosure / correction / as-needed reports
+   from each one's most recent available posting.
+4. **Rebuild the checklist** — `gen_data_products_checklist.py --quiet` rewrites
    `data_products_table_checklist_{<date>,latest}.csv` and upserts the
    `data_products_table_checklist` DB snapshot, labelling each product's
    `in_database` / `existing_table`.
@@ -107,10 +112,20 @@ window), `empty`, `not-data`.
   don't publish that day's data on that day: the 60-day/2-day/3-day disclosures
   and `Event - As Needed` reports.
 - `--latest` sidesteps that: it loads each report's newest available posting
-  regardless of date. Use it to (re)build those delayed/as-needed tables. Note
-  the nightly `--date` run does **not** refresh `--latest`-built tables (their
-  content-date won't equal yesterday); re-run `--latest` when you want them
-  refreshed, or add a nightly `--latest` pass for the delayed set.
+  regardless of date (window anchored on the catalog's `lastPostDatetime`, so
+  dormant reports still resolve). Use it to (re)build those delayed/as-needed
+  tables.
+
+The delayed reports are enumerated in the built-in **`DELAYED`** set
+(`seed_data_product_tables.py`), selectable with **`--delayed`**. The nightly
+run refreshes them with a dedicated `--latest --delayed --reseed-existing` pass;
+the `--all --date` pass skips them (`delayed-skip`). If a new report only builds
+via `--latest`, add its EMIL id to `DELAYED`.
+
+```bash
+# Refresh the whole delayed set from most-recent postings (nightly-equivalent)
+py -3 seed_data_product_tables.py --latest --delayed --reseed-existing
+```
 
 ## DB config
 

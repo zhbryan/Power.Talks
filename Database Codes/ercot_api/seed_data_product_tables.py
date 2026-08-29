@@ -71,6 +71,22 @@ CURATED_SKIP = {"NP3-560-CD"}
 PILOT = ["NP6-345-CD", "NP6-346-CD", "NP4-190-CD",
          "NP4-523-CD", "NP4-33-CD", "NP4-188-CD"]
 
+# The "delayed set": reports the --date (yesterday) path can't satisfy — content
+# published on a delay (60-day / 2-day / 3-day disclosures, corrections), posted
+# as-needed, or whose date column the daily loader can't detect. These are
+# skipped by the --date pass (so it doesn't waste downloads failing on them) and
+# refreshed instead by a dedicated nightly `--latest --delayed` pass, which loads
+# each report's most recent available posting. Keep in sync with the checklist:
+# any product that only builds via --latest belongs here.
+DELAYED = [
+    "NP1-301", "NP1-302", "NP3-257-EX", "NP3-765-CD", "NP3-906-EX", "NP3-907-EX",
+    "NP3-908-ER", "NP3-909-ER", "NP3-910-ER", "NP3-911-ER", "NP3-914-EX",
+    "NP3-915-EX", "NP3-916-EX", "NP3-965-ER", "NP3-966-ER", "NP3-987-EX",
+    "NP3-990-EX", "NP3-991-EX", "NP4-159-CD", "NP4-179-CD", "NP4-196-M",
+    "NP4-197-M", "NP4-215-CD", "NP4-231-CD", "NP4-791-CD", "NP5-108-CD",
+    "NP5-754-CD", "NP6-625-CD", "NP6-626-CD", "NP6-86-CD",
+]
+
 DATE_HEADER_HINTS = ("deliverydate", "operday", "operatingday", "operatingdate",
                      "operatingdatetime", "businessdate", "tradedate", "date")
 HOUR_HEADER_HINTS = ("hourending", "hourbeginning", "deliveryhour", "hour",
@@ -528,6 +544,9 @@ def main():
                     help="ignore --date and load each report's most recent "
                          "available posting (for delayed / as-needed reports)")
     ap.add_argument("--pilot", action="store_true", help="seed the built-in pilot set")
+    ap.add_argument("--delayed", action="store_true",
+                    help="seed the built-in delayed set (disclosures / as-needed); "
+                         "intended with --latest")
     ap.add_argument("--all", action="store_true",
                     help="seed every DATA product (all frequencies; RTD excluded)")
     ap.add_argument("--reseed-existing", action="store_true",
@@ -539,12 +558,14 @@ def main():
     catalog = load_catalog()
     if args.all:
         emils = list(catalog.keys())
+    elif args.delayed:
+        emils = DELAYED
     elif args.pilot:
         emils = PILOT
     else:
         emils = args.emils
     if not emils:
-        sys.exit("Nothing to do: pass EMIL ids, --pilot, or --all.")
+        sys.exit("Nothing to do: pass EMIL ids, --pilot, --delayed, or --all.")
 
     import pymysql
     cfg = db_config()
@@ -570,6 +591,12 @@ def main():
         if emil in CURATED_SKIP:
             print(f"{emil:<12} {'curated-skip':<20} (dedicated loader owns it)")
             results.append({"emil": emil, "status": "curated-skip", "rows": 0})
+            continue
+        # In the bulk --date pass, don't waste downloads on the delayed set — the
+        # nightly `--latest --delayed` pass refreshes those instead.
+        if args.all and not args.latest and emil in DELAYED:
+            print(f"{emil:<12} {'delayed-skip':<20} (use --latest --delayed)")
+            results.append({"emil": emil, "status": "delayed-skip", "rows": 0})
             continue
         if not args.reseed_existing and _has_table(stems, emil):
             print(f"{emil:<12} {'exists-skip':<20} (table already present)")

@@ -27,7 +27,9 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
                     Documents Database/ERCOT.PUBAPI/emil_products_{<date>,latest}.
     8c. tables    — seed/create a stats_illustrator table for every DATA product
                     (all frequencies, RTD excluded) and upload yesterday's rows
-                    (seed_data_product_tables.py --all --reseed-existing).
+                    (seed_data_product_tables.py --all --reseed-existing), then a
+                    --latest --delayed pass to refresh the disclosure / as-needed
+                    "delayed set" from each report's most recent posting.
     8d. checklist — rebuild the DATA-products -> table checklist from that
                     catalog, labelling which products exist in stats_illustrator
                     (data_products_table_checklist_{<date>,latest}.csv).
@@ -164,6 +166,13 @@ def build_steps(args):
         steps.append(("PUBAPI seed/upload DATA-product tables",
                       [os.path.join(DB, "ercot_api", "seed_data_product_tables.py"),
                        "--date", seed_date, "--all", "--reseed-existing"],
+                      os.path.join(DB, "ercot_api")))
+        # Delayed set: disclosures / corrections / as-needed reports whose content
+        # isn't published for `seed_date`. Refresh them from each report's most
+        # recent available posting (--latest), which the --date pass skips.
+        steps.append(("PUBAPI refresh delayed-set tables (latest)",
+                      [os.path.join(DB, "ercot_api", "seed_data_product_tables.py"),
+                       "--latest", "--delayed", "--reseed-existing"],
                       os.path.join(DB, "ercot_api")))
         # Rebuild the DATA-products -> table checklist from the freshly written
         # catalog, labelling which products already exist in stats_illustrator.
