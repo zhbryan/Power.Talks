@@ -1255,6 +1255,10 @@ function ERCOTHome({ onSectionChange }) {
         .pt-ercot-intro-divider {
           border: none; border-top: 1px dashed var(--rule-2); margin: 18px 0;
         }
+        .pt-ercot-footnote {
+          font-family: var(--mono); font-size: 10px; color: var(--muted);
+          line-height: 1.6; margin-top: 8px;
+        }
         .pt-ercot-qlbl {
           font-size: 11px; font-family: var(--mono); letter-spacing: .08em;
           text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 10px;
@@ -1293,7 +1297,10 @@ function ERCOTHome({ onSectionChange }) {
       <div className="pt-ercot-intro">
         <div className="pt-ercot-intro-eye">About ERCOT</div>
         <div className="pt-ercot-intro-body">
-          ERCOT (Electric Reliability Council of Texas) is the independent system operator (ISO) for roughly 90% of Texas's electric load, managing over 89,000 MW of generation capacity and serving approximately 26 million customers. As a non-profit, member-governed organization, ERCOT operates one of the largest competitive wholesale electricity markets in North America. The market is energy-only — there is no separate capacity market — relying instead on real-time scarcity pricing and ancillary service markets to maintain grid reliability and incentivize investment in generation resources. ERCOT is unique among U.S. ISOs in operating an intrastate grid largely isolated from neighboring interconnections, giving Texas significant autonomy over its own market design. Most recently, ERCOT launched Real-Time Co-optimization with Batteries (RTC-B), a landmark market enhancement that simultaneously optimizes energy and ancillary service awards for battery storage resources in the real-time market — enabling batteries to provide multiple grid services at once and significantly improving the efficiency of storage dispatch across the grid.
+          ERCOT (Electric Reliability Council of Texas) is the independent system operator (ISO) for roughly 90% of Texas's electric load, managing over 104,850 MW of generation capacity and serving more than 27 million customers. As a non-profit, member-governed organization, ERCOT operates one of the largest competitive wholesale electricity markets in North America. The market is energy-only — there is no separate capacity market — relying instead on real-time scarcity pricing and ancillary service markets to maintain grid reliability and incentivize investment in generation resources. ERCOT is unique among U.S. ISOs in operating an intrastate grid largely isolated from neighboring interconnections, giving Texas significant autonomy over its own market design. Most recently, ERCOT launched Real-Time Co-optimization with Batteries (RTC-B), a landmark market enhancement that simultaneously optimizes energy and ancillary service awards for battery storage resources in the real-time market — enabling batteries to provide multiple grid services at once and significantly improving the efficiency of storage dispatch across the grid.
+        </div>
+        <div className="pt-ercot-footnote">
+          Grid statistics as of August 2026. Source: ERCOT Fact Sheet (ercot.com).
         </div>
       </div>
 
