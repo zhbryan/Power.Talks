@@ -44,6 +44,30 @@ LIST_PAGE = 1000
 META_COLS = {"id", "posted_datetime", "loaded_at", "content_date"}
 
 
+# --- Lock: signal the nightly seed to yield while we run --------------------
+
+def write_lock(scope):
+    os.makedirs(os.path.dirname(S.LOCK_PATH), exist_ok=True)
+    json.dump({"pid": os.getpid(), "scope": scope,
+               "started": datetime.now().isoformat(timespec="seconds")},
+              open(S.LOCK_PATH, "w", encoding="utf-8"))
+
+
+def touch_lock():
+    """Refresh the lock mtime so the seed sees it as fresh (see LOCK_STALE_SECONDS)."""
+    try:
+        os.utime(S.LOCK_PATH, None)
+    except OSError:
+        pass
+
+
+def remove_lock():
+    try:
+        os.remove(S.LOCK_PATH)
+    except OSError:
+        pass
+
+
 # --- Archive listing (paged, server-side date filter) ------------------------
 
 def list_all_archives(auth, emil, since, until):
@@ -210,6 +234,7 @@ def backfill_report(auth, conn, emil, name, since, until, sleep, reload_):
         if postings % 25 == 0:
             state["rows"] = state.get("rows", 0) + rows_run
             save_state(emil, state)
+            touch_lock()   # keep the lock fresh through long reports
             print(f"    {emil}: {postings}/{len(archives)} postings, "
                   f"{rows_run} rows this run (latest {posted})")
             rows_run = 0
@@ -263,22 +288,28 @@ def main():
 
     print(f"Backfill {len(emils)} reports  [{args.since} .. {args.until}]  "
           f"tier={args.tier if not args.emils else 'explicit'}")
+    scope = " ".join(args.emils) if args.emils else f"tier-{args.tier}"
+    write_lock(f"{scope} [{args.since}..{args.until}]")
     t0 = time.time()
     results = []
-    for n, emil in enumerate(emils, 1):
-        p = catalog.get(emil)
-        if not p:
-            print(f"[{n}/{len(emils)}] {emil:<12} not-data (skip)")
-            continue
-        print(f"[{n}/{len(emils)}] {emil:<12} {p['name'][:50]}")
-        try:
-            res = backfill_report(auth, conn, emil, p["name"], args.since, args.until,
-                                  args.sleep, args.reload)
-        except Exception as e:  # noqa: BLE001
-            res = {"emil": emil, "status": f"error: {str(e)[:150]}", "postings": 0, "rows": 0}
-        print(f"           -> {res['status']}  postings={res['postings']}  "
-              f"total_docs={res.get('rows', 0)}  {res.get('table', '')}")
-        results.append(res)
+    try:
+        for n, emil in enumerate(emils, 1):
+            touch_lock()
+            p = catalog.get(emil)
+            if not p:
+                print(f"[{n}/{len(emils)}] {emil:<12} not-data (skip)")
+                continue
+            print(f"[{n}/{len(emils)}] {emil:<12} {p['name'][:50]}")
+            try:
+                res = backfill_report(auth, conn, emil, p["name"], args.since, args.until,
+                                      args.sleep, args.reload)
+            except Exception as e:  # noqa: BLE001
+                res = {"emil": emil, "status": f"error: {str(e)[:150]}", "postings": 0, "rows": 0}
+            print(f"           -> {res['status']}  postings={res['postings']}  "
+                  f"total_docs={res.get('rows', 0)}  {res.get('table', '')}")
+            results.append(res)
+    finally:
+        remove_lock()
 
     conn.close()
     ok = sum(1 for r in results if r["status"] == "ok")

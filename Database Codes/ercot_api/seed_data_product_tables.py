@@ -41,6 +41,29 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(L.PROJECT_ROOT, "Documents Database", "ERCOT.PUBAPI")
 LATEST_JSON = os.path.join(OUT_DIR, "emil_products_latest.json")
 
+# Cross-process lock so the nightly seed yields to a running backfill (both write
+# the same tables and share the ERCOT rate limit). backfill_all_reports.py holds
+# this file and refreshes its mtime while working; a lock older than
+# LOCK_STALE_SECONDS means the backfill died and is ignored (self-healing).
+LOCK_PATH = os.path.join(L.PROJECT_ROOT, "Documents Database", "STATS.ILLUSTRATOR",
+                         "_backfill.lock")
+LOCK_STALE_SECONDS = 1800   # a live backfill touches the lock well within this
+
+
+def backfill_lock_active():
+    """(active, info): True if a backfill holds a FRESH lock. A stale lock (mtime
+    older than LOCK_STALE_SECONDS => backfill crashed) is treated as inactive."""
+    try:
+        if (time.time() - os.path.getmtime(LOCK_PATH)) > LOCK_STALE_SECONDS:
+            return False, None
+    except OSError:
+        return False, None
+    try:
+        info = json.load(open(LOCK_PATH, encoding="utf-8"))
+    except Exception:  # noqa: BLE001 — a half-written lock still counts as active
+        info = {}
+    return True, info
+
 MAX_DOWNLOADS = 60        # safety cap on postings pulled per report
 HF_POSTINGS = 24          # high-freq: how many newest postings to ingest per run
 LIST_PAGE = 1000
@@ -551,9 +574,20 @@ def main():
                     help="seed every DATA product (all frequencies; RTD excluded)")
     ap.add_argument("--reseed-existing", action="store_true",
                     help="don't skip products that already have a table")
+    ap.add_argument("--ignore-backfill-lock", action="store_true",
+                    help="run even while a backfill holds the lock (default: skip)")
     args = ap.parse_args()
     if not args.latest and not args.date:
         ap.error("--date is required unless --latest is given")
+
+    if not args.ignore_backfill_lock:
+        active, info = backfill_lock_active()
+        if active:
+            print(f"backfill in progress (pid={info.get('pid')}, "
+                  f"since={info.get('started')}, scope={info.get('scope')}) — "
+                  f"skipping seed to avoid contention. "
+                  f"Override with --ignore-backfill-lock.")
+            return
 
     catalog = load_catalog()
     if args.all:

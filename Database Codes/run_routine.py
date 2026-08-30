@@ -162,6 +162,8 @@ def build_steps(args):
         # frequencies, RTD excluded) and upload the prior day's rows into it.
         # --reseed-existing makes it idempotent AND incremental: missing tables
         # are created, existing tables get yesterday's content-date (re)loaded.
+        # Both seed steps below auto-skip if a historical backfill holds the lock
+        # (backfill_all_reports.py) so they don't contend for tables / rate limit.
         seed_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
         steps.append(("PUBAPI seed/upload DATA-product tables",
                       [os.path.join(DB, "ercot_api", "seed_data_product_tables.py"),

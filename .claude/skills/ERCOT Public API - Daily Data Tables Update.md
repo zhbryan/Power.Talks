@@ -77,6 +77,16 @@ rebuild:
 This job is registered under the Windows task **"Power.Talks Daily Refresh"**
 (2 AM) via `run_routine.py`; no separate task is needed.
 
+### Backfill lock
+
+The seed steps yield to a running historical backfill so the two don't fight over
+the same tables and the ERCOT rate limit. `backfill_all_reports.py` writes
+`Documents Database/STATS.ILLUSTRATOR/_backfill.lock` (refreshing its mtime as it
+works); any `seed_data_product_tables.py` run sees a **fresh** lock and skips with
+a message. A lock older than `LOCK_STALE_SECONDS` (30 min) means the backfill
+died and is ignored automatically. Force a seed through with
+`--ignore-backfill-lock`.
+
 ## Run it by hand
 
 ```bash
