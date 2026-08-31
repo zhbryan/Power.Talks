@@ -45,6 +45,10 @@ _client = None
 _word = None
 
 
+import glossary_reference
+_SYS_KW = glossary_reference.system_kwargs()   # ERCOT terminology reference (cached)
+
+
 def get_ai():
     global _client
     if _client is None:
@@ -156,6 +160,7 @@ def ai_summarize(kind, issue_id, title, blocks):
     try:
         msg = get_ai().messages.create(
             model=AI_MODEL, max_tokens=AI_MAX_TOKENS,
+            **_SYS_KW,
             messages=[{"role": "user", "content": prompt}])
         _ai["input"] += msg.usage.input_tokens
         _ai["output"] += msg.usage.output_tokens

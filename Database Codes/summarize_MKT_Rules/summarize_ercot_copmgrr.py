@@ -206,6 +206,9 @@ def infer_status(folder):
     return "Recently Posted / Pending ROS"
 
 # ─── AI EXECUTIVE SUMMARY ────────────────────────────────────────────────────
+import glossary_reference
+_SYS_KW = glossary_reference.system_kwargs()   # ERCOT terminology reference (cached)
+
 _ai_client = None
 
 def get_ai():
@@ -237,6 +240,7 @@ Write 3–5 sentences covering: (1) what COPM Bilateral Agreement or guide secti
     try:
         msg = get_ai().messages.create(
             model=AI_MODEL, max_tokens=AI_MAX_TOKENS,
+            **_SYS_KW,
             messages=[{"role": "user", "content": prompt}]
         )
         _ai_usage["input_tokens"]  += msg.usage.input_tokens
