@@ -1,0 +1,2827 @@
+{
+  "source": "https://www.ercot.com/glossary",
+  "retrieved_at": "2026-08-30T22:35:41",
+  "count": 705,
+  "terms": [
+    {
+      "definition_html_raw": "<p>American Arbitration Association</p>",
+      "term_s": "AAA"
+    },
+    {
+      "definition_html_raw": "<p>Area Control Error</p>",
+      "term_s": "ACE"
+    },
+    {
+      "definition_html_raw": "<p>Automated Clearing House</p>",
+      "term_s": "ACH"
+    },
+    {
+      "definition_html_raw": "<p>Available Credit Limit</p>",
+      "term_s": "ACL"
+    },
+    {
+      "definition_html_raw": "<p>Retail Load usage data that has been adjusted for Unaccounted for Energy (UFE), Transmission Losses, Distribution Losses, and Direct Current Tie (DC Tie) exports (except for the Oklaunion Exemption).&nbsp;</p>",
+      "term_s": "Adjusted Metered Load (AML)"
+    },
+    {
+      "definition_html_raw": "<p>Load Profiles that are generated from statistical models that are based on static historical Load data, and adjusted for conditions of the day (e.g., weather, Season, etc.).</p>",
+      "term_s": "Adjusted Static Models"
+    },
+    {
+      "definition_html_raw": "<p>For each Operating Hour, the time between 1800 in the Day-Ahead up to the start of the hour before that Operating Hour.</p>",
+      "term_s": "Adjustment Period"
+    },
+    {
+      "definition_html_raw": "<p>Alternative Dispute Resolution</p>",
+      "term_s": "ADR"
+    },
+    {
+      "definition_html_raw": "<p>Any new or appropriately retrofitted meter that functions as part of a system that includes such meters and the associated hardware, software, and communications devices, that collects time-differentiated energy usage, and that is deployed pursuant to P.U.C. SUBST. R. 25.130, Advanced Metering.</p>",
+      "term_s": "Advanced Meter"
+    },
+    {
+      "definition_html_raw": "<p>A system, including Advanced Meters and the associated hardware, software, and communications devices, that collects time-differentiated energy usage and is deployed pursuant to P.U.C. SUBST. R. 25.130, Advanced Metering.</p>",
+      "term_s": "Advanced Metering System (AMS)"
+    },
+    {
+      "definition_html_raw": "<p>The second of four levels of communication issued by ERCOT in anticipation of a possible Emergency Condition.</p>",
+      "term_s": "Advisory"
+    },
+    {
+      "definition_html_raw": "<p>Association of Edison Illuminating Companies</p>",
+      "term_s": "AEIC"
+    },
+    {
+      "definition_html_raw": "<ol type=\"a\"> <li>An Entity that directly or indirectly owns or holds at least 5% of the voting securities of another Entity; or</li> <li>An Entity in a chain of successive ownership of at least 5% of the voting securities of another Entity; or</li> <li>An Entity that has at least 5% of its voting securities owned or controlled, directly or indirectly, by another Entity; or</li> <li>An Entity that has at least 5% of its voting securities owned or controlled, directly or indirectly, by an Entity who directly or indirectly owns or controls at least 5% of the voting securities of another Entity or an Entity in a chain of successive ownership of at least 5% of the voting securities of another Entity; or</li> <li>A person who is an officer or director of another Entity or of a corporation in a chain of successive ownership of at least 5% of the voting securities of an Entity; or</li> <li>Any other Entity determined by the Public Utility Commission of Texas (PUCT) to be an Affiliate.</li> </ol>",
+      "term_s": "Affiliate"
+    },
+    {
+      "definition_html_raw": "<p>Automatic Generation Control</p>",
+      "term_s": "AGC"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource that is an aggregation of generators, with the exception of Intermittent Renewable Resource (IRRs) pursuant to paragraph (11) of Section 3.10.7.2, Modeling of Resources and Transmission Loads, each of which is less than 20 MW in output, which share identical operational characteristics and are interconnected at the same Point of Interconnection (POI) and located behind the same Generator Step-Up (GSU) transformer (with a high-side voltage greater than 60 kV).</p>",
+      "term_s": "Aggregate Generation Resource (AGR)"
+    },
+    {
+      "definition_html_raw": "<p>A Load Resource that is an aggregation of individual metered sites, each of which has less than ten MW of Demand response capability and all of which are located within a single Load Zone.</p>",
+      "term_s": "Aggregate Load Resource (ALR)"
+    },
+    {
+      "definition_html_raw": "<p>Aggregate Generation Resource</p>",
+      "term_s": "AGR"
+    },
+    {
+      "definition_html_raw": "<p>A signed written agreement between ERCOT and a Market Participant using one of the standard form agreements in Section 22, Attachments, including those agreements containing changes to the standard form, which changes have been approved by the ERCOT Board.</p>",
+      "term_s": "Agreement"
+    },
+    {
+      "definition_html_raw": "<p>Aggregate Incremental Liability</p>",
+      "term_s": "AIL"
+    },
+    {
+      "definition_html_raw": "<p>Applicable Legal Authority</p>",
+      "term_s": "ALA"
+    },
+    {
+      "definition_html_raw": "<p>A term used to refer to both a Generation Resource and a Non-Modeled Generator.</p>",
+      "term_s": "All-Inclusive Generation Resource"
+    },
+    {
+      "definition_html_raw": "<p>A term used to refer to a Generation Resource, Load Resource and a Non-Modeled Generator.</p>",
+      "term_s": "All-Inclusive Resource"
+    },
+    {
+      "definition_html_raw": "<p>Aggregate Load Resource</p>",
+      "term_s": "ALR"
+    },
+    {
+      "definition_html_raw": "<p>Procedures, outlined in Section 20, Alternative Dispute Resolution Procedure, for settling disputes by means other than litigation.</p>",
+      "term_s": "Alternative Dispute Resolution (ADR)"
+    },
+    {
+      "definition_html_raw": "<p>Adjusted Metered Load</p>",
+      "term_s": "AML"
+    },
+    {
+      "definition_html_raw": "<p>Automatic Mitigation Plan</p>",
+      "term_s": "AMP"
+    },
+    {
+      "definition_html_raw": "<p>Advanced Metering System</p>",
+      "term_s": "AMS"
+    },
+    {
+      "definition_html_raw": "<p>A service necessary to support the transmission of energy to Loads while maintaining reliable operation of the Transmission Service Provider&rsquo;s (TSP&rsquo;s) transmission system using Good Utility Practice.</p>",
+      "term_s": "Ancillary Service"
+    },
+    {
+      "definition_html_raw": "<p><span>Ancillary Service Resource Responsibility assigned to an On-Line Resource pursuant to paragraph (4) of Section 6.5.9.3.3, Watch.</span></p>",
+      "term_s": "Ancillary Service Assignment"
+    },
+    {
+      "definition_html_raw": "<p>A set of processes described in Section 8.1.1.3, Ancillary Service Capacity Compliance Criteria, to determine the Real-Time capability of Resources to provide Ancillary Service.</p>",
+      "term_s": "Ancillary Service Capacity Monitor"
+    },
+    {
+      "definition_html_raw": "<p>For each Ancillary Service, a Qualified Scheduling Entity&rsquo;s (QSE&rsquo;s) ERCOT-allocated share of total ERCOT System needs for that Ancillary Service.</p>",
+      "term_s": "Ancillary Service Obligation"
+    },
+    {
+      "definition_html_raw": "<p>An offer to supply Ancillary Service capacity in the Day-Ahead Market (DAM) or a Supplemental Ancillary Service Market (SASM).</p>",
+      "term_s": "Ancillary Service Offer"
+    },
+    {
+      "definition_html_raw": "<p>A plan produced by ERCOT, as described in Section 4.2.1, Ancillary Service Plan and Ancillary Service Obligation, which identifies the types and amount of Ancillary Service necessary for each hour of the Operating Day.</p>",
+      "term_s": "Ancillary Service Plan"
+    },
+    {
+      "definition_html_raw": "<p>The MW of an Ancillary Service that each Resource is obligated to provide in Real-Time rounded to the nearest MW.</p>",
+      "term_s": "Ancillary Service Resource Responsibility"
+    },
+    {
+      "definition_html_raw": "<p>The MW of each Ancillary Service that each Resource is providing in Real-Time and the MW of each Ancillary Service for each Resource for each hour in the Current Operating Plan (COP).</p>",
+      "term_s": "Ancillary Service Schedule"
+    },
+    {
+      "definition_html_raw": "<p>The net amount of Ancillary Service capacity that a QSE is obligated to deliver to ERCOT, by hour and service type, from Resources represented by the QSE.</p>",
+      "term_s": "Ancillary Service Supply Responsibility"
+    },
+    {
+      "definition_html_raw": "<p>A QSE-to-QSE transaction that transfers an obligation to provide Ancillary Service capacity between a buyer and a seller.</p>",
+      "term_s": "Ancillary Service Trade"
+    },
+    {
+      "definition_html_raw": "<p>American National Standards Institute Accredited Standards Committee X12</p>",
+      "term_s": "ANSI ASC X12"
+    },
+    {
+      "definition_html_raw": "<p>A Texas or federal law, rule, regulation, or applicable ruling of the PUCT or any other regulatory authority having jurisdiction, an order of a court of competent jurisdiction, or a rule, regulation, applicable ruling, procedure, protocol, guide or guideline of the Independent Organization, or any Entity authorized by the Independent Organization to perform registration or settlement functions.</p>",
+      "term_s": "Applicable Legal Authority (ALA)"
+    },
+    {
+      "definition_html_raw": "<p>A calculation of the MW correction needed to control the actual system frequency to the scheduled system frequency.</p>",
+      "term_s": "Area Control Error (ACE)"
+    },
+    {
+      "definition_html_raw": "<p>Affiliated Retail Electric Provider</p>",
+      "term_s": "AREP"
+    },
+    {
+      "definition_html_raw": "<p>Adjusted RPS Requirement</p>",
+      "term_s": "ARR"
+    },
+    {
+      "definition_html_raw": "<p>The person(s) designated by an Entity during the registration process in Section 16, Registration and Qualification of Market Participants, who is responsible for authorizing all registration information required by ERCOT Protocols and ERCOT business processes, including any changes in the future, and will be the contact person(s) between the registered Entity and ERCOT for all business matters requiring authorization by ERCOT.</p>",
+      "term_s": "Authorized Representative"
+    },
+    {
+      "definition_html_raw": "<p><span>A set of pre-defined automatic actions to execute post-contingency to address voltage issues or reduce overloading on one or more given, monitored Transmission Facilities to below their Emergency Rating, excluding any set of automatic actions that constitute a Remedial Action Scheme. AMPs shall only include schemes which switch series reactors by </span><span>monitoring quantities that are solely located at the same substation as the switched device</span><span>. AMPs shall not include adjusting or tripping generation or Load shedding and shall not be implemented on </span><span>Interconnection Reliability Operating Limits (IROLs).</span></p>",
+      "term_s": "Automatic Mitigation Plan (AMP)"
+    },
+    {
+      "definition_html_raw": "<p>A device on a Generation Resource or a control system at the Facility of a Generation Resource used to automatically control the voltage to an established Voltage Set Point.</p>",
+      "term_s": "Automatic Voltage Regulator (AVR)"
+    },
+    {
+      "definition_html_raw": "<p>An hourly representation of availability of Reliability Must-Run (RMR) Units or Synchronous Condenser Units, or an hourly representation of the capability of Black Start Resources as submitted to ERCOT by 0600 in the Day-Ahead by QSEs representing RMR Units, Synchronous Condenser Units or Black Start Resources.</p>",
+      "term_s": "Availability Plan"
+    },
+    {
+      "definition_html_raw": "<p>Automatic Voltage Regulator</p>",
+      "term_s": "AVR"
+    },
+    {
+      "definition_html_raw": "<p>See Business Day</p>",
+      "term_s": "Bank Business Day"
+    },
+    {
+      "definition_html_raw": "<p>The condition of an Entity that: <ol type=\"a\"> <li>Files a petition or otherwise commences a proceeding under any bankruptcy, insolvency, reorganization or similar law, or has any such petition filed or commenced against it;</li> <li>Makes an assignment or any general arrangement for the benefit of creditors;</li> <li>Has a liquidator, administrator, receiver, trustee, conservator, or similar official appointed with respect to it or any substantial portion of its property or assets; or</li> <li>Is generally unable to pay its debts as they fall due.</li> </ol></p>",
+      "term_s": "Bankrupt"
+    },
+    {
+      "definition_html_raw": "<p>The MW output level for a Resource produced by the Security-Constrained Economic Dispatch (SCED) process.</p>",
+      "term_s": "Base Point"
+    },
+    {
+      "definition_html_raw": "<p>Balancing Energy Services</p>",
+      "term_s": "BES"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource under contract with ERCOT to provide BSS.</p>",
+      "term_s": "Black Start Resource"
+    },
+    {
+      "definition_html_raw": "<p>An Ancillary Service provided by a Resource able to start without support of the ERCOT Transmission Grid.</p>",
+      "term_s": "Black Start Service (BSS)"
+    },
+    {
+      "definition_html_raw": "<p>A condition in which frequency for the entire ERCOT System has dropped to zero and Generation Resources are no longer serving Load.</p> <p> <ul>Partial Blackout<br>A condition in which an uncontrolled separation of a portion of the ERCOT System occurs and frequency for that portion has dropped to zero and Generation Resources within that portion are no longer serving Load and restoration is dependent on either internal Black Start Plans or assistance for restoration is needed from neighboring transmission operator(s) within the ERCOT System which requires ERCOT coordination. </ul> <p></p>",
+      "term_s": "Blackout"
+    },
+    {
+      "definition_html_raw": "<p>A transfer system that isolates a group of Loads from the Control Area in which they normally are served and then connects them to another Control Area. Such transfer systems involve either transferring Loads normally in the ERCOT Control Area to a non-ERCOT Control Area or transferring Loads normally in non-ERCOT Control Areas to the ERCOT Control Area.</p>",
+      "term_s": "Block Load Transfer (BLT)"
+    },
+    {
+      "definition_html_raw": "<p>Block Load Transfer</p>",
+      "term_s": "BLT"
+    },
+    {
+      "definition_html_raw": "<p>Black Start Service</p>",
+      "term_s": "BSS"
+    },
+    {
+      "definition_html_raw": "<p>A set of processes used by ERCOT to determine a forecast of the Load at each Electrical Bus in the ERCOT Transmission Grid.</p>",
+      "term_s": "Bus Load Forecast"
+    },
+    {
+      "definition_html_raw": "<p>Monday through Friday, excluding observed holidays listed below:</p> <ol type=\"a\"> <li>New Year's Day</li> <li>Memorial Day</li> <li>Independence Day</li> <li>Labor Day</li> <li>Thanksgiving Thursday and Friday</li> <li>Two days at Christmas, as designated from time to time by the ERCOT CEO</li> </ol> <p><em><strong>Bank Business Day</strong></em><br /> Any day during which the United States Federal Reserve Bank of New York is open for normal business activity.<br /><br /> <em><strong>Retail Business Day</strong></em><br /> Same as a Business Day, except in the case of retail transactions processed by a TSP or Distribution Service Provider (DSP), Competitive Retailers (CRs) shall substitute the TSP or DSP holidays for ERCOT holidays when determining the time available to the TSP or DSP to process the transaction. For additional important information related to Retail Business Days, please refer to the Retail Market Guide.</p>",
+      "term_s": "Business Day"
+    },
+    {
+      "definition_html_raw": "<p>0800 to 1700 Central Prevailing Time (CPT) on Business Days.</p>",
+      "term_s": "Business Hours"
+    },
+    {
+      "definition_html_raw": "<p>Control Area Operator</p>",
+      "term_s": "CAO"
+    },
+    {
+      "definition_html_raw": "<p>A QSE-to-QSE financial transaction that transfers responsibility to supply capacity between a buyer and a seller at a Settlement Point.</p>",
+      "term_s": "Capacity Trade"
+    },
+    {
+      "definition_html_raw": "<p>CRR Auction Revenue Distribution</p>",
+      "term_s": "CARD"
+    },
+    {
+      "definition_html_raw": "<p>Cash Concentration and Disbursement Plus</p>",
+      "term_s": "CCD+"
+    },
+    {
+      "definition_html_raw": "<p>Capacity Conversion Factor</p>",
+      "term_s": "CCF"
+    },
+    {
+      "definition_html_raw": "<p>Certificate of Convenience and Necessity</p>",
+      "term_s": "CCN"
+    },
+    {
+      "definition_html_raw": "<p>Critical Energy Infrastructure Information</p>",
+      "term_s": "CEII"
+    },
+    {
+      "definition_html_raw": "<p>Either Central Standard Time or Central Daylight Time, in effect in Austin, Texas.</p>",
+      "term_s": "Central Prevailing Time (CPT)"
+    },
+    {
+      "definition_html_raw": "<p>Chief Executive Officer</p>",
+      "term_s": "CEO"
+    },
+    {
+      "definition_html_raw": "<p>Constant Frequency Control</p>",
+      "term_s": "CFC"
+    },
+    {
+      "definition_html_raw": "<p>Comision Federal de Electricidad</p>",
+      "term_s": "CFE"
+    },
+    {
+      "definition_html_raw": "<p>Commodity Futures Trading Commission</p>",
+      "term_s": "CFTC"
+    },
+    {
+      "definition_html_raw": "<p>Common Information Model</p>",
+      "term_s": "CIM"
+    },
+    {
+      "definition_html_raw": "<p>Current Maturities of Long-Term Debt</p>",
+      "term_s": "CMLTD"
+    },
+    {
+      "definition_html_raw": "<p>Constraint Management Plan</p>",
+      "term_s": "CMP"
+    },
+    {
+      "definition_html_raw": "<p>Congestion Management Zone</p>",
+      "term_s": "CMZ"
+    },
+    {
+      "definition_html_raw": "<p>A specified configuration of physical Generation Resources (gas and steam turbines), with a distinct set of operating parameters and physical constraints, in a Combined Cycle Train registered with ERCOT.</p>",
+      "term_s": "Combined Cycle Generation Resource"
+    },
+    {
+      "definition_html_raw": "<p>The combinations of gas turbines and steam turbines in an electric generation plant that employs more than one thermodynamic cycle. For example, a Combined Cycle Train refers to the combination of gas turbine generators (operating on the Brayton Cycle) with turbine exhaust waste heat boilers and steam turbine generators (operating on the Rankin Cycle) for the production of electric power. In the ERCOT market, Combined Cycle Trains are each registered as a plant that can operate as a Generation Resource in one or more Combined Cycle Generation Resource configurations.</p>",
+      "term_s": "Combined Cycle Train"
+    },
+    {
+      "definition_html_raw": "<p>The government agency in Mexico charged with the responsibility of operating the Mexican national electricity grid.</p>",
+      "term_s": "Comision Federal de Electricidad (CFE)"
+    },
+    {
+      "definition_html_raw": "<p><span>The date on which an Interconnecting Entity</span><span> (IE)</span><span> or a Resource Entity expects that construction and trial operation of a Resource will be completed and the Resource is expected to complete the Resource </span><span>i</span><span>nterconnection process and be approved for participation in ERCOT market operations.</span></p>",
+      "term_s": "Commercial Operations Date"
+    },
+    {
+      "definition_html_raw": "<p>A standard way to communicate information about a transmission system. The CIM is used to describe the ERCOT transmission system topology consisting of Transmission Elements, including all the parameters needed to describe the Transmission Elements and how they interrelate to one another. The CIM that ERCOT and the TSP use must conform to the North American Electric Reliability Corporation (NERC) and Electric Power Research Institute (EPRI) standards for CIMs.</p>",
+      "term_s": "Common Information Model (CIM)"
+    },
+    {
+      "definition_html_raw": "<p>A contingency and limiting Transmission Element pair or group of Transmission Elements associated with a Generic Transmission Constraint (GTC) that is determined to be competitive using the process defined in Section 3.19, Constraint Competitiveness Tests.</p>",
+      "term_s": "Competitive Constraint"
+    },
+    {
+      "definition_html_raw": "<p>A Municipally Owned Utility (MOU) or an Electric Cooperative (EC) that offers Customer Choice and sells electric energy at retail in the restructured electric power market in Texas, or a Retail Electric Provider (REP).</p>",
+      "term_s": "Competitive Retailer (CR)"
+    },
+    {
+      "definition_html_raw": "<p>The CR assigned to the Electric Service Identifier (ESI ID) in ERCOT&rsquo;s database. There can be no more than one CR of Record assigned to an ESI ID for any given time period.</p>",
+      "term_s": "Competitive Retailer (CR) of Record"
+    },
+    {
+      "definition_html_raw": "<p>A calendar year beginning January 1 and ending December 31 in which Renewable Energy Credits (RECs) are required of a Retail Entity.</p>",
+      "term_s": "Compliance Period"
+    },
+    {
+      "definition_html_raw": "<p>A payment awarded by the Program Administrator in conjunction with a REC that is generated by a renewable energy source that is not powered by wind and meets the criteria of subsection (l) of P.U.C. SUBST. R. 25.173, Goal for Renewable Energy. For the purpose of the Renewable Portfolio Standard (RPS) requirements, one Compliance Premium is equal to one REC.</p>",
+      "term_s": "Compliance Premium"
+    },
+    {
+      "definition_html_raw": "<p>see Rating</p>",
+      "term_s": "Conductor/Transformer 2-Hour Rating"
+    },
+    {
+      "definition_html_raw": "<p>A financial instrument that entitles the holder to be charged or to receive compensation (i.e., congestion rent), depending on the instrument, when the ERCOT Transmission Grid is congested in the DAM or in Real-Time.</p> <p><em><strong>Flowgate Right (FGR)</strong></em></p> <p>A type of CRR that entitles the holder to receive compensation and is evaluated in each CRR Auction and DAM as the positive power flows represented by the quantity of the CRR bid or offer (MW) on a flowgate (i.e., predefined directional network element or a predefined bundle of directional network elements).</p> <p><em><strong>Point-to-Point (PTP) Obligation</strong></em></p> <p>A type of CRR that entitles the holder to be charged or to receive compensation and is evaluated in each CRR Auction and DAM as the positive and negative power flows on all directional network elements created by the injection and withdrawal at the specified source and sink points of the quantity represented by the CRR bid or offer (MW).</p> <p><em><strong>Point-to-Point (PTP) Obligation with Links to an Option</strong></em></p> <p>A type of CRR that entitles a Non-Opt-In Entity&rsquo;s (NOIE&rsquo;s) PTP Obligation bought in the DAM to be reflective of the NOIE&rsquo;s PTP Option.&nbsp; To qualify as a PTP Obligation of this type, the source and sink pairs on both the NOIE&rsquo;s PTP Obligation and the NOIE&rsquo;s PTP Option shall be the same, and the MWs of the NOIE&rsquo;s PTP Obligations shall be less than or equal to the number of MWs of the NOIE&rsquo;s PTP Option.&nbsp; Qualified PTP Obligations with Links to an Option shall be settled as if they were a PTP Option.</p> <p><em><strong>Point-to-Point (PTP) Option</strong></em></p> <p>A type of CRR that is evaluated in each CRR Auction and DAM as the positive power flows on all directional network elements created by the injection and withdrawal at the specified source and sink points in the quantity represented by the CRR bid or offer (MW), excluding all negative flows on all directional network elements. A PTP Option entitles the holder to receive compensation equal to the positive energy price difference between the sink and the source Settlement Point Prices. A PTP Option with Refund is evaluated in the same manner and compensated as described in Section 7.4.2, PCRR Allocation and Nomination Terms and Conditions.</p>",
+      "term_s": "Congestion Revenue Right (CRR)"
+    },
+    {
+      "definition_html_raw": "<p>An Entity that is qualified to become the owner of record of CRRs and is registered as a CRR Account Holder with ERCOT. <ul> <b>Participating Congestion Revenue Right (CRR) Account Holder</b><br> For a given CRR Auction, a CRR Account Holder who either owns one or more CRRs effective during the Operating Days covered by the CRR Auction, or whose Counter-Party has a non-zero credit limit available and allocated to the CRR Auction as described in paragraph (1) of Section 7.5.5.3, Auction Process. </ul></p>",
+      "term_s": "Congestion Revenue Right (CRR) Account Holder"
+    },
+    {
+      "definition_html_raw": "<p>A periodic auction by ERCOT that allows eligible CRR Account Holders to buy and sell CRRs.</p>",
+      "term_s": "Congestion Revenue Right (CRR) Auction"
+    },
+    {
+      "definition_html_raw": "<p>The fraction of the network capacity that is offered for sale in a given CRR Auction.</p>",
+      "term_s": "Congestion Revenue Right (CRR) Auction Capacity"
+    },
+    {
+      "definition_html_raw": "<p>The CRR Auction, which is part of a CRR Long-Term Auction Sequence, in which a series of calendar months of CRRs is offered for sale for the first time.</p>",
+      "term_s": "Congestion Revenue Right (CRR) First Offering"
+    },
+    {
+      "definition_html_raw": "<p>A series of six CRR Auctions held consecutively, each of which entails the sale of a six-month window of CRRs.</p>",
+      "term_s": "Congestion Revenue Right (CRR) Long-Term Auction Sequence"
+    },
+    {
+      "definition_html_raw": "<p>The CRR Auction in which a calendar month is offered for sale for the last time. This CRR Auction may, but is not required to, be conducted on the same dates as a CRR Auction that is part of a CRR Long-Term Auction Sequence.</p>",
+      "term_s": "Congestion Revenue Right (CRR) Monthly Auction"
+    },
+    {
+      "definition_html_raw": "<p>A model of ERCOT network topology to be used in conducting a CRR Auction. It must be based on, but is not the same as, the Updated Network Model, as detailed in Section 3.10.3, CRR Network Model.</p>",
+      "term_s": "Congestion Revenue Right (CRR) Network Model"
+    },
+    {
+      "definition_html_raw": "<p>A CRR Account Holder that owns one or more CRRs.</p>",
+      "term_s": "Congestion Revenue Right (CRR) Owner"
+    },
+    {
+      "definition_html_raw": "<p>An operating mode of an Automatic Generation Control (AGC) system.&nbsp; While in CFC, an AGC system will monitor only the frequency error to determine Resource adjustments needed to balance sources and obligations.&nbsp; CFC controls generation to increase or decrease by the amount of frequency deviation multiplied by the bias.</p>",
+      "term_s": "Constant Frequency Control (CFC)"
+    },
+    {
+      "definition_html_raw": "<p><span>A set of pre-defined manual transmission system actions, or automatic transmission system actions that do not constitute a Remedial Action Scheme</span><span> (RAS)</span><span>, which are executed in response to system conditions to prevent or to resolve one or more thermal or non-thermal transmission security violations or to optimize the transmission system. CMPs may be developed in cases where studies indicate economic dispatch alone may be unable to resolve a transmission security violation or in response to Real-Time conditions where </span><span>Security-Constrained Economic Dispatch (SCED) is unable to resolve a transmission security violation. ERCOT will employ CMPs to facilitate the market use of the ERCOT Transmission Grid, while maintaining system security and reliability in accordance with the Protocols, Operating Guides and</span><span> North American Electric Reliability Corporation (NERC) </span><span>Reliability Standards. CMPs are intended to supplement, not to replace, the use of SCED for prevention or resolution of one or more thermal or non-thermal transmission security violations. </span></p>",
+      "term_s": "Constraint Management Plan (CMP)"
+    },
+    {
+      "definition_html_raw": "<p>An arrangement between the owner or controller of a leased Premise and a CR wherein the CR provides service to the leased Premise between tenants so that the Premise does not experience discontinuation of electric service during vacancy.</p>",
+      "term_s": "Continuous Service Agreement (CSA)"
+    },
+    {
+      "definition_html_raw": "<p>An electrical system, bound by interconnect (tie line) metering and telemetry, that continuously regulates, through automatic Resource control, its Resource(s) and interchange schedules to match its system Load and frequency schedule.</p>",
+      "term_s": "Control Area"
+    },
+    {
+      "definition_html_raw": "<p>An individual or set of individuals responsible for monitoring and controlling operation of a Control Area.</p>",
+      "term_s": "Control Area Operator (CAO)"
+    },
+    {
+      "definition_html_raw": "<p>A Load Resource capable of controllably reducing or increasing consumption under dispatch control by ERCOT.</p>",
+      "term_s": "Controllable Load Resource"
+    },
+    {
+      "definition_html_raw": "<p>The MW consumption for a Controllable Load Resource produced by summing its Scheduled Power Consumption and Ancillary Service deployments.</p>",
+      "term_s": "Controllable Load Resource Desired Load"
+    },
+    {
+      "definition_html_raw": "<p>Current Operating Plan</p>",
+      "term_s": "COP"
+    },
+    {
+      "definition_html_raw": "<p>Commercial Operations Subcommittee</p>",
+      "term_s": "COPS"
+    },
+    {
+      "definition_html_raw": "<p>One of the four zones in effect during the 2003 ERCOT market as they are changed pursuant to Section 3.4.2, Load Zone Modifications. A Cost Allocation Zone may be used by ERCOT to uplift certain costs to a QSE&rsquo;s Load regardless of Non-Opt-In Entity (NOIE) Load Zone.</p>",
+      "term_s": "Cost Allocation Zone"
+    },
+    {
+      "definition_html_raw": "<p>A single Entity that is a QSE and/or a CRR Account Holder. A Counter-Party includes all registrations as a QSE, all subordinate QSEs, and all CRR Account Holders by the same Entity.</p>",
+      "term_s": "Counter-Party"
+    },
+    {
+      "definition_html_raw": "<p>Control Performance Standard</p>",
+      "term_s": "CPS"
+    },
+    {
+      "definition_html_raw": "<p>Central Prevailing Time</p>",
+      "term_s": "CPT"
+    },
+    {
+      "definition_html_raw": "<p>Competitive Retailer</p>",
+      "term_s": "CR"
+    },
+    {
+      "definition_html_raw": "<ol> <li>The Forced Outage of any single Transmission Facility or, during a single fault, the Forced Outage of multiple Transmission Facilities (single fault multiple element); <li>The Forced Outage of a double-circuit transmission line in excess of 0.5 miles in length; <li>The Forced Outage of any single Generation Resource, and in the case of a Combined Cycle Train, the Forced Outage of the combustion turbine and the steam turbine if they cannot operate separately as provided in the Resource registration process; or <li>For transmission planning purposes, contingencies are defined in the Planning Guide. </ol>",
+      "term_s": "Credible Single Contingency"
+    },
+    {
+      "definition_html_raw": "<p>Information concerning proposed or existing critical infrastructure (physical or virtual) that: <ol type=\"a\"> <li>Relates to the production, generation, transmission or distribution of energy;</li> <li>Could be useful to a person planning an attack on critical infrastructure;</li> <li>Is exempt from mandatory disclosure under the Freedom of Information Act, 5 U.S.C. Â§ 552; and</li> <li>Gives strategic information beyond the location of the critical infrastructure.</li> </ol></p>",
+      "term_s": "Critical Energy Infrastructure Information (CEII)"
+    },
+    {
+      "definition_html_raw": "<p>Congestion Revenue Right</p>",
+      "term_s": "CRR"
+    },
+    {
+      "definition_html_raw": "<p>Congestion Revenue Right Balancing Account</p>",
+      "term_s": "CRRBA"
+    },
+    {
+      "definition_html_raw": "<p>Continuous Service Agreement</p>",
+      "term_s": "CSA"
+    },
+    {
+      "definition_html_raw": "<p>Comma Separated Value</p>",
+      "term_s": "CSV"
+    },
+    {
+      "definition_html_raw": "<p>Corporate Trade Exchange</p>",
+      "term_s": "CTX"
+    },
+    {
+      "definition_html_raw": "<p>A plan by a QSE reflecting anticipated operating conditions for each of the Resources that it represents for each hour in the next seven Operating Days, including Resource operational data, Resource Status, and Ancillary Service Schedule.</p>",
+      "term_s": "Current Operating Plan (COP)"
+    },
+    {
+      "definition_html_raw": "<p>A record of a QSE&rsquo;s Capacity Trades, Energy Trades, and most recent COP.</p>",
+      "term_s": "Current Operating Plan (COP) and Trades Snapshot"
+    },
+    {
+      "definition_html_raw": "<p>An Entity that purchases electricity for its consumption.</p>",
+      "term_s": "Customer"
+    },
+    {
+      "definition_html_raw": "<p>The freedom of a retail Customer to purchase electric services, either individually or on an aggregated basis with other retail Customers, from the provider or providers of the Customer&rsquo;s choice and to choose among various fuel types, energy efficiency programs, and renewable power suppliers.</p>",
+      "term_s": "Customer Choice"
+    },
+    {
+      "definition_html_raw": "<p>The database maintained by the registration agent containing information identifying each Premise, including current and previous CRs serving the Premise.</p>",
+      "term_s": "Customer Registration Database"
+    },
+    {
+      "definition_html_raw": "<p>Day-Ahead Market</p>",
+      "term_s": "DAM"
+    },
+    {
+      "definition_html_raw": "<p>Data Aggregation System</p>",
+      "term_s": "DAS"
+    },
+    {
+      "definition_html_raw": "<p>Day-Ahead Settlement Point Price</p>",
+      "term_s": "DASPP"
+    },
+    {
+      "definition_html_raw": "<p>The process of netting, grouping, and summing Load consumption data, applying appropriate profiles, Transmission Loss Factors (TLFs), and Distribution Loss Factors (DLFs) and calculating and allocating UFE to determine each QSE and/or Load Serving Entity&rsquo;s (LSE&rsquo;s) responsibility by Settlement Interval by Load Zone and by other prescribed aggregation determinants.</p>",
+      "term_s": "Data Aggregation"
+    },
+    {
+      "definition_html_raw": "<p>The database and communication system that collects meter data from TSPs, DSPs and ERCOT Polled Settlement (EPS) Meters. The system performs aggregation functions to Load data in order to satisfy certain objectives, such as providing TSPs with Load share data to use in billing CRs, assigning QSE Load responsibility, and assisting CRs and QSEs in their Settlement responsibilities. The data is also compiled along Load and Weather Zones.</p>",
+      "term_s": "Data Aggregation System (DAS)"
+    },
+    {
+      "definition_html_raw": "<p>An integrated normalized data structure of all the target source systems&rsquo; transactions. The population of the Data Archive is an extraction of data from the transaction systems without altering the data. The Data Archive is used to populate the Data Warehouse.</p>",
+      "term_s": "Data Archive"
+    },
+    {
+      "definition_html_raw": "<p>De-normalized data stored in a schema, physically optimized to handle high volumes of data and concurrent user access, and generally lightly indexed.</p>",
+      "term_s": "Data Warehouse"
+    },
+    {
+      "definition_html_raw": "<p>The 24-hour period before the start of the Operating Day.</p>",
+      "term_s": "Day-Ahead"
+    },
+    {
+      "definition_html_raw": "<p>A daily, co-optimized market in the Day-Ahead for Ancillary Service capacity, certain CRRs, and forward financial energy transactions.</p>",
+      "term_s": "Day-Ahead Market (DAM)"
+    },
+    {
+      "definition_html_raw": "<p>A proposal to buy energy in the DAM at a Settlement Point at a monotonically decreasing price with increasing quantity.</p>",
+      "term_s": "Day-Ahead Market (DAM) Energy Bid"
+    },
+    {
+      "definition_html_raw": "<p>A QSE&rsquo;s willingness to sell energy at or above a certain price and at a certain quantity at a specific Settlement Point in the DAM. A DAM Energy-Only Offer Curve may be offered only in the DAM. DAM Energy-Only Offer Curves are not Resource-specific.</p>",
+      "term_s": "Day-Ahead Market (DAM) Energy-Only Offer"
+    },
+    {
+      "definition_html_raw": "<p>See Settlement Statement</p>",
+      "term_s": "Day-Ahead Market (DAM) Resettlement Statement"
+    },
+    {
+      "definition_html_raw": "<p>See Settlement Statement</p>",
+      "term_s": "Day-Ahead Market (DAM) Statement"
+    },
+    {
+      "definition_html_raw": "<p>A Settlement Interval for which the Resource has been committed due to a DAM award.</p>",
+      "term_s": "Day-Ahead Market (DAM)-Committed Interval"
+    },
+    {
+      "definition_html_raw": "<p>The Day-Ahead process consisting of the DAM and Day-Ahead Reliability Unit Commitment (DRUC).</p>",
+      "term_s": "Day-Ahead Operations"
+    },
+    {
+      "definition_html_raw": "<p>A Reliability Unit Commitment (RUC) process performed for the next Operating Day.</p>",
+      "term_s": "Day-Ahead Reliability Unit Commitment (DRUC)"
+    },
+    {
+      "definition_html_raw": "<p>Direct current</p>",
+      "term_s": "DC"
+    },
+    {
+      "definition_html_raw": "<p>Direct Current Tie</p>",
+      "term_s": "DC TIE"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource for which a Resource Entity has submitted a Notification of Suspension of Operations, for which ERCOT has declined to execute an RMR Agreement, and which has been decommissioned and retired.</p>",
+      "term_s": "Decommissioned Generation Resource"
+    },
+    {
+      "definition_html_raw": "<p>A plan by ERCOT containing the hours and levels of operation that an RMR Unit, including a Synchronous Condenser Unit, is instructed to operate.</p>",
+      "term_s": "Delivery Plan"
+    },
+    {
+      "definition_html_raw": "<p>The amount of instantaneous electric power in MW delivered at any specified point or points on a system.</p>",
+      "term_s": "Demand"
+    },
+    {
+      "definition_html_raw": "<p>A responsible natural person authorized by the owners or operators of a renewable Resource to register that Resource with ERCOT.</p>",
+      "term_s": "Designated Representative"
+    },
+    {
+      "definition_html_raw": "<p>Distributed Generation</p>",
+      "term_s": "DG"
+    },
+    {
+      "definition_html_raw": "<p>An electronic file installed on a programmatic interface or an individual's assigned computer used to authenticate that the interface or individual is authorized for secure electronic messaging with ERCOT's computer systems.</p>",
+      "term_s": "Digital Certificate"
+    },
+    {
+      "definition_html_raw": "<p>Any non-synchronous transmission interconnections between ERCOT and non-ERCOT electric power systems.</p>",
+      "term_s": "Direct Current Tie (DC Tie)"
+    },
+    {
+      "definition_html_raw": "<p>A Load used to represent the withdrawal of power from the ERCOT System to a DC Tie.</p>",
+      "term_s": "Direct Current Tie (DC Tie) Load"
+    },
+    {
+      "definition_html_raw": "<p>A Resource used to represent the injection of power into the ERCOT System from a DC Tie.</p>",
+      "term_s": "Direct Current Tie (DC Tie) Resource"
+    },
+    {
+      "definition_html_raw": "<p>An energy schedule between ERCOT and a non-ERCOT Control Area and is represented by a corresponding Electronic Tag (e-Tag) that contains the physical transaction information such as the Settlement Point energy amount (MW), the associated DC Tie, and the buyer and seller.</p>",
+      "term_s": "Direct Current Tie (DC Tie) Schedule"
+    },
+    {
+      "definition_html_raw": "<p>The control of end-use equipment (e.g., air conditioning equipment, water heaters) to reduce or increase energy consumption during select periods.</p>",
+      "term_s": "Direct Load Control (DLC)"
+    },
+    {
+      "definition_html_raw": "<p>The act of issuing Dispatch Instructions.</p>",
+      "term_s": "Dispatch"
+    },
+    {
+      "definition_html_raw": "<p>A specific command issued by ERCOT to a QSE, TSP or DSP in the&nbsp;operation of&nbsp;the ERCOT System.</p>",
+      "term_s": "Dispatch Instruction"
+    },
+    {
+      "definition_html_raw": "<p>The individual associated with a Market Participant who is the primary contact with ERCOT regarding the pursuit of an Alternative Dispute Resolution (ADR) request.</p>",
+      "term_s": "Dispute Contact"
+    },
+    {
+      "definition_html_raw": "<p>An electrical generating facility located at a Customer&rsquo;s point of delivery (point of common coupling) ten megawatts (MW) or less and connected at a voltage less than or equal to 60 kilovolts (kV) which may be connected in parallel operation to the utility system.</p>",
+      "term_s": "Distributed Generation (DG)"
+    },
+    {
+      "definition_html_raw": "<p>Electric generation with a capacity of not more than 2,000 kW provided by a renewable energy technology that is installed on a retail electric Customer&rsquo;s side of the meter.</p>",
+      "term_s": "Distributed Renewable Generation (DRG)"
+    },
+    {
+      "definition_html_raw": "<p>The ratio of a DSP&rsquo;s estimated Distribution Losses to the total amount of energy deemed consumed (Interval Data Recorder (IDR) plus profiled consumption) on the DSP&rsquo;s system.</p>",
+      "term_s": "Distribution Loss Factor (DLF)"
+    },
+    {
+      "definition_html_raw": "<p>The difference between the energy delivered to the Distribution System and the energy consumed by Customers connected to the Distribution System.</p>",
+      "term_s": "Distribution Losses"
+    },
+    {
+      "definition_html_raw": "<p>An Entity that owns or operates a Distribution System for the delivery of energy from the ERCOT Transmission Grid to Customers.</p>",
+      "term_s": "Distribution Service Provider (DSP)"
+    },
+    {
+      "definition_html_raw": "<p>That portion of an electric delivery system operating under 60 kV that provides electric service to Customers or Wholesale Customers.</p>",
+      "term_s": "Distribution System"
+    },
+    {
+      "definition_html_raw": "<p>Direct Load Control</p>",
+      "term_s": "DLC"
+    },
+    {
+      "definition_html_raw": "<p>Distribution Loss Factor</p>",
+      "term_s": "DLF"
+    },
+    {
+      "definition_html_raw": "<p>Distributed Renewable Generation</p>",
+      "term_s": "DRG"
+    },
+    {
+      "definition_html_raw": "<p>Down Regulation Services</p>",
+      "term_s": "DRS"
+    },
+    {
+      "definition_html_raw": "<p>Day-Ahead Reliability Unit Commitment</p>",
+      "term_s": "DRUC"
+    },
+    {
+      "definition_html_raw": "<p>Debt Service Coverage</p>",
+      "term_s": "DSC"
+    },
+    {
+      "definition_html_raw": "<p>Distribution Service Provider</p>",
+      "term_s": "DSP"
+    },
+    {
+      "definition_html_raw": "<p>Dynamically Scheduled Resource</p>",
+      "term_s": "DSR"
+    },
+    {
+      "definition_html_raw": "<p>Data Universal Numbering System</p>",
+      "term_s": "DUNS"
+    },
+    {
+      "definition_html_raw": "<p>DUNS Number</p>",
+      "term_s": "DUNS #"
+    },
+    {
+      "definition_html_raw": "<p>A unique nine-digit common company identifier used in electronic commerce transactions, supplied by the Data Universal Numbering System (DUNS).</p>",
+      "term_s": "DUNS Number"
+    },
+    {
+      "definition_html_raw": "<p>The current-carrying capability of a Transmission Element adjusted to take into account the effect of ambient weather conditions.</p>",
+      "term_s": "Dynamic Rating"
+    },
+    {
+      "definition_html_raw": "<p>A process used to establish ERCOT Transmission Element limits based upon factors such as ambient temperature and wind speed.</p>",
+      "term_s": "Dynamic Rating Processor"
+    },
+    {
+      "definition_html_raw": "<p>A Resource that has been designated by the QSE, and approved by ERCOT, as a DSR status-type and that follows a DSR Load.</p>",
+      "term_s": "Dynamically Scheduled Resource (DSR)"
+    },
+    {
+      "definition_html_raw": "<p>A Load that a QSE designates to be followed by a Dynamically Scheduled Resource (DSR).</p>",
+      "term_s": "Dynamically Scheduled Resource (DSR) Load"
+    },
+    {
+      "definition_html_raw": "<p>Electronic Tag</p>",
+      "term_s": "E-TAG"
+    },
+    {
+      "definition_html_raw": "<p>Equivalent Availability Factor</p>",
+      "term_s": "EAF"
+    },
+    {
+      "definition_html_raw": "<p>Estimated Aggregate Liability</p>",
+      "term_s": "EAL"
+    },
+    {
+      "definition_html_raw": "<p>Electric Cooperative</p>",
+      "term_s": "EC"
+    },
+    {
+      "definition_html_raw": "<p>Element Competitiveness Index</p>",
+      "term_s": "ECI"
+    },
+    {
+      "definition_html_raw": "<p>Electronic Data Interchange</p>",
+      "term_s": "EDI"
+    },
+    {
+      "definition_html_raw": "<p>Energy Emergency Alert</p>",
+      "term_s": "EEA"
+    },
+    {
+      "definition_html_raw": "<p>Electronic Funds Transfer</p>",
+      "term_s": "EFT"
+    },
+    {
+      "definition_html_raw": "<ol type=\"a\"> <li>A corporation organized under the Electric Cooperative Corporation Act, TEX. UTIL. CODE ANN. ch 161 (Vernon 1998 & Supp. 2007); <li>A corporation organized as an electric cooperative in a state other than Texas that has obtained a certificate of authority to conduct business in Texas; or <li>A successor to an electric cooperative created before June 1, 1999 under a conversion plan approved by a vote of the members of the electric cooperative, regardless of whether the successor later purchases, acquires, merges with, or consolidates with other electric cooperatives.</li></ol>",
+      "term_s": "Electric Cooperative (EC)"
+    },
+    {
+      "definition_html_raw": "<p>A Texas nonprofit corporation that has been certified by the PUCT as the Independent Organization for the ERCOT Region.</p>",
+      "term_s": "Electric Reliability Council of Texas, Inc. (ERCOT)"
+    },
+    {
+      "definition_html_raw": "<p>The organization approved by the Federal Energy Regulatory Commission (FERC) to perform the electric reliability organization functions described in the Electricity Modernization Act of 2005, 16 U.S.C. Â§ 824o (2005).</p>",
+      "term_s": "Electric Reliability Organization"
+    },
+    {
+      "definition_html_raw": "<p>The basic identifier assigned to each Service Delivery Point used in the registration and settlement systems managed by ERCOT or another Independent Organization.</p>",
+      "term_s": "Electric Service Identifier (ESI ID)"
+    },
+    {
+      "definition_html_raw": "<ol> <li>A physical transmission element defined in the Network Operations Model that connects, using breakers and switches, one or more:<br><br> <ol type=\"a\"> <li>Loads; <li>Lines; <li>Transformers; <li>Generators; <li>Capacitors; <li>Reactors; <li>Phase shifters; or <li>Other reactive control devices to the ERCOT Transmission Grid where there is negligible impedance between the connected Transmission Elements.</li></ol><br> <li>All Electrical Buses are designated by ERCOT and TSPs for modeling the electrical topology of the ERCOT Transmission Grid. </li></ol>",
+      "term_s": "Electrical Bus"
+    },
+    {
+      "definition_html_raw": "<p>Two or more distinct Settlement Points that are either mapped to the same electrical location in a market model or are mapped to locations that are connected by a transmission element with a reactance of less than 0.0005 per unit.</p>",
+      "term_s": "Electrically Similar Settlement Points"
+    },
+    {
+      "definition_html_raw": "<p>A Transmission and/or Distribution Service Provider (TDSP) (for all uses of its transmission system), or any electric utility, MOU, EC, power generation company, CR, REP, federal power marketing agency, exempt wholesale generator, Qualifying Facility (QF), Independent Power Marketer, or other Entity that the PUCT has determined to be an Eligible Transmission Service Customer.</p>",
+      "term_s": "Eligible Transmission Service Customer"
+    },
+    {
+      "definition_html_raw": "<p>External Load Serving Entity</p>",
+      "term_s": "ELSE"
+    },
+    {
+      "definition_html_raw": "<p>The target MW output level for a Resource that is selected by ERCOT during an Emergency Condition.</p>",
+      "term_s": "Emergency Base Point"
+    },
+    {
+      "definition_html_raw": "<p>An operating condition in which the safety or reliability of the ERCOT System is compromised or threatened, as determined by ERCOT.</p>",
+      "term_s": "Emergency Condition"
+    },
+    {
+      "definition_html_raw": "<p>The fourth of four levels of communication issued by ERCOT to declare that ERCOT is operating in an Emergency Condition.</p>",
+      "term_s": "Emergency Notice"
+    },
+    {
+      "definition_html_raw": "<p>The maximum rate of change (up and down) in MW per minute of a Resource to provide Responsive Reserve (RRS) that is deployed by ERCOT and that is provided to ERCOT in up to ten segments, each represented by a single MW per minute value (across the capacity of the Resource), which describes the available rate of change for the given range (between High Sustained Limit (HSL) and Low Sustained Limit (LSL)) of the generation or consumption of a Resource. In Real-Time SCED Dispatch, the up and down Emergency Ramp Rates are telemetered by the QSE to ERCOT and represent the total capacity (in MW) that the Resource can change from its current actual generation or consumption within the next five minutes divided by five.</p>",
+      "term_s": "Emergency Ramp Rate"
+    },
+    {
+      "definition_html_raw": "<p>See Rating</p>",
+      "term_s": "Emergency Rating"
+    },
+    {
+      "definition_html_raw": "<p>An emergency service consistent with P.U.C. SUBST. R. 25.507, Electric Reliability Council of Texas (ERCOT) Emergency Response Service (ERS), used during an Energy Emergency Alert (EEA) to assist in maintaining or restoring ERCOT System frequency. ERS is not an Ancillary Service.</p> <p><em><strong>ERS-10</strong></em><br /> ERS with a ten-minute ramp period.<br /><br /> <em><strong>ERS-30</strong></em><br /> ERS with a 30-minute ramp period.<br /><br /> <em><strong>Non-Weather-Sensitive ERS</strong></em><br /> A type of ERS in which an ERS Resource may participate in ERS without meeting the qualification requirements for weather sensitivity set forth in paragraph (5) of Section 3.14.3.1, Emergency Response Service Procurement.<br /><br /> <em><strong>Weather-Sensitive ERS</strong></em><br /> A type of ERS in which an ERS Load may participate in ERS only after meeting the qualification requirements for weather sensitivity set forth in paragraph (5) of Section 3.14.3.1.</p>",
+      "term_s": "Emergency Response Service (ERS)"
+    },
+    {
+      "definition_html_raw": "<p>A period designated by ERCOT during which an ERS Resource is obligated to provide ERS consisting of all or part of the contiguous hours in an ERS Standard Contract Term.</p>",
+      "term_s": "Emergency Response Service (ERS) Contract Period"
+    },
+    {
+      "definition_html_raw": "<p>Either (1) an individual generator contracted to provide ERS which is not a Generation Resource or a source of intermittent renewable generation and which provides ERS by injecting energy to the ERCOT System, or (2) an aggregation of such generators.</p>",
+      "term_s": "Emergency Response Service (ERS) Generator"
+    },
+    {
+      "definition_html_raw": "<p>A Load or aggregation of Loads contracted to provide ERS.</p>",
+      "term_s": "Emergency Response Service (ERS) Load"
+    },
+    {
+      "definition_html_raw": "<p>Either an ERS Load or an ERS Generator.</p>",
+      "term_s": "Emergency Response Service (ERS) Resource"
+    },
+    {
+      "definition_html_raw": "<p>The designation by a QSE of one or more ERS Resources to meet some or all of that QSE&rsquo;s Load Ratio Share (LRS) of the total ERCOT-wide cost of ERS.</p>",
+      "term_s": "Emergency Response Service (ERS) Self-Provision"
+    },
+    {
+      "definition_html_raw": "<p>One of three periods for which ERCOT may procure ERS.</p>",
+      "term_s": "Emergency Response Service (ERS) Standard Contract Term"
+    },
+    {
+      "definition_html_raw": "<p>Blocks of hours in an ERS Standard Contract Term in which ERS Resources are contractually committed to provide ERS.</p>",
+      "term_s": "Emergency Response Service (ERS) Time Period"
+    },
+    {
+      "definition_html_raw": "<p>Energy and Market Management System</p>",
+      "term_s": "EMMS"
+    },
+    {
+      "definition_html_raw": "<p>Energy Management System</p>",
+      "term_s": "EMS"
+    },
+    {
+      "definition_html_raw": "<p>An orderly, predetermined procedure for maximizing use of available Resources and, only if necessary, curtailing load during an Emergency Condition while providing for the maximum possible continuity of service and maintaining the integrity of the ERCOT System.</p>",
+      "term_s": "Energy Emergency Alert (EEA)"
+    },
+    {
+      "definition_html_raw": "<p>An Ancillary Service that is provided when a difference occurs between the scheduled and the actual delivery of energy in Real-Time.</p>",
+      "term_s": "Energy Imbalance Service"
+    },
+    {
+      "definition_html_raw": "<p>A proposal to sell energy at a Settlement Point at a monotonically increasing price with increasing quantity.</p>",
+      "term_s": "Energy Offer Curve"
+    },
+    {
+      "definition_html_raw": "<p>An Energy Storage System (ESS) registered with ERCOT for the purpose of providing energy and/or Ancillary Service to the ERCOT System.</p>",
+      "term_s": "Energy Storage Resource (ESR)"
+    },
+    {
+      "definition_html_raw": "<p>A facility, process, or device(s) that receives electric energy and stores it, in any form, for the purpose of later releasing electrical energy.</p>",
+      "term_s": "Energy Storage System (ESS)"
+    },
+    {
+      "definition_html_raw": "<p>A QSE-to-QSE financial transaction that transfers responsibility for energy between a buyer and a seller at a Settlement Point.</p>",
+      "term_s": "Energy Trade"
+    },
+    {
+      "definition_html_raw": "<p>Any natural person, partnership, municipal corporation, cooperative corporation, association, governmental subdivision, or public or private organization.</p>",
+      "term_s": "Entity"
+    },
+    {
+      "definition_html_raw": "<p>Energy Provider</p>",
+      "term_s": "EP"
+    },
+    {
+      "definition_html_raw": "<p>Electric Power Research Institute</p>",
+      "term_s": "EPRI"
+    },
+    {
+      "definition_html_raw": "<p>ERCOT Polled Settlement</p>",
+      "term_s": "EPS"
+    },
+    {
+      "definition_html_raw": "<p>Electric Reliability Council of Texas</p>",
+      "term_s": "ERCOT"
+    },
+    {
+      "definition_html_raw": "<p>The Board of Directors of the Electric Reliability Council of Texas, Inc.</p>",
+      "term_s": "ERCOT BOARD"
+    },
+    {
+      "definition_html_raw": "<p>Any meter polled directly by ERCOT for use in the Settlement of the market.</p>",
+      "term_s": "ERCOT Polled Settlement (EPS) Meter"
+    },
+    {
+      "definition_html_raw": "<p>The power region, as defined in P.U.C. SUBST. R. 25.5, Definitions, represented by the ERCOT Control Area.</p>",
+      "term_s": "ERCOT Region"
+    },
+    {
+      "definition_html_raw": "<p>The interconnected power system that is under the jurisdiction of the PUCT and that is not synchronously interconnected with either the Eastern Interconnection or the Western Electricity Coordinating Council.</p>",
+      "term_s": "ERCOT System"
+    },
+    {
+      "definition_html_raw": "<p>The sum of all power flows, in MW, on the DC Ties and from Generation Resources metered at the points of their interconnections with the ERCOT System at any given time.</p>",
+      "term_s": "ERCOT System Demand"
+    },
+    {
+      "definition_html_raw": "<p>All Transmission Facilities that are part of the ERCOT System.</p>",
+      "term_s": "ERCOT Transmission Grid"
+    },
+    {
+      "definition_html_raw": "<p>Emergency Response Service</p>",
+      "term_s": "ERS"
+    },
+    {
+      "definition_html_raw": "<p>Electric Service Identifier</p>",
+      "term_s": "ESI ID"
+    },
+    {
+      "definition_html_raw": "<p>Energy Storage Resource</p>",
+      "term_s": "ESR"
+    },
+    {
+      "definition_html_raw": "<p>Energy Storage System</p>",
+      "term_s": "ESS"
+    },
+    {
+      "definition_html_raw": "<p>An Entity that is registered as an LSE and is either: <ol type=\"a\"> <li>A distribution service provider (as that term is defined in P.U.C. Subst. R. 25.5, Definitions), which includes an electric utility, a Municipally Owned Utility (MOU), or an Electric Cooperative (EC) that has a legal duty to serve one or more Customers connected to the ERCOT System but that does not own or operate Facilities connecting Customers to the ERCOT System; or <br> <li>The CFE. </li></ol></p>",
+      "term_s": "External Load Serving Entity (ELSE)"
+    },
+    {
+      "definition_html_raw": "<p>Finance and Audit</p>",
+      "term_s": "F&A"
+    },
+    {
+      "definition_html_raw": "<p>Equipment situated for the purpose of conducting service and/or business through use of the ERCOT System.</p>",
+      "term_s": "Facilities"
+    },
+    {
+      "definition_html_raw": "<p>A number assigned to a renewable Resource facility by ERCOT.</p>",
+      "term_s": "Facility Identification Number"
+    },
+    {
+      "definition_html_raw": "<p>First Available Switch Date</p>",
+      "term_s": "FASD"
+    },
+    {
+      "definition_html_raw": "<p>See Regulation Service</p>",
+      "term_s": "Fast Responding Regulation Down Service (FRRS-Down)"
+    },
+    {
+      "definition_html_raw": "<p>See Regulation Service</p>",
+      "term_s": "Fast Responding Regulation Service (FRRS)"
+    },
+    {
+      "definition_html_raw": "<p>See Regulation Service</p>",
+      "term_s": "Fast Responding Regulation Up Service (FRRS-Up)"
+    },
+    {
+      "definition_html_raw": "<p>Future Credit Exposure</p>",
+      "term_s": "FCE"
+    },
+    {
+      "definition_html_raw": "<p>Federal</p>",
+      "term_s": "FED"
+    },
+    {
+      "definition_html_raw": "<p>Federal Energy Regulatory Commission</p>",
+      "term_s": "FERC"
+    },
+    {
+      "definition_html_raw": "<p>Flowgate Right</p>",
+      "term_s": "FGR"
+    },
+    {
+      "definition_html_raw": "<p>Those schedules ERCOT deems valid following the close of the Day Ahead period.</p>",
+      "term_s": "Final Day-Ahead Schedule"
+    },
+    {
+      "definition_html_raw": "<p>The lender, security holder, investor, partner, multilateral institution, or other Entity providing financing or refinancing for the business of another Entity, including development, construction, ownership, operation and/or maintenance of a facility or any portion thereof, or any trustee or agent acting on behalf of any of the foregoing.</p>",
+      "term_s": "Financing Person"
+    },
+    {
+      "definition_html_raw": "<p>Fuel Index Price</p>",
+      "term_s": "FIP"
+    },
+    {
+      "definition_html_raw": "<p>Fuel Index Price for Resource</p>",
+      "term_s": "FIPRR"
+    },
+    {
+      "definition_html_raw": "<p>Full Interconnection Study</p>",
+      "term_s": "FIS"
+    },
+    {
+      "definition_html_raw": "<p>See Congestion Revenue Right (CRR)</p>",
+      "term_s": "Flowgate Right (FGR)"
+    },
+    {
+      "definition_html_raw": "<p>Frequency Measurable Event</p>",
+      "term_s": "FME"
+    },
+    {
+      "definition_html_raw": "<p>Fuel Oil Price</p>",
+      "term_s": "FOP"
+    },
+    {
+      "definition_html_raw": "<p>Any event beyond the reasonable control of, and that occurs without the fault or negligence of, an Entity whose performance is prevented by the occurrence of such event. Examples of such a Force Majeure Event may include the following, subject to the limitations of the above sentence: an act of God, labor disturbance, act of the public enemy, war, insurrection, riot, fire, storm or flood, explosion, breakage or accident to machinery or equipment, or a curtailment, order, regulation or restriction imposed by governmental, military, or lawfully established civilian authorities.</p>",
+      "term_s": "Force Majeure Event"
+    },
+    {
+      "definition_html_raw": "<p>The portion of the Resource removed from service when the derating exceeds the greater of ten MW or 5% of its Seasonal net max sustainable rating provided through the Resource Registration process.&nbsp; For QSEs representing Intermittent Renewable Resources (IRRs), the loss of a portion of the capacity shall be due to the unavailability of a portion of the equipment and shall not include capacity changes due to changes in the power source (e.g., wind speed at the Wind-powered Generation Resource (WGR) facility for a WGR, or changes in solar irradiance at the PhotoVoltaic Generation Resource (PVGR) facility for a PVGR).&nbsp;&nbsp;</p>",
+      "term_s": "Forced Derate"
+    },
+    {
+      "definition_html_raw": "<p>See Outage</p>",
+      "term_s": "Forced Outage"
+    },
+    {
+      "definition_html_raw": "<p>Federal Power Act</p>",
+      "term_s": "FPA"
+    },
+    {
+      "definition_html_raw": "<p>An event that results in a frequency deviation, identified at ERCOT&rsquo;s sole discretion, and meeting one of the following conditions:</p> <p>(a) A frequency deviation that has a pre-perturbation [the 16-second period of time before t(0)] average frequency to post-perturbation [the 32-second period of time starting 20 seconds after t(0)] average frequency absolute deviation greater than 100 mHz (the 100 mHz value may be adjusted by ERCOT to capture 30 to 40 events per year); or</p> <p>(b) A cumulative change in generating unit/generating facility, Direct Current Tie (DC Tie), and/or firm load pre-perturbation megawatt value to post-perturbation megawatt value absolute deviation greater than 550 MW (the 550 MW value may be adjusted by ERCOT to capture 30 to 40 events per year).</p>",
+      "term_s": "Frequency Measurable Event (FME)"
+    },
+    {
+      "definition_html_raw": "<p>Final RPS Requirement</p>",
+      "term_s": "FRR"
+    },
+    {
+      "definition_html_raw": "<p>Fast Responding Regulation Service</p>",
+      "term_s": "FRRS"
+    },
+    {
+      "definition_html_raw": "<p>Fast Responding Regulation Down Service</p>",
+      "term_s": "FRRS-DOWN"
+    },
+    {
+      "definition_html_raw": "<p>Fast Responding Regulation Up Service</p>",
+      "term_s": "FRRS-UP"
+    },
+    {
+      "definition_html_raw": "<p>The midpoint or average of the daily index prices for fuel for each Operating Day for the Houston Ship Channel area (Houston Ship Channel), expressed in dollars per million British thermal units ($/MMBtu). ERCOT shall issue a Market Notice disclosing the name of the ERCOT-selected source for the average daily index prices used to calculate FIP. In the event that the ERCOT-selected index becomes unavailable, or ERCOT determines that the index has become unsuitable for the intended purpose, ERCOT may select a substitute index source. ERCOT shall issue a Market Notice disclosing its intent to use a substitute index source and the name of the substitute index source at least 60 days prior to the beginning of its use, or as soon as practicable. &nbsp;The effective dates for daily index prices shall be as indicated in the ERCOT-selected index. For Saturdays, Sundays, holidays, and other days for which the ERCOT-selected index source does not publish an effective price, the effective price shall be the effective price for the Operating Day following the holiday or day without a published price. If, at the time of calculation of peaking operating cost of System-Wide Offer Cap, or at the time of settlement or calculation of generic costs, the described midpoint or average price for a particular Operating Day is not available, the effective price for the most recent preceding Operating Day shall be used. </p>",
+      "term_s": "Fuel Index Price (FIP)"
+    },
+    {
+      "definition_html_raw": "<p><span>An average of the daily index prices for fuel oil for each Operating Day, plus five cents per gallon</span>,<span> for U.S. Gulf Coast,</span> Houston<span> pipeline No. 2 oil, converted to dollars per million British thermal units ($/MMBtu). The conversion is 0.1385 MMBtu per gallon. The effective dates for daily index prices shall be as indicated in the ERCOT-selected index. In the event, at the time of settlement or calculation of generic costs, that the effective price for a particular Operating Day is not available, the effective price for the most recent preceding Operating Day shall be used. &nbsp;</span><span>ERCOT shall issue a Market Notice disclosing the name of the ERCOT-selected source for the average daily index prices used to calculate FOP. In the event that the ERCOT-selected index becomes unavailable, or ERCOT determines that the index has become unsuitable for the intended purpose, ERCOT may select a substitute index source. ERCOT shall issue a Market Notice disclosing its intent to use a substitute index source and the name of the substitute index source at least 60 days prior to the beginning of its use, or as soon as practicable.</span></p>",
+      "term_s": "Fuel Oil Price (FOP)"
+    },
+    {
+      "definition_html_raw": "<p><span>The set of studies conducted by a Transmission Service Provider (TSP) for the purpose of identifying any electric system improvements or enhancements required to reliably interconnect a new All-Inclusive Generation Resource consistent with the provisions of Planning Guide Section 5, Generation Resource Interconnection or Change Request.&nbsp; These studies may include steady-state studies, system protection (short-circuit) studies, dynamic and transient stability studies, facility studies, and sub-synchronous oscillation studies.</span></p>",
+      "term_s": "Full Interconnection Study (FIS)"
+    },
+    {
+      "definition_html_raw": "<p>Generation Availability Data System</p>",
+      "term_s": "GADS"
+    },
+    {
+      "definition_html_raw": "<p>The owner of an All-Inclusive Generation Resource and, unless otherwise specified in these Protocols, is registered as a Resource Entity.</p>",
+      "term_s": "Generation Entity"
+    },
+    {
+      "definition_html_raw": "<p>A generator capable of providing energy or Ancillary Service to the ERCOT System and is registered with ERCOT as a Generation Resource. The term \"Generation Resource\" used by itself in these Protocols does not include a Non-Modeled Generator.</p>",
+      "term_s": "Generation Resource"
+    },
+    {
+      "definition_html_raw": "<p>A dynamically calculated system total generation MW requirement used by Security-Constrained Economic Dispatch (SCED) for resource dispatch, calculated every four seconds.</p>",
+      "term_s": "Generation To Be Dispatched (GTBD)"
+    },
+    {
+      "definition_html_raw": "<p>A transmission constraint made up of one or more grouped Transmission Elements that is used to constrain flow between geographic areas of ERCOT for the purpose of managing stability, voltage, and other constraints that cannot otherwise be modeled directly in ERCOT&rsquo;s powerflow and contingency analysis applications.</p>",
+      "term_s": "Generic Transmission Constraint (GTC)"
+    },
+    {
+      "definition_html_raw": "<p>The value of the transmission flow limit associated with a GTC.</p>",
+      "term_s": "Generic Transmission Limit (GTL)"
+    },
+    {
+      "definition_html_raw": "<p>Any of the practices, methods, and acts engaged in, or approved by, a significant portion of the electric utility industry during the relevant time period, or any of the practices, methods, and acts that, in the exercise of reasonable judgment in light of the facts known at the time the decision was made, could have been expected to accomplish the desired result at a reasonable cost consistent with good business practices, reliability, safety, and expedition. Good Utility Practice is not intended to be limited to the optimum practice, method, or act, to the exclusion of all others, but rather is intended to include acceptable practices, methods, and acts generally accepted in the region.</p>",
+      "term_s": "Good Utility Practice"
+    },
+    {
+      "definition_html_raw": "<p>Any federal, state, local, or municipal body having jurisdiction over a Market Participant or ERCOT. A Governmental Authority that is also a Market Participant may not exercise its jurisdiction in any matter that involves the interests of that Market Participant where that matter also involves the interests or responsibilities of any other Market Participant or ERCOT, unless the matter is one in which the Market Participant has exclusive jurisdiction.</p>",
+      "term_s": "Governmental Authority"
+    },
+    {
+      "definition_html_raw": "<p>The electronic, digital, or mechanical device that implements Primary Frequency Response of generating units/generating facilities or other system elements.</p>",
+      "term_s": "Governor"
+    },
+    {
+      "definition_html_raw": "<p>The range of deviations of system frequency (+/-) that produces no Primary Frequency Response.</p>",
+      "term_s": "Governor Dead-Band"
+    },
+    {
+      "definition_html_raw": "<p>Generation Resource Energy Deployment Performance</p>",
+      "term_s": "GREDP"
+    },
+    {
+      "definition_html_raw": "<p>Generator Step-Up</p>",
+      "term_s": "GSU"
+    },
+    {
+      "definition_html_raw": "<p>Generation To Be Dispatched</p>",
+      "term_s": "GTBD"
+    },
+    {
+      "definition_html_raw": "<p>Generic Transmission Constraint</p>",
+      "term_s": "GTC"
+    },
+    {
+      "definition_html_raw": "<p>Generic Transmission Limit</p>",
+      "term_s": "GTL"
+    },
+    {
+      "definition_html_raw": "<p>High Ancillary Service Limit</p>",
+      "term_s": "HASL"
+    },
+    {
+      "definition_html_raw": "<p>High Dispatch Limit</p>",
+      "term_s": "HDL"
+    },
+    {
+      "definition_html_raw": "<p>Hour Ending</p>",
+      "term_s": "HE"
+    },
+    {
+      "definition_html_raw": "<p>High Emergency Limit</p>",
+      "term_s": "HEL"
+    },
+    {
+      "definition_html_raw": "<p>A dynamically calculated MW upper limit on a Resource to reserve the part of the Resource&rsquo;s capacity committed for Ancillary Service, calculated as described in Section 6.5.7.2, Resource Limit Calculator.<strong>&nbsp;&nbsp;</strong>HASL is also included in Section 5.7.4.1.1, Capacity Shortfall Ratio Share, and in the Reliability Unit Commitment (RUC) optimization but is not adjusted for Non-Frequency Responsive Capacity (NFRC) as in Section 6.5.7.2.</p>",
+      "term_s": "High Ancillary Service Limit (HASL)"
+    },
+    {
+      "definition_html_raw": "<p>The limit established by the QSE describing the maximum temporary unsustainable energy production capability of a Resource. This limit must be achievable for a time stated by the QSE, but not less than 30 minutes.</p>",
+      "term_s": "High Emergency Limit (HEL)"
+    },
+    {
+      "definition_html_raw": "<p><span>A Planned Outage or Rescheduled Outage that interrupts flow on a High Impact Transmission Element (HITE).</span></p>",
+      "term_s": "High Impact Outage (HIO)"
+    },
+    {
+      "definition_html_raw": "<p><span>A Transmission Element that may, in certain conditions, result in high congestion risk when taken out-of-service and that is identified as further described in Section 3.1.8, High Impact Transmission Element (HITE) Identification.</span></p>",
+      "term_s": "High Impact Transmission Element (HITE)"
+    },
+    {
+      "definition_html_raw": "<b>High Sustained Limit (HSL) for a Generation Resource</b> <p>The limit established by the QSE, continuously updated in Real-Time, that describes the maximum sustained energy production capability of the Resource.</p> <b>High Sustained Limit (HSL) for a Load Resource</b> <p>The limit calculated by ERCOT, using the QSE-established Maximum Power Consumption (MPC).</p>",
+      "term_s": "High Sustained Limit (HSL)"
+    },
+    {
+      "definition_html_raw": "<p>High Impact Outage</p>",
+      "term_s": "HIO"
+    },
+    {
+      "definition_html_raw": "<p>High Impact Transmission Element</p>",
+      "term_s": "HITE"
+    },
+    {
+      "definition_html_raw": "<p>Any RUC executed after the DRUC.</p>",
+      "term_s": "Hourly Reliability Unit Commitment (HRUC)"
+    },
+    {
+      "definition_html_raw": "<p>High Reasonability Limit</p>",
+      "term_s": "HRL"
+    },
+    {
+      "definition_html_raw": "<p>Hourly Reliability Unit Commitment</p>",
+      "term_s": "HRUC"
+    },
+    {
+      "definition_html_raw": "<p>High Sustainable Limit</p>",
+      "term_s": "HSL"
+    },
+    {
+      "definition_html_raw": "<p>A designated Settlement Point consisting of a Hub Bus or group of Hub Buses and the associated Settlement price calculation methodology prescribed in the definition of the Hub in Section 3.5.2, Hub Definitions. Hubs may only be created by an amendment to Section 3.5.2. The list of Hub Buses and the Settlement price calculation methodology that define a Hub can never be modified, and a Hub, once defined, exists in perpetuity.</p>",
+      "term_s": "Hub"
+    },
+    {
+      "definition_html_raw": "<p>An energized Electrical Bus or group of energized Electrical Buses defined as a single element in the Hub definition. The Locational Marginal Price (LMP) of the Hub Bus is the simple average of the LMPs assigned to each energized Electrical Bus in the Hub Bus. If all Electrical Buses within a Hub Bus are de-energized, the LMP of the Hub does not include the de-energized Hub Bus. This is used solely for calculating the prices of existing Hub Buses defined in Section 3.5.2, Hub Definitions.</p>",
+      "term_s": "Hub Bus"
+    },
+    {
+      "definition_html_raw": "<p>See Locational Marginal Price</p>",
+      "term_s": "Hub LMP"
+    },
+    {
+      "definition_html_raw": "<p>High Winter Ratio</p>",
+      "term_s": "HWR"
+    },
+    {
+      "definition_html_raw": "<p>Hertz</p>",
+      "term_s": "HZ"
+    },
+    {
+      "definition_html_raw": "<p>Inter-Control Center Communications Protocol</p>",
+      "term_s": "ICCP"
+    },
+    {
+      "definition_html_raw": "<p>Interval Data Recorder</p>",
+      "term_s": "IDR"
+    },
+    {
+      "definition_html_raw": "<p>Interconnecting Entity</p>",
+      "term_s": "IE"
+    },
+    {
+      "definition_html_raw": "<p>Initial Estimated Liability</p>",
+      "term_s": "IEL"
+    },
+    {
+      "definition_html_raw": "<p>Induction Generator Effects</p>",
+      "term_s": "IGE"
+    },
+    {
+      "definition_html_raw": "<p>Independent Market Monitor</p>",
+      "term_s": "IMM"
+    },
+    {
+      "definition_html_raw": "<p>Independent Market Information System Registered Entity</p>",
+      "term_s": "IMRE"
+    },
+    {
+      "definition_html_raw": "<p>A Market Participant that has signed the Standard Form Market Participant Agreement (as provided for in Section 22, Attachment A, Standard Form Market Participant Agreement), and has completed applicable registration and approval for the sole purpose of accessing the MIS Secure Area.</p>",
+      "term_s": "Independent Market Information System Registered Entity (IMRE)"
+    },
+    {
+      "definition_html_raw": "<p>The Entity selected to monitor the wholesale electric market pursuant to the Public Utility Regulatory Act (PURA), TEX. UTIL. CODE ANN. Â§ 39.1515 (Vernon 1998 & Supp. 2007) and P.U.C SUBST. R. 25.365, Independent Market Monitor.</p>",
+      "term_s": "Independent Market Monitor (IMM)"
+    },
+    {
+      "definition_html_raw": "<p>An independent organization as defined in the Public Utility Regulatory Act (PURA), TEX. UTIL. CODE ANN. Â§ 39.151 (Vernon 1998 & Supp. 2007)</p>",
+      "term_s": "Independent Organization"
+    },
+    {
+      "definition_html_raw": "<p><span>An electrical phenomena in which a resonance involving a Generation Resource and a series compensated transmission system results in electrical self-excitation of the Generation Resource at a subsynchronous frequency.</span></p>",
+      "term_s": "Induction Generator Effect (IGE)"
+    },
+    {
+      "definition_html_raw": "<p><span>The first time an All-Inclusive Generation Resource facility&rsquo;s equipment connects to the ERCOT System during commissioning.</span></p>",
+      "term_s": "Initial Energization"
+    },
+    {
+      "definition_html_raw": "<p><span>The first time an All-Inclusive Generation Resource facility&rsquo;s equipment injects power to the ERCOT System during commissioning.</span></p>",
+      "term_s": "Initial Synchronization"
+    },
+    {
+      "definition_html_raw": "<p>Any Entity that has submitted a Generation Interconnection or Change Request Application proposing to interconnect an All-Inclusive Generation Resource with the ERCOT System, upgrade the rated capacity of an existing All-Inclusive Generation Resource by ten MW or greater, re-power an All-Inclusive Generation Resource, or change the Point of Interconnection (POI) of an All-Inclusive Generation Resource, but that has not yet submitted the Resource Registration data for the new All-Inclusive Generation Resource or change thereto pursuant to paragraph (1) of Section 16.5, Registration of a Resource Entity.</p>",
+      "term_s": "Interconnecting Entity (IE)"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource that can only produce energy from variable, uncontrollable Resources, such as wind, solar, or run-of-the-river hydroelectricity.</p>",
+      "term_s": "Intermittent Renewable Resource (IRR)"
+    },
+    {
+      "definition_html_raw": "<p><span>A group of two or more IRRs whose performance in responding to </span><span>Security-Constrained Economic Dispatch (</span><span>SCED</span><span>)</span><span> Dispatch Instructions will be assessed as an aggregate for Generation Resource Energy Deployment Performance (GREDP) and Base Point Deviation.&nbsp; An IRR Group cannot contain any IRRs that are Split Generation Resources.&nbsp; Additionally, only IRRs that have the same Resource Node can be mapped to an IRR Group.&nbsp; Resource Entities can choose to group IRRs and shall provide the grouping information in a timely manner for ERCOT review prior to the scheduled database loads.</span></p>",
+      "term_s": "Intermittent Renewable Resource (IRR) Group"
+    },
+    {
+      "definition_html_raw": "<p>A metering device that is capable of recording energy in each Settlement Interval under Section 9, Settlement and Billing, and Section 10, Metering.</p>",
+      "term_s": "Interval Data Recorder (IDR)"
+    },
+    {
+      "definition_html_raw": "<p>An IDR where the ESI ID is required to be assigned a BUSIDRRQ Load Profile Type code and data is submitted in accordance with Section 10.3.3.3, Submission of Settlement Quality Meter Data to ERCOT.</p>",
+      "term_s": "Interval Data Recorder (IDR) Meter"
+    },
+    {
+      "definition_html_raw": "<p>The percentage of IDR Meter data, by Meter Reading Entity (MRE), that must be available before ERCOT will perform a True-Up Settlement as set forth in Section 9.5.8, RTM True-Up Statement.</p>",
+      "term_s": "Interval Data Recorder (IDR) Meter Data Threshold"
+    },
+    {
+      "definition_html_raw": "<p>The kW (kVA) level at which the installation of an IDR Meter is required for Settlement purposes as set forth in Section 18.6.1, Interval Data Recorder Meter Mandatory Installation Requirements.</p>",
+      "term_s": "Interval Data Recorder (IDR) Meter Mandatory Installation Requirements"
+    },
+    {
+      "definition_html_raw": "<p>The kW (kVA) level at which an IDR may be removed as set forth in Section 18.6.2, Interval Data Recorder Meter Optional Removal.</p>",
+      "term_s": "Interval Data Recorder (IDR) Meter Optional Removal Threshold"
+    },
+    {
+      "definition_html_raw": "<p>A notice for payment or credit due rendered by ERCOT.</p>",
+      "term_s": "Invoice"
+    },
+    {
+      "definition_html_raw": "<p>A Market Participant that receives an Invoice from ERCOT.</p>",
+      "term_s": "Invoice Recipient"
+    },
+    {
+      "definition_html_raw": "<p>Investor Owned Utilities</p>",
+      "term_s": "IOU"
+    },
+    {
+      "definition_html_raw": "<p>Independent Power Marketer</p>",
+      "term_s": "IPM"
+    },
+    {
+      "definition_html_raw": "<p>Interconnection Reliability Operating Limit</p>",
+      "term_s": "IROL"
+    },
+    {
+      "definition_html_raw": "<p>Intermittent Renewable Resources</p>",
+      "term_s": "IRR"
+    },
+    {
+      "definition_html_raw": "<p>Kilovolt</p>",
+      "term_s": "KV"
+    },
+    {
+      "definition_html_raw": "<p>Kilovolt-Ampere</p>",
+      "term_s": "KVA"
+    },
+    {
+      "definition_html_raw": "<p>Kilovolt-Ampere reactive</p>",
+      "term_s": "KVAR"
+    },
+    {
+      "definition_html_raw": "<p>Kilovolt-Ampere reactive hour</p>",
+      "term_s": "KVARH"
+    },
+    {
+      "definition_html_raw": "<p>Kilowatt</p>",
+      "term_s": "KW"
+    },
+    {
+      "definition_html_raw": "<p>Kilowatt Hour</p>",
+      "term_s": "KWH"
+    },
+    {
+      "definition_html_raw": "<p>Low Ancillary Service Limit</p>",
+      "term_s": "LASL"
+    },
+    {
+      "definition_html_raw": "<p>Payments due to ERCOT by Invoice Recipients that are not received by the due date and time.</p>",
+      "term_s": "Late Payment"
+    },
+    {
+      "definition_html_raw": "<p>Low Dispatch Limit</p>",
+      "term_s": "LDL"
+    },
+    {
+      "definition_html_raw": "<p>Low Emergency Limit</p>",
+      "term_s": "LEL"
+    },
+    {
+      "definition_html_raw": "<p>See Outage</p>",
+      "term_s": "Level I Maintenance Outage"
+    },
+    {
+      "definition_html_raw": "<p>See Outage</p>",
+      "term_s": "Level II Maintenance Outage"
+    },
+    {
+      "definition_html_raw": "<p>See Outage</p>",
+      "term_s": "Level III Maintenance Outage"
+    },
+    {
+      "definition_html_raw": "<p>Load Frequency Control</p>",
+      "term_s": "LFC"
+    },
+    {
+      "definition_html_raw": "<p>Locational Marginal Price</p>",
+      "term_s": "LMP"
+    },
+    {
+      "definition_html_raw": "<p>The amount of energy in MWh delivered at any specified point or points on a system.</p>",
+      "term_s": "Load"
+    },
+    {
+      "definition_html_raw": "<p>The deployment of those Generation Resources that are providing Regulation Service to ensure that system frequency is maintained within predetermined limits and the deployment of those Generation Resources that are providing Responsive Reserve Service when necessary as backup regulation. LFC does not include the deployment of Responsive Reserve by Load Resources when deployed as a block under EEA procedures.</p>",
+      "term_s": "Load Frequency Control (LFC)"
+    },
+    {
+      "definition_html_raw": "<p>A representation of the energy usage of a group of Customers, showing the Demand variation on an hourly or sub-hourly basis.</p>",
+      "term_s": "Load Profile"
+    },
+    {
+      "definition_html_raw": "<p>The Load Profile designation string that contains, the Load Profile Type Code, the Weather Zone Code, the Meter Data Type Code, the Weather Sensitivity Code, and the Time-Of-Use Schedule Code. An example of all Load Profile IDs are located in the Load Profiling Guide, Appendix D, Profile Decision Tree.</p>",
+      "term_s": "Load Profile ID"
+    },
+    {
+      "definition_html_raw": "<p>Processes that use analytical modeling techniques to create Load Profiles.</p>",
+      "term_s": "Load Profile Models"
+    },
+    {
+      "definition_html_raw": "<p>A sub-classification of a Load Profile Group. High Winter Ratio (HWR) is an example. Together, the Load Profile Group and the Load Profile Segment form the Load Profile Type.</p>",
+      "term_s": "Load Profile Segment"
+    },
+    {
+      "definition_html_raw": "<p>A classification of a group of Customers having similar energy usage patterns and that are assigned the same Load Profile.</p>",
+      "term_s": "Load Profile Type"
+    },
+    {
+      "definition_html_raw": "<p>The set of processes used to develop and create Load Profiles.</p>",
+      "term_s": "Load Profiling"
+    },
+    {
+      "definition_html_raw": "<p>The fundamental basis on which Load Profiles are created. The implementation of a Load Profiling Methodology may require statistical Sampling, engineering methods, econometric modeling, or other approaches.</p>",
+      "term_s": "Load Profiling Methodology"
+    },
+    {
+      "definition_html_raw": "<p>The ratio of an Entity&rsquo;s AML to total ERCOT AML for an interval.</p>",
+      "term_s": "Load Ratio Share"
+    },
+    {
+      "definition_html_raw": "<p>A Load capable of providing Ancillary Service to the ERCOT System and/or energy in the form of Demand response and registered with ERCOT as a Load Resource.</p>",
+      "term_s": "Load Resource"
+    },
+    {
+      "definition_html_raw": "<p>An Entity that sells energy to Customers or Wholesale Customers and that has registered as an LSE with ERCOT.&nbsp; LSEs include Competitive Retailers (which includes REPs) and NOIEs that serve Load and ELSEs.</p>",
+      "term_s": "Load Serving Entity (LSE)"
+    },
+    {
+      "definition_html_raw": "<p>A group of Electrical Buses assigned to the same zone under Section 3.4, Load Zones. Every Electrical Bus in ERCOT with a Load must be assigned to a Load Zone for Settlement purposes. A NOIE Load Zone is a type of Load Zone.</p>",
+      "term_s": "Load Zone"
+    },
+    {
+      "definition_html_raw": "<p>See Locational Marginal Price</p>",
+      "term_s": "Load Zone LMP"
+    },
+    {
+      "definition_html_raw": "<p>The offer and/or bid-based marginal cost of serving the next increment of Load at an Electrical Bus, which marginal cost is produced by the DAM process or by the SCED process.</p> <b>Hub LMP</b> <p>The price calculated for a Hub for each SCED interval according to the formula in Section 6.6.1.5, Hub LMPs, using LMPs at the Electrical Buses included in the Hub.</p> <b>Load Zone LMP</b> <p>The price calculated for a Load Zone for each SCED interval according to the formula in Section 6.6.1.4, Load Zone LMPs, using State Estimator (SE) Load data and LMPs at the Electrical Buses included in the Load Zone.</p>",
+      "term_s": "Locational Marginal Price (LMP)"
+    },
+    {
+      "definition_html_raw": "<p>A dynamically calculated MW lower limit on a Resource to maintain the ability of the Resource to provide committed Ancillary Service.</p>",
+      "term_s": "Low Ancillary Service Limit (LASL)"
+    },
+    {
+      "definition_html_raw": "<p>The limit established by the QSE describing the minimum temporary unsustainable energy production capability of a Resource. This limit must be achievable for a period of time indicated by the QSE but not less than 30 minutes.</p>",
+      "term_s": "Low Emergency Limit (LEL)"
+    },
+    {
+      "definition_html_raw": "<p>For a Load Resource, the limit established by the QSE, continuously updated in Real-Time, that describes the minimum sustained power consumption of a Load Resource. The LPC shall be a non-negative number in MW.</p>",
+      "term_s": "Low Power Consumption (LPC)"
+    },
+    {
+      "definition_html_raw": "<b>Low Sustained Limit (LSL) for a Generation Resource</b> <p>The limit established by the QSE, continuously updatable in Real-Time, that describes the minimum sustained energy production capability of a Resource.</p> <b>Low Sustained Limit (LSL) for a Load Resource</b> <p>The limit calculated by ERCOT, using the QSE-established LPC.</p>",
+      "term_s": "Low Sustained Limit (LSL)"
+    },
+    {
+      "definition_html_raw": "<p>Low Power Consumption</p>",
+      "term_s": "LPC"
+    },
+    {
+      "definition_html_raw": "<p>Low Reasonability Limit</p>",
+      "term_s": "LRL"
+    },
+    {
+      "definition_html_raw": "<p>Load Ratio Share</p>",
+      "term_s": "LRS"
+    },
+    {
+      "definition_html_raw": "<p>Load Serving Entity</p>",
+      "term_s": "LSE"
+    },
+    {
+      "definition_html_raw": "<p>Low Sustained Limit</p>",
+      "term_s": "LSL"
+    },
+    {
+      "definition_html_raw": "<p>See Outage</p>",
+      "term_s": "Maintenance Outage"
+    },
+    {
+      "definition_html_raw": "<p>A charge made by ERCOT to a QSE for a Resource to recapture all or part of the revenues received by a QSE that exceed the Make-Whole Payment for a Resource.</p>",
+      "term_s": "Make-Whole Charge"
+    },
+    {
+      "definition_html_raw": "<p><span>A payment made by ERCOT to a Qualified Scheduling Entity (QSE) for a Resource to reimburse a QSE for allowable startup and minimum energy costs of a Resource not recovered in energy revenue when a Resource is committed by Reliability Unit Commitment (RUC) and the QSE has not elected to opt out of RUC Settlement, or when a Resource is committed by the Day-Ahead Market (DAM).</span></p>",
+      "term_s": "Make-Whole Payment"
+    },
+    {
+      "definition_html_raw": "<p>A peak demand greater than 700 kW (or 700 kVA).</p>",
+      "term_s": "Mandatory Installation Threshold"
+    },
+    {
+      "definition_html_raw": "<p>The hourly price for Ancillary Service capacity awarded in the DAM or a SASM.</p>",
+      "term_s": "Market Clearing Price for Capacity (MCPC)"
+    },
+    {
+      "definition_html_raw": "<p>An electronic communications interface established and maintained by ERCOT that provides a communications link to the public and to Market Participants, as a group or individually.</p> <p><em><strong>Market Information System (MIS) Certified Area</strong></em><br />The portion of the MIS that is available only to a specific Market Participant.</p> <p><em><strong>Market Information System (MIS) Secure Area</strong></em><br />The portion of the MIS that is available only to registered Market Participants.</p>",
+      "term_s": "Market Information System (MIS)"
+    },
+    {
+      "definition_html_raw": "<p>A notice required by the Protocols or any Other Binding Document, or at ERCOT&rsquo;s discretion, regarding market-relevant information that shall be communicated through ERCOT publicly-subscribed electronic distribution channels.</p>",
+      "term_s": "Market Notice"
+    },
+    {
+      "definition_html_raw": "<p>An Entity, other than ERCOT, that engages in any activity that is in whole or in part the subject of these Protocols, regardless of whether that Entity has signed an Agreement with ERCOT. Examples of such an Entity include but are not limited to the following: LSE, QSE, TDSP, CRR Account Holder, Resource Entity, IMRE and REC Account Holder.</p>",
+      "term_s": "Market Participant"
+    },
+    {
+      "definition_html_raw": "<p>The segments defined in Article 2 of the ERCOT Bylaws.</p>",
+      "term_s": "Market Segment"
+    },
+    {
+      "definition_html_raw": "<p>The transition of ESI IDs from one CR to a Provider of Last Resort (POLR) or designated CR, or from one TDSP to another TDSP, in a quantity or within a timeframe identified by Applicable Legal Authority.</p>",
+      "term_s": "Mass Transition"
+    },
+    {
+      "definition_html_raw": "<p>see Qualified Scheduling Entity (QSE)</p>",
+      "term_s": "Master Qualified Scheduling Entity (QSE)"
+    },
+    {
+      "definition_html_raw": "<p>For a Load Resource, the limit established by the QSE, continuously updated in Real-Time, that describes the maximum sustained power consumption of a Load Resource. The MPC shall be a positive number in MW.</p>",
+      "term_s": "Maximum Power Consumption (MPC)"
+    },
+    {
+      "definition_html_raw": "<p>Market Clearing Price for Capacity</p>",
+      "term_s": "MCPC"
+    },
+    {
+      "definition_html_raw": "<p>Meter Data Acquisition System</p>",
+      "term_s": "MDAS"
+    },
+    {
+      "definition_html_raw": "<p>The ERCOT-to-QSE communications system used to send Real-Time notices and Dispatch Instructions to QSEs.</p>",
+      "term_s": "Messaging System"
+    },
+    {
+      "definition_html_raw": "<p>The system used to obtain revenue quality meter data from EPS meters and Settlement Quality Meter Data from TSPs and DSPs for Settlement and to populate the DAS and Data Archive.</p>",
+      "term_s": "Meter Data Acquisition System (MDAS)"
+    },
+    {
+      "definition_html_raw": "<p>A TSP or DSP that is responsible for providing ERCOT with ESI ID level consumption data as defined in Section 19, Texas Standard Electronic Transaction. In the case of an EPS Meter or ERCOT-populated ESI ID data (such as Generation Resource site Load), ERCOT will be identified as the MRE in ERCOT systems.</p>",
+      "term_s": "Meter Reading Entity (MRE)"
+    },
+    {
+      "definition_html_raw": "<p>Revenue Quality Meters, instrument transformers, secondary circuitry, secondary devices, meter data servers, related communication Facilities and other related local equipment intended to supply ERCOT settlement quality data.</p>",
+      "term_s": "Metering Facilities"
+    },
+    {
+      "definition_html_raw": "<p>A value of $0.010 representing the minimum price that can be submitted into the CRR Auction for a PTP Option bid.</p>",
+      "term_s": "Minimum Point-to-Point (PTP) Option Bid Price"
+    },
+    {
+      "definition_html_raw": "<p>The lowest price that a seller is willing to accept.</p>",
+      "term_s": "Minimum Reservation Price"
+    },
+    {
+      "definition_html_raw": "<p>An offer for the costs incurred by a Resource in producing energy at the Resource&rsquo;s LSL expressed in $/MWh.</p>",
+      "term_s": "Minimum-Energy Offer"
+    },
+    {
+      "definition_html_raw": "<p>Market Information System</p>",
+      "term_s": "MIS"
+    },
+    {
+      "definition_html_raw": "<p>An upper limit on the price of an offer as detailed in Section 4.4.9.4.1, Mitigated Offer Cap.</p>",
+      "term_s": "Mitigated Offer Cap"
+    },
+    {
+      "definition_html_raw": "<p>A lower limit on the price of an offer as detailed in Section 4.4.9.4.2, Mitigated Offer Floor.</p>",
+      "term_s": "Mitigated Offer Floor"
+    },
+    {
+      "definition_html_raw": "<p><span>A set of pre-defined manual actions to execute post-contingency to address voltage issues or reduce overloading on one or more given, monitored Transmission Facilities to below their Emergency Rating with restoration of normal operating conditions within two hours. A Mitigation Plan must be implementable and may include transmission switching and Load shedding. Mitigation Plans shall not be used to manage constraints in</span><span> Security-Constrained Economic Dispatch</span><span> (SCED).</span></p>",
+      "term_s": "Mitigation Plan"
+    },
+    {
+      "definition_html_raw": "<p>Million British Thermal Units</p>",
+      "term_s": "MMBTU"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource for which a Resource&nbsp;Entity has submitted a Notification of Suspension of Operations, for which ERCOT has declined to execute an RMR Agreement, and which has not been decommissioned and retired.</p>",
+      "term_s": "Mothballed Generation Resource"
+    },
+    {
+      "definition_html_raw": "<p>Municipally Owned Utility</p>",
+      "term_s": "MOU"
+    },
+    {
+      "definition_html_raw": "<p>A request submitted by a CR on behalf of a Customer to initiate service at a Premise with the requesting CR.</p>",
+      "term_s": "Move-In Request"
+    },
+    {
+      "definition_html_raw": "<p>A request submitted by a CR on behalf of a Customer to terminate service at a Premise with the requesting CR.</p>",
+      "term_s": "Move-Out Request"
+    },
+    {
+      "definition_html_raw": "<p>Maximum Power Consumption</p>",
+      "term_s": "MPC"
+    },
+    {
+      "definition_html_raw": "<p>Must-Run Alternative</p>",
+      "term_s": "MRA"
+    },
+    {
+      "definition_html_raw": "<p>Meter Reading Entity</p>",
+      "term_s": "MRE"
+    },
+    {
+      "definition_html_raw": "<p>Mid-Term Load Forecast</p>",
+      "term_s": "MTLF"
+    },
+    {
+      "definition_html_raw": "<p>A utility owned, operated, and controlled by a nonprofit corporation, the directors of which are appointed by one or more municipalities, or a utility owned, operated, or controlled by a municipality.</p>",
+      "term_s": "Municipally Owned Utility (MOU)"
+    },
+    {
+      "definition_html_raw": "<p>Megavolt Ampere</p>",
+      "term_s": "MVA"
+    },
+    {
+      "definition_html_raw": "<p>Mega Volt-Amperes reactive</p>",
+      "term_s": "MVAR"
+    },
+    {
+      "definition_html_raw": "<p>Megawatt</p>",
+      "term_s": "MW"
+    },
+    {
+      "definition_html_raw": "<p>Megawatt Hour</p>",
+      "term_s": "MWH"
+    },
+    {
+      "definition_html_raw": "<p>Notice of Change of Information</p>",
+      "term_s": "NCI"
+    },
+    {
+      "definition_html_raw": "<p>North American Electric Reliability Corporation</p>",
+      "term_s": "NERC"
+    },
+    {
+      "definition_html_raw": "<p>National Electrical Safety Code</p>",
+      "term_s": "NESC"
+    },
+    {
+      "definition_html_raw": "<p>The maximum sustained capability of a Resource as demonstrated by performance testing.</p>",
+      "term_s": "Net Dependable Capability"
+    },
+    {
+      "definition_html_raw": "<p>Gross generation less station auxiliary Load or other internal unit power requirements metered at or adjusted to the POI with the ERCOT Transmission Grid at the common switchyard.</p>",
+      "term_s": "Net Generation"
+    },
+    {
+      "definition_html_raw": "<p>A representation of the ERCOT System providing the complete physical network definition, characteristics, ratings, and operational limits of all elements of the ERCOT Transmission Grid and other information from TSPs, Resource Entities, and QSEs.</p>",
+      "term_s": "Network Operations Model"
+    },
+    {
+      "definition_html_raw": "<p>A processor used by ERCOT to monitor Transmission Elements in the ERCOT Transmission Grid for limit violations and to verify Electrical Bus voltage limits to be within a percentage tolerance as outlined in the Operating Guides.</p>",
+      "term_s": "Network Security Analysis"
+    },
+    {
+      "definition_html_raw": "<p>Non-Frequency Responsive Capacity</p>",
+      "term_s": "NFRC"
+    },
+    {
+      "definition_html_raw": "<p>National Institute of Standards and Technology</p>",
+      "term_s": "NIST"
+    },
+    {
+      "definition_html_raw": "<p>Network Model Management System</p>",
+      "term_s": "NMMS"
+    },
+    {
+      "definition_html_raw": "<p>Non Opt-In Entity</p>",
+      "term_s": "NOIE"
+    },
+    {
+      "definition_html_raw": "<p>Network Operations Model Change Request</p>",
+      "term_s": "NOMCR"
+    },
+    {
+      "definition_html_raw": "<p>A contingency and limiting Transmission Element pair or group of Transmission Elements associated with a GTC that is not determined to be a Competitive Constraint under the process defined in Section 3.19, Constraint Competitiveness Tests.</p>",
+      "term_s": "Non-Competitive Constraint"
+    },
+    {
+      "definition_html_raw": "<p><span>The telemetered portion of a Generation Resource&rsquo;s HSL that represents the sustainable non-Dispatched power augmentation capability from duct firing, inlet air cooling, auxiliary boilers, or other methods which does not immediately respond, arrest, or stabilize frequency excursions during the first minutes following a disturbance without secondary frequency response or instructions from ERCOT.</span></p>",
+      "term_s": "Non-Frequency Responsive Capacity (NFRC)"
+    },
+    {
+      "definition_html_raw": "<p>Load that is not required to be metered by applicable transmission or <span>distribution </span>tariff.</p>",
+      "term_s": "Non-Metered Load"
+    },
+    {
+      "definition_html_raw": "<p>A generator that is: <ol type=\"a\"> <li>Capable of providing net output of energy to the ERCOT System; <li>Ten MW or less in size; or greater than ten MW and registered with the PUCT according to P.U.C. SUBST. R. 25.109, Registration of Power Generation Companies and Self-Generators, as a self-generator; and <li>Registered with ERCOT as a Non-Modeled Generator, which means that the generator may not participate in the Ancillary Service or energy markets, RUC, or SCED. </ol></p>",
+      "term_s": "Non-Modeled Generator"
+    },
+    {
+      "definition_html_raw": "<p>An&nbsp;EC or&nbsp;MOU that does not offer Customer Choice.</p>",
+      "term_s": "Non-Opt In Entity (NOIE)"
+    },
+    {
+      "definition_html_raw": "<p>A Load Zone established by a NOIE or a group of NOIEs using a one-time NOIE election.</p>",
+      "term_s": "Non-Opt-In Entity (NOIE) Load Zone"
+    },
+    {
+      "definition_html_raw": "<p>Non-Spinning Reserve</p>",
+      "term_s": "NON-SPIN"
+    },
+    {
+      "definition_html_raw": "<p>An Ancillary Service that is provided through use of the part of Off-Line Generation Resources that can be synchronized and ramped to a specified output level within 30 minutes (or Load Resources that can be interrupted within 30 minutes) and that can operate (or Load Resources that can be interrupted) at a specified output level for at least one hour. Non-Spin may also be provided from unloaded On-Line capacity that meets the 30-minute response requirements and that is reserved exclusively for use for this service.</p>",
+      "term_s": "Non-Spinning Reserve (Non-Spin) Service"
+    },
+    {
+      "definition_html_raw": "<p>The rate of change (up and down) in MW per minute of a Resource, which is specified by the QSE to ERCOT by up to ten segments; each segment represents a single MW per minute value (across the capacity of the Resource) that describe the available rate of change for the given range (between HSL and LSL) of generation or consumption of a Resource. In Real-Time SCED Dispatch, the up and down Normal Ramp Rates are telemetered by the QSE to ERCOT and represent the total capacity (in MW) that the Resource can change from its current actual generation or consumption within the next five minutes divided by five.</p>",
+      "term_s": "Normal Ramp Rate"
+    },
+    {
+      "definition_html_raw": "<p>See Rating</p>",
+      "term_s": "Normal Rating"
+    },
+    {
+      "definition_html_raw": "<p>An Entity with delegated authority from the North American Electric Reliability Corporation (NERC) and approved by the Federal Energy Regulatory Commission (FERC) to propose and enforce NERC Reliability Standards in the ERCOT Region.</p>",
+      "term_s": "North American Electric Reliability Corporation (NERC) Regional Entity"
+    },
+    {
+      "definition_html_raw": "<p>The sending of information by an Entity to Market Participants, ERCOT, or others, as called for in these Protocols. Notice or Notification may be sent by electronic mail, facsimile transmission, or U.S. mail.</p>",
+      "term_s": "Notice or Notification"
+    },
+    {
+      "definition_html_raw": "<p>Network Security Analysis</p>",
+      "term_s": "NSA"
+    },
+    {
+      "definition_html_raw": "<p>Non-Weather Sensitive IDR</p>",
+      "term_s": "NWSIDR"
+    },
+    {
+      "definition_html_raw": "<p>Operations and Maintenance</p>",
+      "term_s": "O&M"
+    },
+    {
+      "definition_html_raw": "<p>Operating Condition Notice</p>",
+      "term_s": "OCN"
+    },
+    {
+      "definition_html_raw": "<p>The status of a Resource that is not synchronously interconnected to the ERCOT System.</p>",
+      "term_s": "Off-Line"
+    },
+    {
+      "definition_html_raw": "<p>The export schedules from the Public Service Company of Oklahoma, the Oklahoma Municipal Power Authority, and the AEP Texas North Company for their share of the Oklaunion Resource over the North DC Tie that are not treated as Load connected at transmission voltage, are not subject to any of the fees described in Section 4.4.4, DC Tie Schedules, and are limited to the actual net output of the Oklaunion Resource.</p>",
+      "term_s": "Oklaunion Exemption"
+    },
+    {
+      "definition_html_raw": "<p>The status of a Resource that is synchronously interconnected to the ERCOT System.</p>",
+      "term_s": "On-Line"
+    },
+    {
+      "definition_html_raw": "<p>Hours ending in 0700 to 2200 CPT from Monday through Friday excluding NERC holidays.</p>",
+      "term_s": "On-Peak Hours"
+    },
+    {
+      "definition_html_raw": "<p>The first of four levels of communication issued by ERCOT in anticipation of a possible Emergency Condition.</p>",
+      "term_s": "Operating Condition Notice (OCN)"
+    },
+    {
+      "definition_html_raw": "<p>The day, including hours ending 0100 to 2400, during which energy flows.</p>",
+      "term_s": "Operating Day"
+    },
+    {
+      "definition_html_raw": "<p>A full clock hour during which energy flows.</p>",
+      "term_s": "Operating Hour"
+    },
+    {
+      "definition_html_raw": "<p>A two-hour period comprised of the Operating Hour and the clock hour preceding the Operating Hour.</p>",
+      "term_s": "Operating Period"
+    },
+    {
+      "definition_html_raw": "<p>A curve that represents the value of reserves at different reserve levels based on the probability of reserves falling below the minimum contingency level and the Value of Lost Load (VOLL), as further described in the Methodology for Implementing Operating Reserve Demand Curve (ORDC) to Calculate Real-Time Reserve Price Adder.</p>",
+      "term_s": "Operating Reserve Demand Curve (ORDC)"
+    },
+    {
+      "definition_html_raw": "<p>See Outage</p>",
+      "term_s": "Opportunity Outage"
+    },
+    {
+      "definition_html_raw": "<p>List of Other Binding Documents as managed in paragraph (3) of Section 1.1, Summary of the ERCOT Protocols Document.</p>",
+      "term_s": "Other Binding Documents List"
+    },
+    {
+      "definition_html_raw": "<p>The condition of a Transmission Facility or a portion of a Facility, or Generation Resource that is part of the ERCOT Transmission Grid and defined in the Network Operations Model that has been removed from its normal service, excluding the operations of Transmission Facilities associated with the start-up and shutdown of Generation Resources.<br><br><b>Forced Outage</b><br>An Outage initiated by protective relay, or manually in response to an observation by personnel that the condition of equipment could lead to an event, or potential event, that poses a threat to people, equipment, or public safety.<br><br>For a Generation Resource, an Outage that requires immediate removal, either through controlled or uncontrolled actions, of all or a portion of the capacity of the Resource from service through automated or manual means. This type of Outage usually results from immediate mechanical/electrical/hydraulic control system trips and operator-initiated actions in response to a Resource&rsquo;s condition.<br><br><b>Maintenance Outage</b><br>An Outage initiated manually to remove equipment from service to perform work on components that could be postponed briefly but that is required to prevent a potential Forced Outage and that cannot be postponed until the next Planned Outage. Maintenance Outages are classified as follows: <ol> <li><STRONG collagebold=\"true\" cmid=\"Glossary:definition\">Level 1 Maintenance Outage</strong> -- Equipment that must be removed from service within 24 hours to prevent a potential Forced Outage;<br> <li><STRONG collagebold=\"true\" cmid=\"Glossary:definition\">Level II Maintenance Outage</strong> -- Equipment that must be removed from service within seven days to prevent a potential Forced Outage; and <br> <li><STRONG collagebold=\"true\" cmid=\"Glossary:definition\">Level III Maintenance Outage</strong> -- Equipment that must be removed from service within 30 days to prevent a potential Forced Outage. </li></ol><b>Opportunity Outage</b><br>An Outage that may be accepted by ERCOT when a specific Resource is Off-Line due to an Outage.<br><br><b>Planned Outage</b><br>An Outage that is planned and scheduled in advance with ERCOT, other than a Maintenance Outage or Opportunity Outage.<br><br><b>Simple Transmission Outage</b><br>A Planned Outage or Maintenance Outage of any Transmission Element in the Network Operations Model such that when the Transmission Element is removed from its normal service, absent a Forced Outage of other Transmission Elements, the Outage does not cause a topology change in the LMP calculation and thus cannot cause any LMPs to change with or without the Transmission Element that is suffering the Outage.</p>",
+      "term_s": "Outage"
+    },
+    {
+      "definition_html_raw": "<p>The application that TSPs or QSEs use to submit Notification of Outages or requests for Outages to ERCOT for approval, acceptance, or rejection.</p>",
+      "term_s": "Outage Scheduler"
+    },
+    {
+      "definition_html_raw": "<p>The self-scheduled output for every five-minute interval of a Resource provided by a QSE before the execution of SCED.</p>",
+      "term_s": "Output Schedule"
+    },
+    {
+      "definition_html_raw": "<p>See Blackout</p>",
+      "term_s": "Partial Blackout"
+    },
+    {
+      "definition_html_raw": "<p>see Congestion Revenue Right (CRR) Account Holder</p>",
+      "term_s": "Participating Congestion Revenue Right (CRR)"
+    },
+    {
+      "definition_html_raw": "<p>Pre-Contingency Action Plan</p>",
+      "term_s": "PCAP"
+    },
+    {
+      "definition_html_raw": "<p>Pre-Assigned Congestion Revenue Right</p>",
+      "term_s": "PCRR"
+    },
+    {
+      "definition_html_raw": "<p>Summer months are June, July, August, and September; winter months are December, January, and February.</p>",
+      "term_s": "Peak Load Season"
+    },
+    {
+      "definition_html_raw": "<p>Power Generation Company</p>",
+      "term_s": "PGC"
+    },
+    {
+      "definition_html_raw": "<p>Of or pertaining to a material or device in which electricity is generated as a result of exposure to light.</p>",
+      "term_s": "PhotoVoltaic (PV)"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource that is powered by PhotoVoltaic (PV) equipment exposed to light.&nbsp; PV equipment may be aggregated together to form a PVGR as set forth in paragraph (11) of Section 3.10.7.2, Modeling of Resources and Transmission Loads.</p>",
+      "term_s": "PhotoVoltaic Generation Resource (PVGR)"
+    },
+    {
+      "definition_html_raw": "<p>The generation in MWh per hour from a PVGR that could be generated from all available units of that Resource allocated from the 80% probability of exceedance of the Total ERCOT PhotoVoltaic Power Forecast (TEPPF).</p>",
+      "term_s": "PhotoVoltaic Generation Resource Production Potential (PVGRPP)"
+    },
+    {
+      "definition_html_raw": "<p>A representation of the total amount of frequency responsive Resource capability On-Line in Real-Time.</p>",
+      "term_s": "Physical Responsive Capability (PRC)"
+    },
+    {
+      "definition_html_raw": "<p>See Outage</p>",
+      "term_s": "Planned Outage"
+    },
+    {
+      "definition_html_raw": "<p>The net of total capacity for the Peak Load Season, less firm peak Load for the Peak Load Season, divided by the firm peak Load for the Peak Load Season (expressed as a percentage).</p>",
+      "term_s": "Planning Reserve Margin (PRM)"
+    },
+    {
+      "definition_html_raw": "<p>Peaker Net Margin</p>",
+      "term_s": "PNM"
+    },
+    {
+      "definition_html_raw": "<p>Peaking Operating Cost</p>",
+      "term_s": "POC"
+    },
+    {
+      "definition_html_raw": "<p>Point of Interconnection</p>",
+      "term_s": "POI"
+    },
+    {
+      "definition_html_raw": "<p>The voltage level and substation where a Generation Entity&rsquo;s interconnection Facilities connect to the Transmission Facilities as reflected in the Standard Generation Interconnection Agreement (SGIA) between a Generation Entity and a Transmission Service Provider (TSP) or the voltage level and substation where Load interconnects to the TSP Facilities.</p>",
+      "term_s": "Point of Interconnection (POI)"
+    },
+    {
+      "definition_html_raw": "<p>Point-to-Point (PTP) Obligation with Links to an Option (see Congestion Revenue Right (CRR))</p>",
+      "term_s": "Point-to-Point (PTP)"
+    },
+    {
+      "definition_html_raw": "<p>See Congestion Revenue Right (CRR)</p>",
+      "term_s": "Point-to-Point (PTP) Obligation"
+    },
+    {
+      "definition_html_raw": "<p>A type of CRR that entitles a Non-Opt-In Entity's (NOIE's) PTP Obligation bought in the DAM to be reflective of the NOIE's PTP Option. To qualify as a PTP Obligation of this type, the source and sink pairs on both the NOIE's PTP Obligation and the NOIE's PTP Option shall be the same, and the MWs of the NOIE's PTP Obligations shall be less than or equal to the number of MWs of the NOIE's PTP Option. Qualified PTP Obligations with Links to an Option shall be settled as if they were a PTP Option.</p>",
+      "term_s": "Point-to-Point (PTP) Obligation with Links to an Option"
+    },
+    {
+      "definition_html_raw": "<p>A type of CRR that is evaluated in each CRR Auction and DAM as the positive power flows on all directional network elements created by the injection and withdrawal at the specified source and sink points in the quantity represented by the CRR bid or offer (MW), excluding all negative flows on all directional network elements. A PTP Option entitles the holder to receive compensation equal to the positive energy price difference between the sink and the source Settlement Point Prices. A PTP Option with Refund is evaluated in the same manner and compensated as described in Section 7.4.2, PCRR Allocations and Nominations.</p>",
+      "term_s": "Point-to-Point (PTP) Option"
+    },
+    {
+      "definition_html_raw": "<p>A charge placed on each PTP Option bid awarded where the clearing price for the PTP Option bid awarded is less than the Minimum PTP Option Bid Price as further described in Section 7.7.1, Determination of the PTP Option Award Charge.</p>",
+      "term_s": "Point-to-Point (PTP) Option Award Charge"
+    },
+    {
+      "definition_html_raw": "<p>Provider of Last Resort</p>",
+      "term_s": "POLR"
+    },
+    {
+      "definition_html_raw": "<p>Power Operating System</p>",
+      "term_s": "POS"
+    },
+    {
+      "definition_html_raw": "<p>A device that is installed on Generation Resources to maintain synchronous operation of the ERCOT System under transient conditions.</p>",
+      "term_s": "Power System Stabilizer (PSS)"
+    },
+    {
+      "definition_html_raw": "<p>Physical Responsive Capability</p>",
+      "term_s": "PRC"
+    },
+    {
+      "definition_html_raw": "<p>The calendar year that is three years after the year containing a PCRR nomination process.</p>",
+      "term_s": "Pre-Assigned Congestion Revenue Right (PCRR) Nomination Year"
+    },
+    {
+      "definition_html_raw": "<p><span>A set of pre-defined manual actions to execute pre-contingency to address voltage issues or reduce overloading on one or more given, monitored Transmission Facilities to below their Emergency Rating with restoration of normal operating conditions within two hours. A PCAP may include transmission switching and does not include Load shedding. A PCAP may also be implemented for the duration of an Outage and shall be included in the Outage Scheduler as soon as practicable. </span></p>",
+      "term_s": "Pre-Contingency Action Plan (PCAP)"
+    },
+    {
+      "definition_html_raw": "<p>A Service Delivery Point or combination of Service Delivery Points that is assigned a single ESI ID for Settlement and registration.</p>",
+      "term_s": "Premise"
+    },
+    {
+      "definition_html_raw": "<p>The losses associated with keeping the 69 kV line from the Gonzales substation to the ERCOT BLT Point at Presidio constantly energized in order to maintain connectivity and allow for rapid response to contingencies impacting the reliability for Customers in the Presidio area when there is no BLT of Load from the ERCOT Control Area to a non-ERCOT Control Area. The TDSP responsible for the Presidio BLT Point metering shall witness and maintain records of meter verification no less than every four years.</p>",
+      "term_s": "Presidio Exception"
+    },
+    {
+      "definition_html_raw": "<p>The immediate proportional increase or decrease in real power output provided by All-Inclusive Generation Resources and Controllable Load Resources and the natural real power dampening response provided by Load in response to system frequency deviations. This response is in the direction that stabilizes frequency.</p>",
+      "term_s": "Primary Frequency Response"
+    },
+    {
+      "definition_html_raw": "<p>Any previous Agreement between an Entity, its Affiliate, or its predecessor in interest and ERCOT about performance under the ERCOT Protocols.</p>",
+      "term_s": "Prior Agreement"
+    },
+    {
+      "definition_html_raw": "<p>An electric network connected to the ERCOT Transmission Grid that contains Load that is not directly metered by ERCOT (i.e., Load that is typically netted with internal generation).</p>",
+      "term_s": "Private Use Network"
+    },
+    {
+      "definition_html_raw": "<p>Planning Reserve Margin</p>",
+      "term_s": "PRM"
+    },
+    {
+      "definition_html_raw": "<p>The Entity approved by the PUCT that is responsible for carrying out the administrative responsibilities for the Renewable Energy Credit Program as set forth in P.U.C. SUBST. R. 25.173.</p>",
+      "term_s": "Program Administrator"
+    },
+    {
+      "definition_html_raw": "<p>Information protected from disclosure as described in Section 1, Overview.</p>",
+      "term_s": "Protected Information"
+    },
+    {
+      "definition_html_raw": "<p>The designated CR as defined in the P.U.C. SUBST. R. 25.43, Provider of Last Resort (POLR), for default Customer service, and as further described in Section 15.1, Customer Switch of Competitive Retailer.</p>",
+      "term_s": "Provider of Last Resort (POLR)"
+    },
+    {
+      "definition_html_raw": "<p>Protocol Revision Request</p>",
+      "term_s": "PRR"
+    },
+    {
+      "definition_html_raw": "<p>Protocol Revision Subcommittee</p>",
+      "term_s": "PRS"
+    },
+    {
+      "definition_html_raw": "<p>Power System Stabilizer</p>",
+      "term_s": "PSS"
+    },
+    {
+      "definition_html_raw": "<p>Point-to-Point</p>",
+      "term_s": "PTP"
+    },
+    {
+      "definition_html_raw": "<p>Public Utility Commission of Texas</p>",
+      "term_s": "PUCT"
+    },
+    {
+      "definition_html_raw": "<p>Public Utility Regulatory Act, Title II, Texas Utility Code</p>",
+      "term_s": "PURA"
+    },
+    {
+      "definition_html_raw": "<p>Public Utility Regulatory Policy Act</p>",
+      "term_s": "PURPA"
+    },
+    {
+      "definition_html_raw": "<p>PhotoVoltaic</p>",
+      "term_s": "PV"
+    },
+    {
+      "definition_html_raw": "<p>PhotoVoltaic Generation Resource</p>",
+      "term_s": "PVGR"
+    },
+    {
+      "definition_html_raw": "<p>PhotoVoltaic Generation Resource Production Potential</p>",
+      "term_s": "PVGRPP"
+    },
+    {
+      "definition_html_raw": "<p>Profiling Working Group</p>",
+      "term_s": "PWG"
+    },
+    {
+      "definition_html_raw": "<p>Qualifying Facility</p>",
+      "term_s": "QF"
+    },
+    {
+      "definition_html_raw": "<p>Qualified Scheduling Entity</p>",
+      "term_s": "QSE"
+    },
+    {
+      "definition_html_raw": "<p>Quick Start Generation Resource</p>",
+      "term_s": "QSGR"
+    },
+    {
+      "definition_html_raw": "<p>A Market Participant that is qualified by ERCOT in accordance with Section 16, Registration and Qualification of Market Participants, for communication with ERCOT for Resource Entities and LSEs and for settling payments and charges with ERCOT.</p> <ul> <strong>Master Qualified Scheduling Entity (QSE)</strong><br> A QSE designated by Resource Entities owning or controlling a Generation Resource that has been split into two or more Split Generation Resources as set forth in Section 3.8.1, Split Generation Resources, that provides ERCOT data and dispatch on total Generation Resource basis in accordance with the Protocols. </ul>",
+      "term_s": "Qualified Scheduling Entity (QSE)"
+    },
+    {
+      "definition_html_raw": "<p>Any QSE-Committed Interval that is part of a contiguous block that includes at least one RUC-Committed Hour unless it is: <ol type=\"a\"> <li>QSE-committed in the COP and Trades Snapshot before the first RUC instruction for any RUC-Committed Hour in that contiguous block;<br><br> <li>Part of a contiguous block of a QSE-Committed Intervals, at least one of which was committed by the QSE in the COP and Trades Snapshot before the RUC instruction described in paragraph (a) above; or<br><br> <li>Part of a contiguous block of QSE-Committed Intervals, at least one of which is a RUC Buy-Back Hour.</li> </ol></p>",
+      "term_s": "Qualified Scheduling Entity (QSE) Clawback Interval"
+    },
+    {
+      "definition_html_raw": "<p>A Settlement Interval for which the QSE for a Resource has committed the Resource without a RUC instruction to commit it.</p>",
+      "term_s": "Qualified Scheduling Entity (QSE)-Committed Interval"
+    },
+    {
+      "definition_html_raw": "<p>A qualifying small power production facility or qualifying cogeneration facility under regulatory qualification criteria as defined in 16 U.S.C.A. Â§ 796(17)(C) and (18)(B).</p>",
+      "term_s": "Qualifying Facility (QF)"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource that in its cold-temperature state can come On-Line within ten minutes of receiving ERCOT notice and has passed an ERCOT QSGR test that establishes an amount of capacity that can be deployed within a ten-minute period.</p>",
+      "term_s": "Quick Start Generation Resource"
+    },
+    {
+      "definition_html_raw": "<p>Remedial Action Plan</p>",
+      "term_s": "RAP"
+    },
+    {
+      "definition_html_raw": "<p>Remedial Action Scheme</p>",
+      "term_s": "RAS"
+    },
+    {
+      "definition_html_raw": "<p><b>Conductor/Transformer 2-Hour Rating</b><br> The two-hour MVA rating of the conductor or transformer only, excluding substation terminal equipment in series with a conductor or transformer, at the applicable ambient temperature. The conductor or transformer can operate at this rating for two hours without violation of National Electrical Safety Code (NESC) clearances or equipment failure.</p> <p><b>Emergency Rating</b><br> The two-hour MVA rating of a Transmission Element, including substation terminal equipment in series with a conductor or transformer, at the applicable ambient temperature. The Transmission Element can operate at this rating for two hours without violation of NESC clearances or equipment failure.</p> <p><b>15-Minute Rating</b><br> The 15-minute MVA rating of a Transmission Element, including substation terminal equipment in series with a conductor or transformer, at the applicable ambient temperature and with a step increase from a prior loading up to 90% of the Normal Rating. The Transmission Element can operate at this rating for 15 minutes, assuming its pre-contingency loading up to 90% of the Normal Rating limit at the applicable ambient temperature, without violation of NESC clearances or equipment failure. This rating takes advantage of the time delay associated with heating of a conductor or transformer following a sudden increase in current.</p> <p><b>Normal Rating</b><br> The continuous MVA rating of a Transmission Element, including substation terminal equipment in series with a conductor or transformer, at the applicable ambient temperature. The Transmission Element can operate at this rating indefinitely without damage, or violation of NESC clearances.</p>",
+      "term_s": "Rating"
+    },
+    {
+      "definition_html_raw": "<p>Reserve Discount Factor</p>",
+      "term_s": "RDF"
+    },
+    {
+      "definition_html_raw": "<p>The product of voltage and the out-of-phase component of alternating current. Reactive Power, usually measured in MVAr, is produced by capacitors, overexcited generators and other capacitive devices and is absorbed by reactors, under-excited generators and other inductive devices.</p>",
+      "term_s": "Reactive Power"
+    },
+    {
+      "definition_html_raw": "<p>The current instant in time.</p>",
+      "term_s": "Real-Time"
+    },
+    {
+      "definition_html_raw": "<p>A proposal to buy energy in the RTM at a monotonically non-increasing price with increasing quantity.</p>",
+      "term_s": "Real-Time Market (RTM) Energy Bid"
+    },
+    {
+      "definition_html_raw": "<p>The RTM Settlement Statement issued at the end of the 55th day following the Operating Day, as described in Section 9.5.5, RTM Final Statement.</p>",
+      "term_s": "Real-Time Market (RTM) Final Statement"
+    },
+    {
+      "definition_html_raw": "<p>See Settlement Statement</p>",
+      "term_s": "Real-Time Market (RTM) Initial Statement"
+    },
+    {
+      "definition_html_raw": "<p>See Settlement Statement</p>",
+      "term_s": "Real-Time Market (RTM) Resettlement Statement"
+    },
+    {
+      "definition_html_raw": "<p>See Settlement Statement</p>",
+      "term_s": "Real-Time Market (RTM) True-Up Statement"
+    },
+    {
+      "definition_html_raw": "<p>A Real-Time price adder that captures the value of the opportunity costs of Off-Line reserves based on the defined ORDC as detailed in Section 6.7.5, Real-Time Ancillary Service Imbalance Payment or Charge.</p>",
+      "term_s": "Real-Time Off-Line Reserve Price Adder"
+    },
+    {
+      "definition_html_raw": "<p>A Real-Time price for each 15-minute Settlement Interval reflecting the impact of reliability deployments on energy prices that is calculated from the Real-Time On-Line Reliability Deployment Price Adder.</p>",
+      "term_s": "Real-Time On-Line Reliability Deployment Price"
+    },
+    {
+      "definition_html_raw": "<p>A Real-Time price adder that captures the impact of reliability deployments on energy prices for each Security-Constrained Economic Dispatch (SCED) process as detailed in Section 6.5.7.3.1, Determination of Real-Time On-Line Reliability Deployment Price Adder, and Section 6.7.5, Real-Time Ancillary Service Imbalance Payment or Charge.</p>",
+      "term_s": "Real-Time On-Line Reliability Deployment Price Adder"
+    },
+    {
+      "definition_html_raw": "<p>A Real-Time price adder that captures the value of the opportunity costs of On-Line reserves based on the defined ORDC as detailed in Section 6.7.5.</p>",
+      "term_s": "Real-Time On-Line Reserve Price Adder"
+    },
+    {
+      "definition_html_raw": "<p>A Real-Time price calculated for On-Line reserves for each 15-minute Settlement Interval using the data and formulas as detailed in Section 6.7.5.</p>",
+      "term_s": "Real-Time Reserve Price for On-Line Reserves"
+    },
+    {
+      "definition_html_raw": "<p>A RealTime price calculated for Off-Line reserves for each 15-minute Settlement Interval using the data and formulas as detailed in Section 6.7.5.</p>",
+      "term_s": "RealTime Reserve Price for Off-Line Reserves"
+    },
+    {
+      "definition_html_raw": "<p>Renewable Energy Credit</p>",
+      "term_s": "REC"
+    },
+    {
+      "definition_html_raw": "<p>A version of the Network Operations Model, redacted to exclude Private Use Network Load data and the following defined Resource Parameters as applicable: <ul type=\"a\"> <li>Normal Ramp Rate curve; <li>Emergency Ramp Rate curve; <li>Minimum On-Line time; <li>Minimum Off-Line time; <li>Hot start time; <li>Intermediate start time; <li>Cold start time; <li>Maximum weekly starts; <li>Maximum On-Line time; <li>Maximum daily starts; <li>Maximum weekly energy; <li>Hot-to-intermediate time; <li>Intermediate-to-cold time; <li>Minimum interruption time; <li>Minimum restoration time; <li>Maximum weekly deployments; <li>Maximum interruption time; <li>Maximum daily deployments; <li>Minimum notice time; and <li>Maximum deployment time. </li></ul></p>",
+      "term_s": "Redacted Network Operations Model"
+    },
+    {
+      "definition_html_raw": "<p>Regulation Down</p>",
+      "term_s": "REG-DOWN"
+    },
+    {
+      "definition_html_raw": "<p>Regulation Up</p>",
+      "term_s": "REG-UP"
+    },
+    {
+      "definition_html_raw": "<p>The evaluation of a proposed transmission project pursuant to the process described in Section 3.11.4, Regional Planning Group Project Review Process.</p>",
+      "term_s": "Regional Planning Group (RPG) Project Review"
+    },
+    {
+      "definition_html_raw": "<p>An Ancillary Service that consists of either Regulation Down Service (Reg-Down) or Regulation Up Service (Reg-Up)</p> <b>Fast Responding Regulation Service (FRRS)</b> <p>A subset of Regulation Service that consists of either Fast Responding Regulation Down Service (FRRS-Down) or Fast Responding Regulation Up Service (FRRS-Up). Except where otherwise specified, all requirements that apply to Regulation Service also apply to FRRS.</p> <b>Regulation Down Service (Reg-Down)</b> <p>An Ancillary Service that provides capacity that can respond to signals from ERCOT within five seconds to respond to changes in system frequency. Such capacity is the amount available below any Base Point but above the LSL of a Generation Resource and may be called on to change output as necessary throughout the range of capacity available to maintain proper system frequency. A Load Resource providing Reg-Down must be able to increase and decrease Load as deployed within its Ancillary Service Schedule for Reg-Down below the Load Resource&rsquo;s MPC limit.</p> <b>Fast Responding Regulation Down Service (FRRS-Down)</b> <p>A subset of Reg-Down in which the participating Resource provides Reg-Down capacity to ERCOT within 60 cycles of either its receipt of an ERCOT Dispatch Instruction or its detection of a trigger frequency independent of an ERCOT Dispatch Instruction. Except where otherwise specified, all requirements that apply to Reg-Down also apply to FRRS-Down.</p> <b>Regulation Up Service (Reg-Up)</b> <p>An Ancillary Service that provides capacity that can respond to signals from ERCOT within five seconds to respond to changes in system frequency. Such capacity is the amount available above any Base Point but below the HSL of a Generation Resource and may be called on to change output as necessary throughout the range of capacity available to maintain proper system frequency. A Load Resource providing Reg-Up must be able to increase and decrease Load as deployed within its Ancillary Service Schedule for Reg-Up above the Load Resource&rsquo;s LPC limit.</p> <b>Fast Responding Regulation Up Service (FRRS-Up)</b> <p>A subset of Reg-Up in which the participating Resource provides Reg-Up capacity to ERCOT within 60 cycles of either its receipt of an ERCOT Dispatch Instruction or its detection of a trigger frequency independent of an ERCOT Dispatch Instruction. Except where otherwise specified, all requirements that apply to Reg-Up also apply to FRRS-Up.</p>",
+      "term_s": "Regulation Service"
+    },
+    {
+      "definition_html_raw": "<p>See Regulation Service</p>",
+      "term_s": "Regulation Up Service (Reg-Up)"
+    },
+    {
+      "definition_html_raw": "<p>An Entity selected by the Public Utility Commission of Texas (PUCT) to monitor compliance with all state reliability-related laws, rules, and ERCOT procedures, including Protocols, processes, and any other operating standards applicable to the ERCOT Region.</p>",
+      "term_s": "Reliability Monitor"
+    },
+    {
+      "definition_html_raw": "<p>An Ancillary Service provided from an RMR Unit under an Agreement with ERCOT.</p>",
+      "term_s": "Reliability Must Run (RMR) Service"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource operated under the terms of an Agreement with ERCOT that would not otherwise be operated except that it is necessary to provide voltage support, stability or management of localized transmission constraints under Credible Single Contingency criteria where market solutions do not exist.</p>",
+      "term_s": "Reliability Must Run (RMR) Unit"
+    },
+    {
+      "definition_html_raw": "<p>A process to ensure that there is adequate Resource capacity and Ancillary Service capacity committed in the proper locations to serve ERCOT forecasted Load.</p>",
+      "term_s": "Reliability Unit Commitment (RUC)"
+    },
+    {
+      "definition_html_raw": "<p><span>An Operating Hour for which a Resource that is not a Reliability Must-Run (RMR) Unit has been committed to come On-Line by a RUC process or RUC Verbal Dispatch Instruction (VDI) and the Resource&rsquo;s Qualified Scheduling Entity (QSE) has chosen to opt out of RUC Settlement in accordance with Section 5.5.2, Reliability Unit Commitment (RUC) Process.</span></p>",
+      "term_s": "Reliability Unit Commitment (RUC) Buy-Back Hour"
+    },
+    {
+      "definition_html_raw": "<p>An ERCOT instruction, prior to breaker close, to cancel a previously issued RUC instruction.</p>",
+      "term_s": "Reliability Unit Commitment (RUC) Cancellation"
+    },
+    {
+      "definition_html_raw": "<p>As defined under Section 5.1, Introduction.</p>",
+      "term_s": "Reliability Unit Commitment (RUC) Study Period"
+    },
+    {
+      "definition_html_raw": "<p>An Operating Hour for which a RUC has committed a Resource to be On-Line and the QSE has not designated a RUC Buy-Back Hour.</p>",
+      "term_s": "Reliability Unit Commitment (RUC)-Committed Hour"
+    },
+    {
+      "definition_html_raw": "<p>A Settlement Interval for which there is a RUC instruction to commit a Resource.</p>",
+      "term_s": "Reliability Unit Commitment (RUC)-Committed Interval"
+    },
+    {
+      "definition_html_raw": "<p><span>A set of pre-defined manual actions to execute post-contingency to address voltage issues or in order to reduce loading on one or more given, monitored Transmission Facilities to below their Emergency Rating within 15 minutes. RAPs are sufficiently dependable to assume they can be executed without loss of reliability to the interconnected network, with restoration of normal operating conditions and below Normal Rating within two hours as defined in the Network Operations Model. RAPs may be relied upon in allowing additional use of the transmission system in</span><span> Security-Constrained Economic Dispatch</span><span> (SCED). RAPs shall not include generation re-Dispatch or Load shedding.</span></p>",
+      "term_s": "Remedial Action Plan (RAP)"
+    },
+    {
+      "definition_html_raw": "<p><span>A scheme designed to detect predetermined ERCOT System conditions and automatically take corrective actions that may include, but are not limited to, adjusting or tripping </span><span>generation</span><span> (MW and MVAr), tripping Load, or reconfiguring a System(s) to maintain a secure system. RASs do not include under-frequency or under voltage Load shedding, the isolation of fault conditions, or out-of-step relaying (not designed as an integral part of an RAS). </span><span>RASs shall not be implemented on Interconnection Reliability Operating Limits (IROLs). </span><span>Additional criteria that are excluded from being classified as RAS are outlined in the Operating Guides. A RAS owner can be a Tran</span><span>s</span><span>mission Service Provider (TSP) or Resource Entity.</span></p>",
+      "term_s": "Remedial Action Scheme (RAS)"
+    },
+    {
+      "definition_html_raw": "<p>A tradable instrument that represents all of the renewable attributes associated with one MWh of production from a certified renewable generator.</p>",
+      "term_s": "Renewable Energy Credit (REC)"
+    },
+    {
+      "definition_html_raw": "<p>An account maintained by ERCOT for the purpose of tracking the production, sale, transfer, purchase, and retirement of RECs or Compliance Premiums by a REC Account Holder.</p>",
+      "term_s": "Renewable Energy Credit (REC) Account"
+    },
+    {
+      "definition_html_raw": "<p>An Entity registered with ERCOT to participate in the REC Trading Program.</p>",
+      "term_s": "Renewable Energy Credit (REC) Account Holder"
+    },
+    {
+      "definition_html_raw": "<p>The Renewable Energy Credit Trading program, as described in Section 14, State of Texas Renewable Energy Credit Trading Program, and P.U.C. SUBST. R. 25.173, Goal for Renewable Energy.</p>",
+      "term_s": "Renewable Energy Credit (REC) Trading Program"
+    },
+    {
+      "definition_html_raw": "<p>The amount of capacity required to meet the requirements of Public Utility Regulatory Act (PURA), TEX. UTIL. CODE ANN. Â§ 39.904 (Vernon 1998 & Supp. 2007) and P.U.C. SUBST. R. 25.173(h).</p>",
+      "term_s": "Renewable Portfolio Standard (RPS)"
+    },
+    {
+      "definition_html_raw": "<p>The maximum generation in MWh per interval from an Intermittent Renewable Resource (IRR) that could be generated from all available units of that Resource.&nbsp; The RPP depends on the renewable energy that can be generated from the available units (wind, solar radiation, or run-of-river water supply), current environmental conditions and the energy conversion characteristics of each unit.</p>",
+      "term_s": "Renewable Production Potential (RPP)"
+    },
+    {
+      "definition_html_raw": "<p>Retail Electric Provider</p>",
+      "term_s": "REP"
+    },
+    {
+      "definition_html_raw": "<p>An existing facility that has been modernized or upgraded to use renewable energy technology to produce electricity consistent with P.U.C. SUBST. R. 25.173, Goal for Renewable Energy.</p>",
+      "term_s": "Repowered Facility"
+    },
+    {
+      "definition_html_raw": "<p><span>An Outage on a High Impact Transmission Element (HITE) that was originally submitted as a Planned Outage with more than 90-days&rsquo; notice and approved, but is then rescheduled due to withdrawal of approval by ERCOT of the original Planned Outage or subsequent Rescheduled Outage(s).</span></p>",
+      "term_s": "Rescheduled Outage"
+    },
+    {
+      "definition_html_raw": "<p>A representation of the average amount of system-wide capability that, for whatever reason, is historically undeliverable during periods of high system demand. The RDF will be verified by ERCOT and then approved by the Reliability and Operations Subcommittee (ROS).</p>",
+      "term_s": "Reserve Discount Factor (RDF)"
+    },
+    {
+      "definition_html_raw": "<p>See Settlement Statement</p>",
+      "term_s": "Resettlement Statement"
+    },
+    {
+      "definition_html_raw": "<p>The term is used to refer to both a Generation Resource and a Load Resource. The term \"Resource\" used by itself in these Protocols does not include a Non-Modeled Generator or an ERS Resource.</p>",
+      "term_s": "Resource"
+    },
+    {
+      "definition_html_raw": "<p>The generation technology category designated for a Generation Resource in its Resource Registration documentation.</p>",
+      "term_s": "Resource Category"
+    },
+    {
+      "definition_html_raw": "<p><span>The date on which ERCOT declares that a Resource has completed all qualification testing administered by ERCOT as part of the Resource Interconnection process so that a Resource is approved for participation in ERCOT market operations.</span></p>",
+      "term_s": "Resource Commissioning Date"
+    },
+    {
+      "definition_html_raw": "<p><span>The Electrical Bus to which the terminal of a Resource is connected.</span></p>",
+      "term_s": "Resource Connectivity Node"
+    },
+    {
+      "definition_html_raw": "<p>An Entity that owns or controls an All-Inclusive Resource and is registered with ERCOT as a Resource Entity.</p>",
+      "term_s": "Resource Entity"
+    },
+    {
+      "definition_html_raw": "<p>A unique identifier assigned to each Resource used in the registration and Settlements systems managed by ERCOT.</p>",
+      "term_s": "Resource ID (RID)"
+    },
+    {
+      "definition_html_raw": "<p><span>Either a logical construct that creates a virtual pricing point required to model a Combined-Cycle Configuration or an Electrical Bus defined in the Network Operations Model, at which a Generation Resource&rsquo;s Settlement Point Price or WSL&rsquo;s Settlement Point Price is calculated and used in Settlement. All Resource Nodes shall be identified in accordance with the Other Binding Document titled \"Procedure for Identifying Resource Nodes.\" For a Generation Resource that is connected to the ERCOT Transmission Grid only by one or more radial transmission lines that all originate at the Generation Resource and terminate in a single substation switchyard, the Resource Node is an Electrical Bus in that substation. For all other Generation Resources, the Resource Node is the Generation Resource&rsquo;s side of the Electrical Bus at which the Generation Resource is connected to the ERCOT Transmission Grid.</span></p>",
+      "term_s": "Resource Node"
+    },
+    {
+      "definition_html_raw": "<p>Resource-specific parameters required for use in ERCOT business processes. This is a subset of Resource Registration data that can be changed in the MIS in Real-Time.</p>",
+      "term_s": "Resource Parameters"
+    },
+    {
+      "definition_html_raw": "<p>Provision of Resource information to register All-Inclusive Resources.</p>",
+      "term_s": "Resource Registration"
+    },
+    {
+      "definition_html_raw": "<p>The operational state of a Resource as provided in Section 3.9, Current Operating Plan (COP).</p>",
+      "term_s": "Resource Status"
+    },
+    {
+      "definition_html_raw": "<p>An Ancillary Service that provides operating reserves that is intended to: <ol type=\"a\"> <li>Arrest frequency decay within the first few seconds of a significant frequency deviation on the ERCOT Transmission Grid using Primary Frequency Response and interruptible Load; <li>After the first few seconds of a significant frequency deviation, help restore frequency to its scheduled value to return the system to normal; <li>Provide energy or continued Load interruption during the implementation of the EEA; and <li>Provide backup regulation. </li></ol></p>",
+      "term_s": "Responsive Reserve (RRS)"
+    },
+    {
+      "definition_html_raw": "<p>See Business Day</p>",
+      "term_s": "Retail Business Day"
+    },
+    {
+      "definition_html_raw": "<p>Any hour within a Retail Business Day.</p>",
+      "term_s": "Retail Business Hour"
+    },
+    {
+      "definition_html_raw": "<p>As defined in P.U.C. SUBST. R. 25.5, Definitions, an Entity that sells electric energy to retail Customers in Texas but does not own or operate generation assets and is not an MOU or EC.</p>",
+      "term_s": "Retail Electric Provider (REP)"
+    },
+    {
+      "definition_html_raw": "<p>An MOU, generation and transmission cooperative or distribution cooperative that offers Customer Choice; REP; or IOU that has not unbundled pursuant to Public Utility Regulatory Act (PURA), TEX. UTIL. CODE ANN. Â§ 39.051 (Vernon 1998 & Supp. 2007).</p>",
+      "term_s": "Retail Entity"
+    },
+    {
+      "definition_html_raw": "<p>For EPS Meters, a meter that complies with the Protocols and the Settlement Metering Operating Guide. For TSP- or DSP-metered Entities, a meter that complies with Governmental Authority-approved meter standards, or the Protocols and the Operating Guides.</p>",
+      "term_s": "Revenue Quality Meter"
+    },
+    {
+      "definition_html_raw": "<p>Resource ID</p>",
+      "term_s": "RID"
+    },
+    {
+      "definition_html_raw": "<p>Representative IDR</p>",
+      "term_s": "RIDR"
+    },
+    {
+      "definition_html_raw": "<p>Reliability Must-Run</p>",
+      "term_s": "RMR"
+    },
+    {
+      "definition_html_raw": "<p>Retail Market Subcommittee</p>",
+      "term_s": "RMS"
+    },
+    {
+      "definition_html_raw": "<p>Reliability and Operations Subcommittee</p>",
+      "term_s": "ROS"
+    },
+    {
+      "definition_html_raw": "<p>Regional Planning Group</p>",
+      "term_s": "RPG"
+    },
+    {
+      "definition_html_raw": "<p>Renewable Production Potential</p>",
+      "term_s": "RPP"
+    },
+    {
+      "definition_html_raw": "<p>Renewable Portfolio Standard</p>",
+      "term_s": "RPS"
+    },
+    {
+      "definition_html_raw": "<p>Responsive Reserve</p>",
+      "term_s": "RRS"
+    },
+    {
+      "definition_html_raw": "<p>Reconfiguration Supplemental Ancillary Services Market</p>",
+      "term_s": "RSASM"
+    },
+    {
+      "definition_html_raw": "<p>Real-Time Energy Price</p>",
+      "term_s": "RTEP"
+    },
+    {
+      "definition_html_raw": "<p>Real-Time Market</p>",
+      "term_s": "RTM"
+    },
+    {
+      "definition_html_raw": "<p>Reliability Unit Commitment</p>",
+      "term_s": "RUC"
+    },
+    {
+      "definition_html_raw": "<p>The process of selecting a subset of a population of Customers that statistically represents the entire population.</p>",
+      "term_s": "Sampling"
+    },
+    {
+      "definition_html_raw": "<p>Supplemental Ancillary Services Market</p>",
+      "term_s": "SASM"
+    },
+    {
+      "definition_html_raw": "<p>Supervisory Control And Data Acquisition</p>",
+      "term_s": "SCADA"
+    },
+    {
+      "definition_html_raw": "<p>Security-Constrained Economic Dispatch</p>",
+      "term_s": "SCED"
+    },
+    {
+      "definition_html_raw": "<p>Expected Load, in MW, reported by a QSE for a Controllable Load Resource pursuant to Section 6.5.5.2, Operational Data Requirements.</p>",
+      "term_s": "Scheduled Power Consumption"
+    },
+    {
+      "definition_html_raw": "<p>A snapshot, taken by ERCOT, of the Scheduled Power Consumption provided by the QSE for a Controllable Load Resource at the end of the adjustment period and used in determining the Controllable Load Resource Desired Load.</p>",
+      "term_s": "Scheduled Power Consumption Snapshot"
+    },
+    {
+      "definition_html_raw": "<p>The process through which schedules for energy and Ancillary Services are submitted by QSEs to ERCOT as further described in Section 4, Scheduling.</p>",
+      "term_s": "Scheduling Process"
+    },
+    {
+      "definition_html_raw": "<p>Security-Constrained Unit Commitment</p>",
+      "term_s": "SCUC"
+    },
+    {
+      "definition_html_raw": "<p>SCED Down Ramp Rate</p>",
+      "term_s": "SDRAMP"
+    },
+    {
+      "definition_html_raw": "<p>State Estimator</p>",
+      "term_s": "SE"
+    },
+    {
+      "definition_html_raw": "<p>Winter months are December, January, and February; Spring months are March, April, and May; Summer months are June, July, and August; Fall months are September, October, and November.</p>",
+      "term_s": "Season or Seasonal"
+    },
+    {
+      "definition_html_raw": "<p>The period in which a Generation Resource has identified it is available for operation.</p>",
+      "term_s": "Seasonal Operation Period"
+    },
+    {
+      "definition_html_raw": "<p>The determination of desirable Generation Resource output levels using Energy Offer Curves while considering State Estimator (SE) output for Load at transmission-level Electrical Buses, Generation Resource limits, and transmission limits to provide the least offer-based cost dispatch of the ERCOT System.</p>",
+      "term_s": "Security-Constrained Economic Dispatch (SCED)"
+    },
+    {
+      "definition_html_raw": "<p>The quantity of an Ancillary Service that a QSE secures for itself using Resources represented by that QSE and Ancillary Service Trades.</p>",
+      "term_s": "Self-Arranged Ancillary Service Quantity"
+    },
+    {
+      "definition_html_raw": "<p>Information for Real-Time Settlement purposes that specifies the amount of energy supply at a specified source Settlement Point used to meet an energy obligation at a specified sink Settlement Point for the QSE submitting the information.</p>",
+      "term_s": "Self-Schedule"
+    },
+    {
+      "definition_html_raw": "<p>The street address associated with an ESI ID as recorded in the Customer Registration Database. This address shall conform to United States Postal Service Publication 28.</p>",
+      "term_s": "Service Address"
+    },
+    {
+      "definition_html_raw": "<p>The specific point on the system where electricity flows from the TSP or DSP to a Customer.</p>",
+      "term_s": "Service Delivery Point"
+    },
+    {
+      "definition_html_raw": "<p>The process used to resolve financial obligations between a Market Participant and ERCOT.</p>",
+      "term_s": "Settlement"
+    },
+    {
+      "definition_html_raw": "<p>A calendar that provides information on when Settlement Statements and Invoices shall be posted, payment due dates, and dispute deadlines. Additional information is provided in Section 9.1.2, Settlement Calendar.</p>",
+      "term_s": "Settlement Calendar"
+    },
+    {
+      "definition_html_raw": "<p>The time period for which markets are settled.</p>",
+      "term_s": "Settlement Interval"
+    },
+    {
+      "definition_html_raw": "<p>A notice for payment or credit due rendered by ERCOT based on data contained in Settlement Statements.</p>",
+      "term_s": "Settlement Invoice"
+    },
+    {
+      "definition_html_raw": "<p>Generation and end-use consumption meters used for allocation of ERCOT charges and wholesale and retail Settlements.</p>",
+      "term_s": "Settlement Meter"
+    },
+    {
+      "definition_html_raw": "<p>A Resource Node, Load Zone, or Hub.</p>",
+      "term_s": "Settlement Point"
+    },
+    {
+      "definition_html_raw": "<p>A price calculated for a Settlement Point for each Settlement Interval using LMP data and the formulas detailed in Section 4.6, DAM Settlement, and Section 6.6, Settlement Calculations for the Real-Time Energy Operations.</p>",
+      "term_s": "Settlement Point Price"
+    },
+    {
+      "definition_html_raw": "<p>Data that has been edited, validated, and is appropriate for ERCOT to use for Settlement and billing purposes.</p>",
+      "term_s": "Settlement Quality Meter Data"
+    },
+    {
+      "definition_html_raw": "<p>A statement issued by ERCOT reflecting a breakdown of administrative, miscellaneous, and market charges for the applicable market services, as further described in Section 9.2, Settlement Statements for the Day-Ahead Market, and Section 9.5, Settlement Statements for Real-Time Market.<br /><br /> <em><strong>Day-Ahead Market (DAM) Resettlement Statement</strong></em><br /> The Settlement Statement issued for a particular DAM using corrected Settlement data, in accordance with Section 9.2.5, DAM Resettlement Statement.<br /><br /> <em><strong>Day-Ahead Market (DAM) Statement</strong></em><br /> The Settlement Statement issued for a particular DAM, as further described in Section 9.2.4, DAM Statement.<br /><br /> <em><strong>Real-Time Market (RTM) Final Statement</strong></em><br /> The RTM Settlement Statement issued at the end of the 55th calendar day following the Operating Day, as described in Section 9.5.5, RTM Final Statement.<br /><br /> <em><strong>Real-Time Market (RTM) Initial Statement</strong></em><br /> The first iteration of an RTM Settlement Statement issued for a particular Operating Day, as further described in Section 9.5.4, RTM Initial Statement.<br /><br /> <em><strong>Real-Time Market (RTM) Resettlement Statement</strong></em><br /> The RTM Settlement Statement using corrected Settlement data, in accordance with Section 9.5.6, RTM Resettlement Statement.<br /><br /> <em><strong>Real-Time Market (RTM) True-Up Statement</strong></em><br /> The RTM Settlement Statement issued 180 days following the Operating Day, as further described in Section 9.5.8, RTM True-Up Statement.</p>",
+      "term_s": "Settlement Statement"
+    },
+    {
+      "definition_html_raw": "<p>Simultaneous Feasibility Test</p>",
+      "term_s": "SFT"
+    },
+    {
+      "definition_html_raw": "<p>Standard Generation Interconnection Agreement</p>",
+      "term_s": "SGIA"
+    },
+    {
+      "definition_html_raw": "<p>A price for a commodity that measures the marginal value of this commodity; that is, the rate at which system costs could be decreased or increased by slightly increasing or decreasing, respectively, the amount of the commodity being made available.</p>",
+      "term_s": "Shadow Price"
+    },
+    {
+      "definition_html_raw": "<p>A measure of the flow on a particular Transmission Element due to a unit injection of power from a particular Electrical Bus to a fixed reference Electrical Bus.</p>",
+      "term_s": "Shift Factor"
+    },
+    {
+      "definition_html_raw": "<p>An ERCOT produced hourly 50% probability of exceedance forecast of the generation in MWh per hour from each PVGR that could be generated from all available units of that Resource.</p>",
+      "term_s": "Short-Term PhotoVoltaic Power Forecast (STPPF)"
+    },
+    {
+      "definition_html_raw": "<p>An ERCOT produced hourly 50% probability of exceedance forecast of the generation in MWh per hour from each WGR that could be generated from all available units of that Resource.</p>",
+      "term_s": "Short-Term Wind Power Forecast (STWPF)"
+    },
+    {
+      "definition_html_raw": "<p>See Outage</p>",
+      "term_s": "Simple Transmission Outage"
+    },
+    {
+      "definition_html_raw": "<p>Settlement Metering Operating Guides</p>",
+      "term_s": "SMOG"
+    },
+    {
+      "definition_html_raw": "<p>Where a Generation Resource has been split to function as two or more independent Generation Resources in accordance with Section 10.3.2.1, Generation Resource Meter Splitting, and Section 3.10.7.2, Modeling of Resources and Transmission Loads, each such functionality independent Generation Resource is a Split Generation Resource.</p>",
+      "term_s": "Split Generation Resource"
+    },
+    {
+      "definition_html_raw": "<p>Statewide RPS Requirement</p>",
+      "term_s": "SRR"
+    },
+    {
+      "definition_html_raw": "<p>Subsynchronous Control Interaction</p>",
+      "term_s": "SSCI"
+    },
+    {
+      "definition_html_raw": "<p>Subsynchronous Oscillation</p>",
+      "term_s": "SSO"
+    },
+    {
+      "definition_html_raw": "<p>Subsynchronous Resonance</p>",
+      "term_s": "SSR"
+    },
+    {
+      "definition_html_raw": "<p>All costs incurred by a Generation Resource in starting up and reaching Low Sustained Limit (LSL), as described in the Verifiable Cost Manual. The Startup Cost is in dollars per start.</p>",
+      "term_s": "Startup Cost"
+    },
+    {
+      "definition_html_raw": "<p>An event that results when a Generation Resource is unable to operate at Low Sustained Limit (LSL) at the time scheduled in the Current Operating Plan (COP) which occurs while the unit is ramping up to its scheduled MW output. A Startup Loading Failure ends when the Resource: <ol type=\"a\"> <li>Achieves its LSL; <li>Is scheduled to go Off-Line; or <li>Enters a Forced Outage. </ol></p>",
+      "term_s": "Startup Loading Failure"
+    },
+    {
+      "definition_html_raw": "<p>An offer for all costs incurred by a Generation Resource in starting up and reaching Low Sustained Limit (LSL). The Startup Offer is in dollars per start.</p>",
+      "term_s": "Startup Offer"
+    },
+    {
+      "definition_html_raw": "<p>A computational algorithm that uses Real-Time inputs from the network&rsquo;s Supervisory Control and Data Acquisition (SCADA) system that measure the network&rsquo;s electrical parameters, including its topology, voltage, power flows, etc., to estimate electrical parameters (such as line flows and Electrical Bus voltages and Loads) in the ERCOT Transmission Grid. The SE&rsquo;s output is a description of the network and all of the values (topology, voltage, power flow, etc.) to describe each Electrical Bus and line included in the system model.</p>",
+      "term_s": "State Estimator (SE)"
+    },
+    {
+      "definition_html_raw": "<p>An electrical node of common voltage at a substation that consists of one or more Electrical Buses tied together with closed breakers or switches.</p>",
+      "term_s": "State Estimator (SE) Bus"
+    },
+    {
+      "definition_html_raw": "<p>South Texas Electric Cooperative</p>",
+      "term_s": "STEC"
+    },
+    {
+      "definition_html_raw": "<p>Short-Term Load Forecast</p>",
+      "term_s": "STLF"
+    },
+    {
+      "definition_html_raw": "<p>Short-Term PhotoVoltaic Power Forecast</p>",
+      "term_s": "STPPF"
+    },
+    {
+      "definition_html_raw": "<p>Short-Term Wind Power Forecast</p>",
+      "term_s": "STWPF"
+    },
+    {
+      "definition_html_raw": "<p><span>The interaction between a series </span><span>capacitor</span><span> compensated transmission system and the control system of Generation Resources.</span></p>",
+      "term_s": "Subsynchronous Control Interaction (SSCI)"
+    },
+    {
+      "definition_html_raw": "<p><span>Coincident oscillation occurring between two or more Transmission Elements or Generation Resources at a natural harmonic frequency lower than the normal operating frequency of the ERCOT System (60 Hz).</span></p>",
+      "term_s": "Subsynchronous Oscillation (SSO)"
+    },
+    {
+      "definition_html_raw": "<p><span></span><span>Coincident oscillation occurring between Generation Resources and a series capacitor compensated transmission system at a natural harmonic frequency lower than the normal operating frequency of the ERCOT System (60 Hz).</span></p>",
+      "term_s": "Subsynchronous Resonance (SSR)"
+    },
+    {
+      "definition_html_raw": "<p><span>Any equipment or any procedure to mitigate the SSR vulnerability.</span></p>",
+      "term_s": "Subsynchronous Resonance (SSR) Countermeasures"
+    },
+    {
+      "definition_html_raw": "<p><span>A countermeasure that includes, but is not limited to, equipment installation, controller adjustment, or a procedure to mitigate the SSR vulnerability without disconnecting the affected Generation Resources.</span></p>",
+      "term_s": "Subsynchronous Resonance (SSR) Mitigation"
+    },
+    {
+      "definition_html_raw": "<p><span>A </span><span>countermeasure</span><span> that includes, but is not limited to, disconnecting the affected Generation Resource. </span></p>",
+      "term_s": "Subsynchronous Resonance (SSR) Protection"
+    },
+    {
+      "definition_html_raw": "<p>SCED Up Ramp Rate</p>",
+      "term_s": "SURAMP"
+    },
+    {
+      "definition_html_raw": "<p>The period of time beginning ten minutes after ERCOT&rsquo;s issuance of a VDI deploying ERS-10 or 30 minutes after ERCOT&rsquo;s issuance of a VDI deploying ERS-30 and ending with ERCOT&rsquo;s issuance of a VDI releasing ERS Resources from the deployment.</p>",
+      "term_s": "Sustained Response Period"
+    },
+    {
+      "definition_html_raw": "<p>System-Wide Offer Cap</p>",
+      "term_s": "SWCAP"
+    },
+    {
+      "definition_html_raw": "<p>A request submitted by a CR on behalf of a Customer to switch service from the Customer's current CR to the requesting CR.</p>",
+      "term_s": "Switch Request"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource that can be connected to either the ERCOT Transmission Grid or a non-ERCOT Control Area.</p>",
+      "term_s": "Switchable Generation Resource"
+    },
+    {
+      "definition_html_raw": "<p>A unit operated under the terms of an annual Agreement with ERCOT that is only capable of supplying Volt-Amperes reactive (VArs) that would not otherwise be operated except as necessary to provide voltage support under Credible Single Contingency criteria.</p>",
+      "term_s": "Synchronous Condenser Unit"
+    },
+    {
+      "definition_html_raw": "<p>The cost of providing one MWh of energy at the reference Electrical Bus, i.e. the Shadow Price for the power balance constraint, which is equal to the change in the objective function obtained by relaxing the power balance constraint by one MW. The System Lambda is the energy component of LMP at each Settlement Point in ERCOT.</p>",
+      "term_s": "System Lambda"
+    },
+    {
+      "definition_html_raw": "<p>An Entity that supervises the collective Transmission Facilities of a power region. This Entity is charged with coordination of market transactions, system-wide transmission planning, and network reliability.</p>",
+      "term_s": "System Operator"
+    },
+    {
+      "definition_html_raw": "<p>The <span>SWCAP shall be determined in accordance with PUCT Substantive Rules.</span></p>",
+      "term_s": "System-Wide Offer Cap (SWCAP)"
+    },
+    {
+      "definition_html_raw": "<p>Transmission and Distribution</p>",
+      "term_s": "T&D"
+    },
+    {
+      "definition_html_raw": "<p>Total shareholder&rsquo;s equity less goodwill and other intangible assets.</p>",
+      "term_s": "Tangible Net Worth"
+    },
+    {
+      "definition_html_raw": "<p>Transmission and/or Distribution Service Provider</p>",
+      "term_s": "TDSP"
+    },
+    {
+      "definition_html_raw": "<p>Texas Data Transport Working Group</p>",
+      "term_s": "TDTWG"
+    },
+    {
+      "definition_html_raw": "<p>A subcommittee in the ERCOT governance structure reporting to the Board of Directors as defined by the ERCOT bylaws.</p>",
+      "term_s": "Technical Advisory Committee"
+    },
+    {
+      "definition_html_raw": "<p><span>A temporary set of pre-defined manual actions to execute post-contingency, during a specified Transmission Facility or Resource Outage, in order to address voltage issues or reduce overloading on one or more given, monitored Transmission Facilities to below their Emergency Rating with restoration of normal operating conditions within two hours. A TOAP must be implementable and may include transmission switching and/or Load shedding. TOAPs shall not be used to manage constraints in</span><span> Security-Constrained Economic Dispatch</span><span> (SCED).</span></p>",
+      "term_s": "Temporary Outage Action Plan (TOAP)"
+    },
+    {
+      "definition_html_raw": "<p>Total ERCOT PhotoVoltaic Power Forecast</p>",
+      "term_s": "TEPPF"
+    },
+    {
+      "definition_html_raw": "<p>Total ERCOT Wind Power Forecast</p>",
+      "term_s": "TEWPF"
+    },
+    {
+      "definition_html_raw": "<p>The date on which ERCOT starts operation of the Texas Nodal Market in compliance with the rules and orders of the PUCT. Once this date is determined, ERCOT shall post it on the ERCOT website and maintain it on either the ERCOT website or the MIS Public Area.</p>",
+      "term_s": "Texas Nodal Market Implementation Date"
+    },
+    {
+      "definition_html_raw": "<ol> <li>Texas Standard Electronic Transactions (TX SETs) are the electronic data transactions, implementation guides, and applicable external standards that enable and facilitate the retail business processes in the deregulated Texas electric market.</li> <li>The procedures used to transmit information pertaining to the Customer Registration Database are set forth in Section 19, Texas Standard Electronic Transaction.</li> </ol>",
+      "term_s": "Texas Standard Electronic Transaction (TX SET)"
+    },
+    {
+      "definition_html_raw": "<p>An offer made by a QSE for a Generation Resource that it represents containing three components: a Startup Offer, a Minimum-Energy Offer, and an Energy Offer Curve.</p>",
+      "term_s": "Three-Part Supply Offer"
+    },
+    {
+      "definition_html_raw": "<p>Times/Interest Earning Ratio</p>",
+      "term_s": "TIER"
+    },
+    {
+      "definition_html_raw": "<p>A programmable electronic device capable of measuring and recording electric energy in pre-specified time periods. For Load Profiling purposes&nbsp;TOU Metering does not include IDRs.</p>",
+      "term_s": "Time of Use (TOU) Meter"
+    },
+    {
+      "definition_html_raw": "<p>A schedule identifying the Time of Use period associated with each Settlement Interval. These schedules may include on-peak, off-peak, and shoulder periods.</p>",
+      "term_s": "Time of Use Schedule (TOUS)"
+    },
+    {
+      "definition_html_raw": "<p>Transmission Loss Factor</p>",
+      "term_s": "TLF"
+    },
+    {
+      "definition_html_raw": "<p>Texas Market Test Plan</p>",
+      "term_s": "TMTP"
+    },
+    {
+      "definition_html_raw": "<p>Temporary Outage Action Plan</p>",
+      "term_s": "TOAP"
+    },
+    {
+      "definition_html_raw": "<p><span>An interaction between Generation Resources and a series compensated transmission system in which the response results in higher transient torque during or after disturbances than would otherwise occur.</span></p>",
+      "term_s": "Torque Amplification"
+    },
+    {
+      "definition_html_raw": "<p><span>Torsional Interaction is the interplay between mechanical system of a turbine generator and a series compensated transmission system.</span></p>",
+      "term_s": "Torsional Interaction"
+    },
+    {
+      "definition_html_raw": "<p>Time Of Use</p>",
+      "term_s": "TOU"
+    },
+    {
+      "definition_html_raw": "<p>Time Of Use Schedule</p>",
+      "term_s": "TOUS"
+    },
+    {
+      "definition_html_raw": "<p>Total Potential Exposure</p>",
+      "term_s": "TPE"
+    },
+    {
+      "definition_html_raw": "<p>The use of a TSP&rsquo;s Transmission Facilities for which the TSP is allowed to charge through tariff rates approved by the PUCT.</p>",
+      "term_s": "Transmission Access Service"
+    },
+    {
+      "definition_html_raw": "<p>An Entity that is a TSP, a DSP or both, or an Entity that has been selected to own and operate Transmission Facilities and has a PUCT approved code of conduct in accordance with P.U.C. SUBST. R. 25.272, Code of Conduct for Electric Utilities and Their Affiliates.</p>",
+      "term_s": "Transmission and/or Distribution Service Provider (TDSP)"
+    },
+    {
+      "definition_html_raw": "<p>An Entity under the jurisdiction of the PUCT that owns or operates Transmission Facilities used for the transmission of electricity and provides Transmission Service in the ERCOT Transmission Grid.</p>",
+      "term_s": "Transmission and/or Distribution Service Provider (TSP)"
+    },
+    {
+      "definition_html_raw": "<p>A physical Transmission Facility that is either an Electrical Bus, line, transformer, generator, Load, breaker, switch, capacitor, reactor, phase shifter, or other similar device that is part of the ERCOT Transmission Grid and defined in the ERCOT Network Operations Model.</p>",
+      "term_s": "Transmission Element"
+    },
+    {
+      "definition_html_raw": "<p>The following Facilities are deemed to be Transmission Facilities: <ol type=\"1\"> <li>Power lines, substations, and associated facilities, operated at 60 kV or above, including radial lines operated at or above 60 kV; <li>Substation facilities on the high voltage side of the transformer, in a substation where power is transformed from a voltage higher than 60 kV to a voltage lower than 60 kV or is transformed from a voltage lower than 60 kV to a voltage higher than 60 kV; and <li>The direct current interconnections between ERCOT and the Southwest Power Pool or Comision Federal de Electricidad (CFE).</li></ol></p>",
+      "term_s": "Transmission Facilities"
+    },
+    {
+      "definition_html_raw": "<p>The fraction of ERCOT Load (forecast or actual) that is considered to constitute the ERCOT Transmission Grid losses in a Settlement Interval, based on a linear interpolation (or extrapolation) of the calculated losses in the off-peak and on-peak seasonal ERCOT base cases.</p>",
+      "term_s": "Transmission Loss Factor (TLF)"
+    },
+    {
+      "definition_html_raw": "<p>The difference between energy put into the ERCOT Transmission Grid and energy taken out of the ERCOT Transmission Grid.</p>",
+      "term_s": "Transmission Losses"
+    },
+    {
+      "definition_html_raw": "<p>The commercial use of Transmission Facilities.</p>",
+      "term_s": "Transmission Service"
+    },
+    {
+      "definition_html_raw": "<p>An Entity under the jurisdiction of the PUCT that owns or operates Transmission Facilities used for the transmission of electricity and provides transmission service in the ERCOT Transmission Grid.</p>",
+      "term_s": "Transmission Service Provider (TSP)"
+    },
+    {
+      "definition_html_raw": "<p>Transmission Service Provider</p>",
+      "term_s": "TSP"
+    },
+    {
+      "definition_html_raw": "<p>Any Entity that meets the requirements of Section 10.2.2, TDSP Metered Entities.</p>",
+      "term_s": "TSP and DSP Metered Entity"
+    },
+    {
+      "definition_html_raw": "<p>Texas Test Plan Team</p>",
+      "term_s": "TTPT"
+    },
+    {
+      "definition_html_raw": "<p>Total Usable Offset</p>",
+      "term_s": "TUO"
+    },
+    {
+      "definition_html_raw": "<p>Texas Water Code</p>",
+      "term_s": "TWC"
+    },
+    {
+      "definition_html_raw": "<p>Texas Standard Electronic Transaction</p>",
+      "term_s": "TX SET"
+    },
+    {
+      "definition_html_raw": "<p>Unaccounted For Energy</p>",
+      "term_s": "UFE"
+    },
+    {
+      "definition_html_raw": "<p>The difference between total Load for each Settlement Interval, adjusted for applicable Distribution Losses and Transmission Losses, and total ERCOT generation.</p>",
+      "term_s": "Unaccounted for Energy (UFE)"
+    },
+    {
+      "definition_html_raw": "<p>The maximum quantity of Reactive Power that a Generation Resource is capable of providing at a 0.95 power factor at its maximum real power capability.</p>",
+      "term_s": "Unit Reactive Limit (URL)"
+    },
+    {
+      "definition_html_raw": "<p>A calculated MW value representing the expected MW output of a Generation Resource ramping to a Base Point.</p>",
+      "term_s": "Updated Desired Base Point"
+    },
+    {
+      "definition_html_raw": "<p>A computerized representation of the ERCOT physical network topology, including some Resource Parameters, all of which replicates the forecasted or current network topology of the ERCOT System needed by ERCOT to perform its functions.</p>",
+      "term_s": "Updated Network Model"
+    },
+    {
+      "definition_html_raw": "<p>Unit Reactive Limit</p>",
+      "term_s": "URL"
+    },
+    {
+      "definition_html_raw": "<p>Up Regulation Services</p>",
+      "term_s": "URS"
+    },
+    {
+      "definition_html_raw": "<p>User Security Administrator</p>",
+      "term_s": "USA"
+    },
+    {
+      "definition_html_raw": "<p>United States Dollar or U.S. Dollar</p>",
+      "term_s": "USD"
+    },
+    {
+      "definition_html_raw": "<p>Volt-Ampere reactive</p>",
+      "term_s": "VAR"
+    },
+    {
+      "definition_html_raw": "<p>Verbal Dispatch Instruction</p>",
+      "term_s": "VDI"
+    },
+    {
+      "definition_html_raw": "<p>Validation, Editing and Estimation of meter data</p>",
+      "term_s": "VEE"
+    },
+    {
+      "definition_html_raw": "<p>A Dispatch Instruction issued orally.</p>",
+      "term_s": "Verbal Dispatch Instruction (VDI)"
+    },
+    {
+      "definition_html_raw": "<p>The set of normally desired Voltage Set Points for those Generation Resources specified in paragraph (2) of Section 3.15, Voltage Support, in the ERCOT System.</p>",
+      "term_s": "Voltage Profile"
+    },
+    {
+      "definition_html_raw": "<p><span>The voltage that a Generation Resource is required to maintain at its Point of Interconnection (POI) and that is initially communicated via the Voltage Profile but may be modified by a Real-Time instruction from ERCOT, the interconnecting Transmission Service Provider (TSP), or that TSP&rsquo;s agent.</span></p>",
+      "term_s": "Voltage Set Point"
+    },
+    {
+      "definition_html_raw": "<p>An Ancillary Service that is required to maintain transmission and distribution voltages on the ERCOT Transmission Grid within acceptable limits.</p>",
+      "term_s": "Voltage Support Service (VSS)"
+    },
+    {
+      "definition_html_raw": "<p>Voltage Support Service</p>",
+      "term_s": "VSS"
+    },
+    {
+      "definition_html_raw": "<p>Wide Area Network</p>",
+      "term_s": "WAN"
+    },
+    {
+      "definition_html_raw": "<p>The third of four levels of communication issued by ERCOT in anticipation of a possible Emergency Condition.</p>",
+      "term_s": "Watch"
+    },
+    {
+      "definition_html_raw": "<p>A geographic region designated by ERCOT in which climatological characteristics are similar for all areas within such region.</p>",
+      "term_s": "Weather Zone"
+    },
+    {
+      "definition_html_raw": "<p>Western Electric Coordinating Council</p>",
+      "term_s": "WECC"
+    },
+    {
+      "definition_html_raw": "<p>An instruction issued by ERCOT prior to 1330 in the Day-Ahead for an Operating Day that reserves a Generation Resource that requires a longer lead time for startup than possible from the DRUC.</p>",
+      "term_s": "Weekly Reliability Unit Commitment (WRUC)"
+    },
+    {
+      "definition_html_raw": "<p>Waha Fuel Price</p>",
+      "term_s": "WFP"
+    },
+    {
+      "definition_html_raw": "<p>Wind-powered Generation Resource</p>",
+      "term_s": "WGR"
+    },
+    {
+      "definition_html_raw": "<p>Wind-powered Generation Resource Production Potential</p>",
+      "term_s": "WGRPP"
+    },
+    {
+      "definition_html_raw": "<p>A NOIE receiving service at wholesale points of delivery from an LSE other than itself.</p>",
+      "term_s": "Wholesale Customer"
+    },
+    {
+      "definition_html_raw": "<p>Energy that is separately metered from all other Facilities to charge a technology that is capable of storing energy and releasing that energy at a later time to generate electric energy.&nbsp; WSL includes losses for the energy conversion process that are captured by the WSL EPS Meter.&nbsp; WSL is limited to the following technologies: batteries, flywheels, compressed air energy storage, pumped hydro-electric power, electro chemical capacitors, and thermal energy storage associated with turbine inlet chilling.</p>",
+      "term_s": "Wholesale Storage Load (WSL)"
+    },
+    {
+      "definition_html_raw": "<p>A Generation Resource that is powered by wind. Wind turbines may be aggregated together to form a WGR as set forth in paragraph (11) of Section 3.10.7.2, Modeling of Resources and Transmission Loads.</p>",
+      "term_s": "Wind-powered Generation Resource (WGR)"
+    },
+    {
+      "definition_html_raw": "<p>The generation in MWh per hour from a WGR that could be generated from all available units of that Resource allocated from the 80% probability of exceedance of the Total ERCOT Wind Power Forecast (TEWPF).</p>",
+      "term_s": "Wind-powered Generation Resource Production Potential (WGRPP)"
+    },
+    {
+      "definition_html_raw": "<p>Wholesale Market Subcommittee</p>",
+      "term_s": "WMS"
+    },
+    {
+      "definition_html_raw": "<p>Weekly Reliability Unit Commitment</p>",
+      "term_s": "WRUC"
+    },
+    {
+      "definition_html_raw": "<p>Weather-Sensitive Interval Data Recorder</p>",
+      "term_s": "WSIDR"
+    },
+    {
+      "definition_html_raw": "<p>Wholesale Storage Load</p>",
+      "term_s": "WSL"
+    },
+    {
+      "definition_html_raw": "<p>Extensible Markup Language</p>",
+      "term_s": "XML"
+    }
+  ]
+}

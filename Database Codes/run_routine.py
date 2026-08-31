@@ -34,6 +34,10 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
                     catalog, labelling which products exist in stats_illustrator
                     (data_products_table_checklist_{<date>,latest}.csv).
 
+  REFERENCE
+    8e. glossary  — refresh the ERCOT glossary doc from ercot.com/glossary
+                    (Database Codes/reference_info/ERCOT_Glossary.md + .json).
+
   BUILD
     9. rebuild    — patch the standalone Power.Talks home page bundle
 
@@ -180,6 +184,15 @@ def build_steps(args):
         # catalog, labelling which products already exist in stats_illustrator.
         steps.append(("PUBAPI refresh DATA-products table checklist",
                       [os.path.join(DB, "ercot_api", "gen_data_products_checklist.py"),
+                       "--quiet"],
+                      PROJECT_ROOT))
+
+    # 8e. Reference: refresh the ERCOT glossary doc from ercot.com/glossary
+    #     (full run only; independent of the market/stkhdr/API tracks). Writes
+    #     Database Codes/reference_info/ERCOT_Glossary.md (+ .json).
+    if args.only is None:
+        steps.append(("REFERENCE refresh ERCOT glossary",
+                      [os.path.join(DB, "reference_info", "update_ercot_glossary.py"),
                        "--quiet"],
                       PROJECT_ROOT))
 
