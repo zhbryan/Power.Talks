@@ -43,6 +43,19 @@ STATE_ROOT = os.path.join(L.PROJECT_ROOT, "Documents Database", "STATS.ILLUSTRAT
 LIST_PAGE = 1000
 META_COLS = {"id", "posted_datetime", "loaded_at", "content_date"}
 
+# Reports whose per-posting row count is so large that a full-window backfill
+# produces tens of millions of rows and runs for many hours. These are kept at
+# their recent --latest snapshot instead of backfilled (approx rows/posting noted).
+# Override with --include-giants if you really want the full history.
+BACKFILL_EXCLUDE = {
+    "NP3-991-EX",  # 60-Day COP All Updates          ~1.3M rows/posting (~77M over window)
+    "NP4-159-CD",  # Load Distribution Factors        ~1.4M rows/posting
+    "NP4-183-CD",  # DAM Hourly LMPs                  ~1.4M rows/posting (~82M over window)
+    "NP4-212-CD",  # DAM and SCED AS Demand Curves    ~550K rows/posting
+    "NP4-215-CD",  # Weekly RUC AS Demand Curves      ~750K rows/posting
+    "NP7-464-CD",  # Day-Ahead PTP Option Price Report ~480K rows/posting
+}
+
 
 # --- Lock: signal the nightly seed to yield while we run --------------------
 
@@ -249,10 +262,11 @@ def backfill_report(auth, conn, emil, name, since, until, sleep, reload_):
 # --- Scope + main ------------------------------------------------------------
 
 def tier_b_emils(catalog):
-    """Every non-RTD, non-curated, non-sub-hourly DATA product."""
+    """Every non-RTD, non-curated, non-sub-hourly, non-giant DATA product."""
     out = []
     for emil, p in catalog.items():
-        if S._is_excluded(p) or emil in S.CURATED_SKIP or S._is_highfreq(p):
+        if (S._is_excluded(p) or emil in S.CURATED_SKIP or S._is_highfreq(p)
+                or emil in BACKFILL_EXCLUDE):
             continue
         out.append(emil)
     return sorted(out)
@@ -268,6 +282,8 @@ def main():
                     help="b = exclude sub-hourly (default); all = every non-RTD/curated table")
     ap.add_argument("--sleep", type=float, default=0.2, help="seconds between downloads")
     ap.add_argument("--reload", action="store_true", help="ignore state; rebuild the window")
+    ap.add_argument("--include-giants", action="store_true",
+                    help="also backfill the huge per-posting reports in BACKFILL_EXCLUDE")
     args = ap.parse_args()
 
     catalog = S.load_catalog()
@@ -298,6 +314,10 @@ def main():
             p = catalog.get(emil)
             if not p:
                 print(f"[{n}/{len(emils)}] {emil:<12} not-data (skip)")
+                continue
+            if emil in BACKFILL_EXCLUDE and not args.include_giants:
+                print(f"[{n}/{len(emils)}] {emil:<12} excluded-giant "
+                      f"(kept at --latest snapshot)")
                 continue
             print(f"[{n}/{len(emils)}] {emil:<12} {p['name'][:50]}")
             try:
