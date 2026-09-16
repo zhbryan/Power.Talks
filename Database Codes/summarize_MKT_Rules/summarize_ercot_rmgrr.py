@@ -38,7 +38,7 @@ _ai_usage = {"input_tokens": 0, "output_tokens": 0, "calls": 0}
 # Only rebuild summaries whose issue folder gained documents since the last
 # run, or whose Profile.json was refreshed after the summary was written.
 # Set False to force a full rebuild of every issue.
-ONLY_STALE = True
+ONLY_STALE = os.environ.get("POWERTALKS_FORCE_ALL", "0") != "1"  # =1 forces full rebuild
 
 SUMMARY_DOC_EXTS = ('.pdf', '.doc', '.docx', '.xls', '.xlsx')
 
@@ -213,8 +213,8 @@ _ai_client = None
 def get_ai():
     global _ai_client
     if _ai_client is None:
-        from anthropic_key import get_anthropic_key
-        _ai_client = anthropic.Anthropic(api_key=get_anthropic_key())
+        import ai_backend
+        _ai_client = ai_backend.get_client()
     return _ai_client
 
 def ai_executive_summary(issue_id, title, revision_desc, reason, business_case, sections, status):

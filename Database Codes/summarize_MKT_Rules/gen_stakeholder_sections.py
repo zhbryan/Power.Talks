@@ -52,8 +52,8 @@ _SYS_KW = glossary_reference.system_kwargs()   # ERCOT terminology reference (ca
 def get_ai():
     global _client
     if _client is None:
-        from anthropic_key import get_anthropic_key
-        _client = anthropic.Anthropic(api_key=get_anthropic_key())
+        import ai_backend
+        _client = ai_backend.get_client()
     return _client
 
 
