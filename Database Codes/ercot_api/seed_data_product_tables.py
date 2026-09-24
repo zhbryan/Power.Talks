@@ -356,7 +356,12 @@ def _seed_daily(auth, conn, emil, name, target):
         if n > MAX_DOWNLOADS:
             return {"emil": emil, "status": f"cap-{MAX_DOWNLOADS}-no-match",
                     "rows": 0, "table": None}
-        text = download_csv(auth, emil, doc_id)
+        try:
+            text = download_csv(auth, emil, doc_id)
+        except Exception:
+            # A single corrupt/unavailable ERCOT archive posting (e.g. a 400 on
+            # download) must not abort the whole report — skip it and keep paging.
+            continue
         if not text:
             continue
         allrows = list(_csv.reader(io.StringIO(text)))
@@ -420,7 +425,12 @@ def _seed_highfreq(auth, conn, emil, name, target):
     for n, (doc_id, post_dt) in enumerate(archives, 1):
         if n > HF_POSTINGS:
             break
-        text = download_csv(auth, emil, doc_id)
+        try:
+            text = download_csv(auth, emil, doc_id)
+        except Exception:
+            # A single corrupt/unavailable ERCOT archive posting (e.g. a 400 on
+            # download) must not abort the whole report — skip it and keep paging.
+            continue
         if not text:
             continue
         allrows = list(_csv.reader(io.StringIO(text)))
@@ -503,7 +513,12 @@ def _seed_latest(auth, conn, emil, name, last_post=None, lookback_days=45):
         if n > MAX_DOWNLOADS:
             return {"emil": emil, "status": f"cap-{MAX_DOWNLOADS}-empty",
                     "rows": 0, "table": None}
-        text = download_csv(auth, emil, doc_id)
+        try:
+            text = download_csv(auth, emil, doc_id)
+        except Exception:
+            # A single corrupt/unavailable ERCOT archive posting (e.g. a 400 on
+            # download) must not abort the whole report — skip it and keep paging.
+            continue
         if not text:
             continue
         allrows = list(_csv.reader(io.StringIO(text)))
