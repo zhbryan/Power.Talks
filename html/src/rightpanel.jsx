@@ -393,6 +393,9 @@ const ERCOT_HOME_ARTIFACTS = [
 // ARTIFACTS list from window.DATA.
 const CATEGORY_HIDDEN_ARTIFACT_IDS = ["a2", "a5", "a7", "a8"];
 
+// Stats Illustrator keeps only these two artifacts (order follows DATA).
+const STATS_HOME_ARTIFACT_IDS = ["a3", "a7"];
+
 function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const { SUGGESTED_RUNS, ARTIFACTS } = window.DATA;
   const [tab, setTab] = React.useState("runs"); // runs | artifacts | profile
@@ -405,6 +408,7 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const hasNogrr = Boolean(ctx.nogrr);
   const hasRmgrr = Boolean(ctx.rmgrr);
   const isErcotHome = ctx.section === "market-home";
+  const isStatsHome = ctx.section === "stats-illustrated";
   const isMeetingTracks = ctx.section === "meeting-tracks";
   // A Meeting Tracks group/item homepage is open (vs the tree landing view).
   const isMeetingGroup = isMeetingTracks && Boolean(ctx.meetingGroup || ctx.meetingDoc);
@@ -421,6 +425,8 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const allArtifacts = ARTIFACTS || [];
   const activeArtifacts = isErcotHome
     ? ERCOT_HOME_ARTIFACTS
+    : isStatsHome
+    ? allArtifacts.filter(a => STATS_HOME_ARTIFACT_IDS.includes(a.id))
     : (isCategoryHome || onMeetingTree)
     ? allArtifacts.filter(a => !CATEGORY_HIDDEN_ARTIFACT_IDS.includes(a.id))
     : allArtifacts;
@@ -432,8 +438,8 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   // ERCOT home and the Meeting Tracks tree landing have no "For the talk" tab —
   // force Artifacts. A Meeting Tracks group/item opens to "For the talk".
   React.useEffect(() => {
-    if (isErcotHome || onMeetingTree) setTab("artifacts");
-  }, [isErcotHome, onMeetingTree]);
+    if (isErcotHome || onMeetingTree || isStatsHome) setTab("artifacts");
+  }, [isErcotHome, onMeetingTree, isStatsHome]);
 
   React.useEffect(() => {
     if (isMeetingGroup) setTab("runs");
@@ -582,7 +588,7 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
       </div>
 
       <div className="pt-right-tabs">
-        {!isErcotHome && !onMeetingTree && (
+        {!isErcotHome && !onMeetingTree && !isStatsHome && (
           <button
             className={`pt-right-tab ${tab === "runs" ? "is-on" : ""}`}
             onClick={() => setTab("runs")}
@@ -595,7 +601,7 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
       </div>
 
       <div className="pt-right-scroll">
-        {tab === "runs" && !isErcotHome && !onMeetingTree && (
+        {tab === "runs" && !isErcotHome && !onMeetingTree && !isStatsHome && (
           isMeetingGroup
             ? <MeetingProfileCard committee={ctx.meetingGroup || (ctx.meetingDoc && ctx.meetingDoc.committee)} date={ctx.meetingDate} />
             : ctx.ruleDoc

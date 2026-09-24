@@ -90,7 +90,6 @@ function App() {
     "paper-trails":      "Paper Trails",
     "meeting-tracks":    "Meeting Tracks",
     "hot-topics":        "Hot Topics",
-    "daily-headlines":   "Daily Headlines",
     "stats-illustrated": "Stats Illustrator",
     "gallery":           "Gallery",
   };
@@ -271,6 +270,8 @@ function App() {
                     : <MeetingTracksOrgChart onGroupClick={onMeetingGroupClick}/>)
                 : activeSection === "hot-topics"
                 ? <HotTopicsHome/>
+                : activeSection === "stats-illustrated"
+                ? <StatsIllustratorHome/>
                 : <TalkIllustration title={CURRENT_TALK_TITLE} meta={CURRENT_TALK_META}/>
             }
           />

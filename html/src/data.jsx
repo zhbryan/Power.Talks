@@ -109,6 +109,7 @@ const NPRR_PENDING = [
   { n: 1343, title: "Introduction of PTP Obligation Bid Fee in DAM" },
   { n: 1344, title: "Move OBD to Section 19 – Texas Market Test Plan" },
   { n: 1345, title: "Extend NPRR1279 Sunset Date for Exceptional Fuel Cost Process" },
+  { n: 1346, title: "Updates to the Fuel Oil Price (FOP)" },
 ];
 
 const NPRR_APPROVED = [
@@ -1284,6 +1285,7 @@ const NPRR_WITHDRAWN = [
   { n: 1262, title: "Ancillary Service Opt Out Clarification" },
   { n: 1284, title: "Guaranteed Reliability Load Process" },
   { n: 1321, title: "Batch Alpha" },
+  { n: 1347, title: "Contract for Capacity Dispatch Process and Energy Offer Curves" },
 ];
 
 // Context-aware quick runs keyed by "section:code" or "section"
