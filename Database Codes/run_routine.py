@@ -104,21 +104,25 @@ def build_steps(args):
             steps.append((f"MKT profile {c.upper()}",
                           [_mkt("profile_MKT_Rules", f"profile_ercot_{c}.py")],
                           os.path.join(DB, "profile_MKT_Rules")))
-        # 3. Summarize (AI; ONLY_STALE=True inside each script)
-        for c in MKT_CATS:
-            steps.append((f"MKT summarize {c.upper()}",
-                          [_mkt("summarize_MKT_Rules", f"summarize_ercot_{c}.py")],
-                          os.path.join(DB, "summarize_MKT_Rules")))
+        # 3. Summarize (AI; ONLY_STALE=True inside each script). Paid Anthropic
+        #    API (Haiku 4.5) — skipped under --no-ai to suspend API cost.
+        if not args.no_ai:
+            for c in MKT_CATS:
+                steps.append((f"MKT summarize {c.upper()}",
+                              [_mkt("summarize_MKT_Rules", f"summarize_ercot_{c}.py")],
+                              os.path.join(DB, "summarize_MKT_Rules")))
         # 3b. Comment-derived sections: ERCOT/IMM Opinions (opinion-table
         #     extraction from the most recent doc/docx) + Stakeholder Key Debates
         #     (AI over participant comment docs). Runs after summarize; summarize
         #     preserves existing values, so this only fills issues that are new or
-        #     still missing them (resume-skip inside the script).
-        for c in MKT_CATS:
-            steps.append((f"MKT stakeholder sections {c.upper()}",
-                          [_mkt("summarize_MKT_Rules", "gen_stakeholder_sections.py"),
-                           c.upper(), "--all"],
-                          os.path.join(DB, "summarize_MKT_Rules")))
+        #     still missing them (resume-skip inside the script). Paid Anthropic
+        #     API — skipped under --no-ai.
+        if not args.no_ai:
+            for c in MKT_CATS:
+                steps.append((f"MKT stakeholder sections {c.upper()}",
+                              [_mkt("summarize_MKT_Rules", "gen_stakeholder_sections.py"),
+                               c.upper(), "--all"],
+                              os.path.join(DB, "summarize_MKT_Rules")))
         # 4. Web data for Paper Trails
         steps.append(("MKT web: documents-submitted",
                       [os.path.join(DB, "gen_mkt_doc_summaries.py")],
@@ -228,6 +232,9 @@ def run(logf):
                         help="reprocess/rebuild from documents already on disk")
     parser.add_argument("--no-rebuild", action="store_true",
                         help="skip the final standalone-page rebuild")
+    parser.add_argument("--no-ai", action="store_true",
+                        help="skip paid-Anthropic-API steps (summarize + "
+                             "stakeholder sections) to suspend API cost")
     args = parser.parse_args()
 
     steps = build_steps(args)
@@ -237,7 +244,8 @@ def run(logf):
     emit(f"Steps:  {len(steps)}"
          + (f"  (only={args.only})" if args.only else "")
          + ("  [skip-download]" if args.skip_download else "")
-         + ("  [no-rebuild]" if args.no_rebuild else ""))
+         + ("  [no-rebuild]" if args.no_rebuild else "")
+         + ("  [no-ai: API cost suspended]" if args.no_ai else ""))
     emit("=" * 72)
 
     results = []
