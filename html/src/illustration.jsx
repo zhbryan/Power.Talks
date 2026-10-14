@@ -1696,15 +1696,13 @@ function HotTopicsHome() {
 window.HotTopicsHome = HotTopicsHome;
 
 // ─── Stats Illustrator ───────────────────────────────────────────────────────
-// Most-recent-day ERCOT market & grid dashboard. Reads live JSON from the WAMP
-// PHP endpoint (html/api/stats_dashboard.php), which queries the local MySQL
-// `stats_illustrator` tables. All charts are hand-drawn inline SVG (the framework
-// loads no chart library) and tolerate null gaps (real-time series can be sparse).
+// Most-recent-day ERCOT market & grid dashboard, four full-width charts read live
+// from the WAMP PHP endpoint (html/api/stats_dashboard.php → MySQL stats_illustrator).
+// All charts are hand-drawn inline SVG (the framework loads no chart library) and
+// tolerate null gaps / empty series (real-time & zone data can be sparse).
 const SI_ENDPOINT = "/Power.Talks/html/api/stats_dashboard.php";
-const SI_COL = {                       // theme-aware series colors (CSS vars)
-  dam: "var(--accent)", sced: "var(--warn)",
-  forecast: "var(--muted)", actual: "var(--accent)", available: "var(--ok)",
-};
+const SI_COL = { dam: "var(--accent)", sced: "var(--warn)", forecast: "var(--ink)" };
+const SI_ZONE = ["var(--accent)", "var(--accent-2)", "var(--ok)", "var(--warn)"];
 
 function siFmt(v) {
   if (v == null || isNaN(v)) return "";
@@ -1715,111 +1713,83 @@ function siFmt(v) {
   return v.toFixed(a < 10 ? 1 : 0);
 }
 
-// Multi-series line chart over an index axis; skips null gaps, optional point dots.
-function SILine({ series, xlabels, height }) {
-  const W = 520, H = height || 250, padL = 48, padR = 14, padT = 12, padB = 26;
-  const n = xlabels.length;
-  const all = [].concat(...series.map(s => s.values)).filter(v => v != null && !isNaN(v));
-  if (!all.length) return <div className="si-empty">No data for this day.</div>;
-  let mn = Math.min(...all), mx = Math.max(...all);
+// Numeric-x line chart: each series = {x:[], y:[], color, dash?, dots?, width?}.
+function SIXY({ series, height, xmax }) {
+  const W = 520, H = height || 220, padL = 46, padR = 12, padT = 12, padB = 24;
+  const ys = [].concat(...series.map(s => s.y)).filter(v => v != null && !isNaN(v));
+  if (!ys.length) return <div className="si-empty">No data for this day.</div>;
+  const xs = [].concat(...series.map(s => s.x));
+  const xMax = xmax || Math.max(24, ...xs), xMin = 0;
+  let mn = Math.min(...ys), mx = Math.max(...ys);
   if (mn === mx) { mn -= 1; mx += 1; }
   const pd = (mx - mn) * 0.08; mn -= pd; mx += pd;
   const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
-  const sx = i => x0 + (n <= 1 ? 0 : (i / (n - 1)) * (x1 - x0));
+  const sx = v => x0 + ((v - xMin) / (xMax - xMin)) * (x1 - x0);
   const sy = v => y1 - ((v - mn) / (mx - mn)) * (y1 - y0);
   const yt = [0, 1, 2, 3, 4].map(k => mn + (k / 4) * (mx - mn));
-  const pathOf = vals => {
-    let d = "", pen = false;
-    vals.forEach((v, i) => {
-      if (v == null || isNaN(v)) { pen = false; return; }
-      d += (pen ? " L" : " M") + sx(i).toFixed(1) + " " + sy(v).toFixed(1); pen = true;
-    });
-    return d;
+  const xt = [1, 6, 12, 18, 24].filter(t => t <= xMax);
+  const pathOf = s => {
+    const pts = s.x.map((x, i) => [x, s.y[i]]).filter(p => p[1] != null && !isNaN(p[1])).sort((a, b) => a[0] - b[0]);
+    return pts.map((p, i) => (i ? " L" : "M") + sx(p[0]).toFixed(1) + " " + sy(p[1]).toFixed(1)).join("");
   };
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="si-svg" preserveAspectRatio="xMidYMid meet">
-      {yt.map((t, k) => (
-        <g key={k}>
-          <line x1={x0} x2={x1} y1={sy(t)} y2={sy(t)} className="si-gl" />
-          <text x={x0 - 6} y={sy(t) + 3} className="si-tick" textAnchor="end">{siFmt(t)}</text>
-        </g>
-      ))}
-      {xlabels.map((lb, i) => (i % 4 === 0 || i === n - 1)
-        ? <text key={i} x={sx(i)} y={H - 8} className="si-tick" textAnchor="middle">{lb}</text> : null)}
-      {series.map((s, si) => (
-        <path key={si} d={pathOf(s.values)} fill="none" stroke={s.color}
-              strokeWidth="2" strokeDasharray={s.dash || ""} strokeLinejoin="round" />
-      ))}
-      {series.map((s, si) => s.dots ? s.values.map((v, i) => (v == null || isNaN(v)) ? null
-        : <circle key={si + "-" + i} cx={sx(i)} cy={sy(v)} r="2.5" fill={s.color} />) : null)}
+      {yt.map((t, k) => <g key={k}><line x1={x0} x2={x1} y1={sy(t)} y2={sy(t)} className="si-gl" /><text x={x0 - 6} y={sy(t) + 3} className="si-tick" textAnchor="end">{siFmt(t)}</text></g>)}
+      {xt.map(t => <text key={t} x={sx(t)} y={H - 8} className="si-tick" textAnchor="middle">{t}</text>)}
+      {series.map((s, si) => <path key={si} d={pathOf(s)} fill="none" stroke={s.color} strokeWidth={s.width || 2} strokeDasharray={s.dash || ""} strokeLinejoin="round" />)}
+      {series.map((s, si) => s.dots ? s.x.map((x, i) => (s.y[i] == null || isNaN(s.y[i])) ? null : <circle key={si + "-" + i} cx={sx(x)} cy={sy(s.y[i])} r="1.9" fill={s.color} />) : null)}
     </svg>
   );
 }
 
-// Grouped vertical bars: one group per category, one bar per series.
-function SIGroupBars({ cats, series }) {
-  const W = 520, H = 250, padL = 48, padR = 14, padT = 12, padB = 30;
-  const all = [].concat(...series.map(s => s.values)).filter(v => v != null && !isNaN(v));
-  const mx = Math.max(1, ...all), mn = 0;
+// Stacked bars over hours (one segment per zone) + an overlaid line series.
+function SIStack({ hours, zones, stacks, line, colors, lineColor }) {
+  const W = 760, H = 280, padL = 52, padR = 14, padT = 12, padB = 26;
+  const n = hours.length;
+  const totals = hours.map((_, i) => zones.reduce((s, z) => s + (stacks[z][i] || 0), 0));
+  const lineVals = line || [];
+  const mx = Math.max(1, ...totals, ...lineVals.filter(v => v != null && !isNaN(v)));
   const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
-  const sy = v => y1 - ((v - mn) / (mx - mn)) * (y1 - y0);
-  const band = (x1 - x0) / cats.length, bw = band * 0.3;
+  const band = (x1 - x0) / n, bw = band * 0.66;
+  const sy = v => y1 - (v / mx) * (y1 - y0), cx = i => x0 + band * (i + 0.5);
   const yt = [0, 1, 2, 3, 4].map(k => (k / 4) * mx);
+  let lp = "", pen = false;
+  lineVals.forEach((v, i) => { if (v == null || isNaN(v)) { pen = false; return; } lp += (pen ? " L" : " M") + cx(i).toFixed(1) + " " + sy(v).toFixed(1); pen = true; });
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="si-svg" preserveAspectRatio="xMidYMid meet">
-      {yt.map((t, k) => (
-        <g key={k}>
-          <line x1={x0} x2={x1} y1={sy(t)} y2={sy(t)} className="si-gl" />
-          <text x={x0 - 6} y={sy(t) + 3} className="si-tick" textAnchor="end">{siFmt(t)}</text>
-        </g>
-      ))}
-      {cats.map((c, ci) => {
-        const cx = x0 + band * (ci + 0.5);
-        return (
-          <g key={ci}>
-            {series.map((s, si) => {
-              const v = s.values[ci];
-              if (v == null || isNaN(v)) return null;
-              const bx = cx - bw - 1 + si * (bw + 2);
-              return <rect key={si} x={bx} y={sy(v)} width={bw} height={Math.max(0, y1 - sy(v))}
-                           fill={s.color} rx="1.5" />;
-            })}
-            <text x={cx} y={H - 9} className="si-tick" textAnchor="middle">{c}</text>
-          </g>
-        );
+      {yt.map((t, k) => <g key={k}><line x1={x0} x2={x1} y1={sy(t)} y2={sy(t)} className="si-gl" /><text x={x0 - 6} y={sy(t) + 3} className="si-tick" textAnchor="end">{siFmt(t)}</text></g>)}
+      {hours.map((h, i) => {
+        let cum = 0;
+        return <g key={i}>
+          {zones.map((z, zi) => {
+            const v = stacks[z][i]; if (v == null || isNaN(v) || v <= 0) return null;
+            const yTop = sy(cum + v), yBot = sy(cum); cum += v;
+            return <rect key={zi} x={cx(i) - bw / 2} y={yTop} width={bw} height={Math.max(0, yBot - yTop)} fill={colors[zi]} />;
+          })}
+        </g>;
       })}
+      {[0, 5, 11, 17, 23].map(i => i < n ? <text key={i} x={cx(i)} y={H - 8} className="si-tick" textAnchor="middle">{hours[i]}</text> : null)}
+      {lp ? <path d={lp} fill="none" stroke={lineColor} strokeWidth="2.2" strokeDasharray="5 3" /> : null}
     </svg>
   );
 }
 
-// Horizontal grouped bars for the top-N congestion rents (tall; own scroll box).
-function SIHBars({ rows, series }) {
-  const rowH = 26, W = 560, padL = 150, padR = 52, padT = 6;
-  const H = padT + rows.length * rowH + 6;
-  const all = [].concat(...rows.map(r => series.map(s => r[s.key]))).filter(v => v != null && !isNaN(v));
-  const mx = Math.max(1, ...all);
-  const x0 = padL, x1 = W - padR;
-  const sx = v => x0 + (v / mx) * (x1 - x0);
-  const bh = rowH * 0.32;
+// Single-series horizontal bars (a congestion top-N list).
+function SIHBar({ rows, color, empty }) {
+  const rowH = 22, W = 520, padL = 138, padR = 54, padT = 4;
+  if (!rows.length) return <div className="si-empty">{empty || "No data."}</div>;
+  const H = padT + rows.length * rowH + 4;
+  const mx = Math.max(1, ...rows.map(r => r.value).filter(v => v != null && !isNaN(v)));
+  const x0 = padL, x1 = W - padR, sx = v => x0 + (v / mx) * (x1 - x0), bh = rowH * 0.6;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="si-hsvg">
       {rows.map((r, ri) => {
-        const cy = padT + ri * rowH + rowH / 2;
-        return (
-          <g key={ri}>
-            <text x={x0 - 8} y={cy + 3} className="si-hlabel" textAnchor="end">{r.label}</text>
-            {series.map((s, si) => {
-              const v = r[s.key]; if (v == null || isNaN(v)) return null;
-              const by = cy - bh - 1 + si * (bh + 2), w = Math.max(0, sx(v) - x0);
-              return (
-                <g key={si}>
-                  <rect x={x0} y={by} width={w} height={bh} fill={s.color} rx="1.5" />
-                  <text x={x0 + w + 4} y={by + bh - 1} className="si-hval">{siFmt(v)}</text>
-                </g>
-              );
-            })}
-          </g>
-        );
+        const cy = padT + ri * rowH + rowH / 2, v = r.value || 0, w = Math.max(0, sx(v) - x0);
+        return <g key={ri}>
+          <text x={x0 - 8} y={cy + 3} className="si-hlabel" textAnchor="end">{r.label}</text>
+          <rect x={x0} y={cy - bh / 2} width={w} height={bh} fill={color} rx="1.5" />
+          <text x={x0 + w + 4} y={cy + 3} className="si-hval">{siFmt(v)}</text>
+        </g>;
       })}
     </svg>
   );
@@ -1846,8 +1816,7 @@ function StatsIllustratorHome() {
     setState("loading");
     fetch(SI_ENDPOINT, { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
-      .then(d => { if (d && d.error) { setErr(d.error); setState("error"); }
-                   else { setData(d); setState("ready"); } })
+      .then(d => { if (d && d.error) { setErr(d.error); setState("error"); } else { setData(d); setState("ready"); } })
       .catch(e => { setErr(String(e)); setState("error"); });
   }, []);
 
@@ -1860,33 +1829,32 @@ function StatsIllustratorHome() {
     .si-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
     .si-date { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--accent-2);
       background: var(--accent-soft); border: 1px solid var(--rule-2); padding: 5px 10px; border-radius: 8px; }
-    .si-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
-    .si-card { border: 1px solid var(--rule); border-radius: 14px; background: var(--panel);
-      padding: 14px 14px 8px; }
-    .si-card.full { margin-top: 14px; }
+    .si-stack { display: flex; flex-direction: column; gap: 14px; }
+    .si-card { border: 1px solid var(--rule); border-radius: 14px; background: var(--panel); padding: 14px 14px 10px; }
     .si-ct { font-size: 14px; font-weight: 600; color: var(--ink); }
     .si-cs { font-size: 11.5px; color: var(--muted); margin: 1px 0 6px; }
     .si-svg { width: 100%; height: auto; display: block; }
     .si-gl { stroke: var(--rule-2); stroke-width: 1; }
     .si-tick { fill: var(--muted); font-family: var(--mono); font-size: 9px; }
-    .si-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 2px 0 6px; }
+    .si-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 2px 0 8px; }
     .si-lg { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-2); }
     .si-sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
-    .si-scroll { max-height: 540px; overflow: auto; }
-    .si-hsvg { display: block; min-width: 480px; }
-    .si-hlabel { fill: var(--ink-2); font-family: var(--mono); font-size: 10px; }
-    .si-hval { fill: var(--muted); font-family: var(--mono); font-size: 9.5px; }
-    .si-empty { color: var(--muted); font-size: 12px; padding: 28px 0; text-align: center; }
+    .si-mini { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+    .si-minicard { border: 1px solid var(--rule-2); border-radius: 10px; padding: 6px 8px 2px; background: var(--bg); }
+    .si-mt { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; color: var(--accent-2); font-weight: 600; margin-bottom: 2px; }
+    .si-cong { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+    .si-sub2 { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .si-scroll { max-height: 480px; overflow: auto; }
+    .si-hsvg { display: block; min-width: 380px; }
+    .si-hlabel { fill: var(--ink-2); font-family: var(--mono); font-size: 9.5px; }
+    .si-hval { fill: var(--muted); font-family: var(--mono); font-size: 9px; }
+    .si-empty { color: var(--muted); font-size: 12px; padding: 22px 0; text-align: center; }
     .si-note { font-size: 10.5px; color: var(--muted); margin: 6px 2px 2px; line-height: 1.45; }
     .si-status { color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center; }
     .si-status code { font-family: var(--mono); font-size: 12px; color: var(--accent-2); }
   `;
 
-  const dp = data || {};
-  const ep = dp.energy_prices, am = dp.as_mcpc, lc = dp.load_capacity, cg = dp.congestion;
-  const congRows = (cg || []).map(c => ({
-    label: (c.from || "?") + " → " + (c.to || "?"), dam: c.dam, sced: c.sced,
-  }));
+  const d = data || {};
 
   return (
     <div className="si-wrap">
@@ -1898,7 +1866,7 @@ function StatsIllustratorHome() {
           <h1 className="si-h1">Stats Illustrator</h1>
           <div className="si-sub">Most-recent-day ERCOT market &amp; grid dashboard — live from the local database</div>
         </div>
-        {state === "ready" && dp.date && <div className="si-date">{dp.date}</div>}
+        {state === "ready" && d.date && <div className="si-date">{d.date}</div>}
       </div>
 
       {state === "loading" && <div className="si-status">Loading dashboard…</div>}
@@ -1910,59 +1878,80 @@ function StatsIllustratorHome() {
         </div>
       )}
 
-      {state === "ready" && (
-        <>
-          <div className="si-grid">
+      {state === "ready" && (() => {
+        const ph = d.prices_hub, am = d.as_mcpc, lz = d.load_zone, cg = d.congestion;
+        const hasZones = lz.zones.some(z => lz.stacks[z].some(v => v != null));
+        return (
+          <div className="si-stack">
+            {/* (a) settlement-point prices at HB_BUSAVG */}
             <div className="si-card">
-              <div className="si-ct">DAM vs SCED energy prices</div>
-              <div className="si-cs">System lambda, $/MWh by hour ending</div>
-              <SILegend items={[{ name: "DAM", color: SI_COL.dam }, { name: "SCED (real-time)", color: SI_COL.sced }]} />
-              <SILine xlabels={ep.hours.map(String)} series={[
-                { values: ep.dam, color: SI_COL.dam },
-                { values: ep.sced, color: SI_COL.sced, dots: true },
+              <div className="si-ct">Settlement-point prices — {ph.point}</div>
+              <div className="si-cs">DAM hourly vs SCED 15-minute, $/MWh by hour of day</div>
+              <SILegend items={[{ name: "DAM (hourly)", color: SI_COL.dam }, { name: "SCED (15-min)", color: SI_COL.sced }]} />
+              <SIXY series={[
+                { x: ph.dam.hours, y: ph.dam.price, color: SI_COL.dam },
+                { x: ph.sced.x, y: ph.sced.price, color: SI_COL.sced, dots: true, width: 1.5 },
               ]} />
             </div>
 
+            {/* (b) AS MCPCs — one sub-chart per type */}
             <div className="si-card">
               <div className="si-ct">Ancillary-service MCPCs by type</div>
-              <div className="si-cs">Daily-average clearing price, $/MW — DAM vs real-time</div>
-              <SILegend items={[{ name: "DAM", color: SI_COL.dam }, { name: "Real-time", color: SI_COL.sced }]} />
-              <SIGroupBars cats={am.types} series={[
-                { values: am.dam, color: SI_COL.dam },
-                { values: am.rt, color: SI_COL.sced },
-              ]} />
+              <div className="si-cs">Clearing price $/MW by hour — DAM hourly vs SCED real-time interval</div>
+              <SILegend items={[{ name: "DAM", color: SI_COL.dam }, { name: "SCED (real-time)", color: SI_COL.sced }]} />
+              <div className="si-mini">
+                {am.types.map(t => {
+                  const s = am.series[t] || { dam: [], rt_x: [], rt: [] };
+                  return (
+                    <div key={t} className="si-minicard">
+                      <div className="si-mt">{t}</div>
+                      <SIXY height={148} series={[
+                        { x: am.hours, y: s.dam, color: SI_COL.dam },
+                        { x: s.rt_x, y: s.rt, color: SI_COL.sced, dots: true, width: 1.5 },
+                      ]} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
+            {/* (c) actual load by forecast zone (stacked) + day-ahead forecast */}
             <div className="si-card">
-              <div className="si-ct">Load forecast vs actual vs available capacity</div>
-              <div className="si-cs">System total, MW by hour ending</div>
+              <div className="si-ct">Load by forecast zone vs day-ahead forecast</div>
+              <div className="si-cs">Actual system load stacked by forecast zone (sum = system-wide demand), MW by hour</div>
               <SILegend items={[
-                { name: "Forecast", color: SI_COL.forecast, dash: true },
-                { name: "Actual", color: SI_COL.actual },
-                { name: "Available capacity", color: SI_COL.available },
+                ...lz.zones.map((z, i) => ({ name: z, color: SI_ZONE[i] })),
+                { name: "Day-ahead forecast", color: SI_COL.forecast, dash: true },
               ]} />
-              <SILine xlabels={lc.hours.map(String)} series={[
-                { values: lc.forecast, color: SI_COL.forecast, dash: "5 4" },
-                { values: lc.actual, color: SI_COL.actual, dots: true },
-                { values: lc.available, color: SI_COL.available, dots: true },
-              ]} />
-              {dp.notes && dp.notes.available_capacity
-                ? <div className="si-note">Note: {dp.notes.available_capacity}</div> : null}
+              <SIStack hours={lz.hours} zones={lz.zones} stacks={lz.stacks}
+                       line={lz.forecast} colors={SI_ZONE} lineColor={SI_COL.forecast} />
+              {!hasZones ? <div className="si-note">Actual load by forecast zone is unavailable for this day (that source lags the DAM tables) — showing the day-ahead forecast only. Pass <code>?date=</code> an earlier day for the stacked zones.</div> : null}
+            </div>
+
+            {/* (d) congestion rents — DAM and SCED side by side */}
+            <div className="si-card">
+              <div className="si-ct">Top-20 congestion rents by constraint</div>
+              <div className="si-cs">Shadow price × constraint value, summed over the day ($), from → to station</div>
+              <div className="si-cong">
+                <div>
+                  <div className="si-sub2">Day-Ahead (NP4-191)</div>
+                  <div className="si-scroll">
+                    <SIHBar color={SI_COL.dam} empty="No DAM congestion on this day."
+                            rows={(cg.dam || []).map(c => ({ label: (c.from || "?") + " → " + (c.to || "?"), value: c.rent }))} />
+                  </div>
+                </div>
+                <div>
+                  <div className="si-sub2">Real-Time / SCED (NP6-86)</div>
+                  <div className="si-scroll">
+                    <SIHBar color={SI_COL.sced} empty="No SCED congestion on this day."
+                            rows={(cg.sced || []).map(c => ({ label: (c.from || "?") + " → " + (c.to || "?"), value: c.rent }))} />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div className="si-card full">
-            <div className="si-ct">Top 20 congestion rents by constraint</div>
-            <div className="si-cs">Shadow price × constraint value, summed over the day ($) — DAM vs SCED, from → to station</div>
-            <SILegend items={[{ name: "DAM", color: SI_COL.dam }, { name: "SCED", color: SI_COL.sced }]} />
-            {congRows.length
-              ? <div className="si-scroll"><SIHBars rows={congRows} series={[
-                  { key: "dam", color: SI_COL.dam }, { key: "sced", color: SI_COL.sced },
-                ]} /></div>
-              : <div className="si-empty">No congestion on this day.</div>}
-          </div>
-        </>
-      )}
+        );
+      })()}
     </div>
   );
 }

@@ -7,20 +7,22 @@
  * schema, through its ERCOT report tables, and returns chart-ready JSON. No
  * snapshot, no generate step — the page always reflects the current tables.
  *
+ * Four full-width charts:
+ *   a) DAM (hourly) vs SCED (15-min) settlement-point prices at HB_BUSAVG
+ *   b) AS MCPCs — one series set per type (DAM hourly vs SCED interval)
+ *   c) actual load stacked by forecast zone + day-ahead load forecast
+ *   d) top-20 congestion rents, DAM and SCED computed independently
+ *
  * Served at:  http://localhost/Power.Talks/html/api/stats_dashboard.php[?date=YYYY-MM-DD]
- *
- * Credentials are reused from Database Codes/ercot_api/db_config.json (the same
- * config the Python tools use), so they live in one place.
- *
- * Read-only: SELECTs only, date param bound via prepared statements.
+ * Credentials reused from Database Codes/ercot_api/db_config.json. Read-only.
  */
 
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT); // exceptions on error
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-/** Fetch rows for a query with a single bound `date` string param. */
+/** Rows for a query with one bound `date` string param. */
 function rows(mysqli $db, string $sql, string $date): array {
     $st = $db->prepare($sql);
     $st->bind_param('s', $date);
@@ -40,11 +42,13 @@ function he_index($v): int {
     return $h;
 }
 
-function r2($v) { return $v === null ? null : round((float)$v, 2); }  // prices / $
+/** Fractional hour-ending from deliveryhour (1..24) + deliveryinterval (1..4). */
+function frac_he($dh, $di) { return round(((int)$dh - 1) + ((int)$di) / 4, 2); }
+
+function r2($v) { return $v === null ? null : round((float)$v, 2); }  // prices
 function r1($v) { return $v === null ? null : round((float)$v, 1); }  // MW / rents
 
 try {
-    // ── connect (credentials from the shared Python config) ───────────────────
     $cfgPath = __DIR__ . '/../../Database Codes/ercot_api/db_config.json';
     $cfg = json_decode(file_get_contents($cfgPath), true);
     if (!$cfg) { throw new RuntimeException("could not read db_config.json"); }
@@ -53,167 +57,114 @@ try {
                      $cfg['database'], (int)$cfg['port']);
     $db->set_charset('utf8mb4');
 
-    // ── resolve the target day ────────────────────────────────────────────────
-    // Optional ?date=YYYY-MM-DD override (validated); else the latest day common
-    // to the DAM-settled, SCED real-time, and actual-demand tables.
+    // ── target day: latest deliverydate common to the DAM anchor tables ───────
     $date = null;
     if (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date'])) {
         $date = $_GET['date'];
     } else {
         $res = $db->query(
             "SELECT LEAST(
-                (SELECT MAX(deliverydate) FROM np4_523_cd_dam_system_lambda),
-                (SELECT MAX(content_date)  FROM np6_322_cd_sced_system_lambda),
-                (SELECT MAX(deliverydate)  FROM np6_235_cd_system_wide_demand)
+                (SELECT MAX(deliverydate) FROM np4_190_cd_dam_settlement_point_prices),
+                (SELECT MAX(deliverydate) FROM np4_188_cd_dam_clearing_prices_for_capacity),
+                (SELECT MAX(deliverydate) FROM np4_191_cd_dam_shadow_prices),
+                (SELECT MAX(deliverydate) FROM gen_55_cd_hourly_real_time_load_vs_actual_report)
              ) AS d"
         );
         $date = $res->fetch_assoc()['d'] ?? null;
     }
     if (!$date) { throw new RuntimeException("no data available to pick a target day"); }
 
-    $out = [
-        'generated_at' => date('c'),
-        'date'         => $date,
-        'notes'        => [
-            'available_capacity' =>
-                'available capacity = actual system demand + online headroom '
-              . '(NP6-328 capregup_rrs_ecrs_nspintotal, avg per hour) — approximate.',
-            'congestion' =>
-                'rent = shadowPrice x constraintValue, summed over the day; '
-              . 'SCED 5-min rents scaled by 5/60 to an hourly-equivalent.',
-        ],
+    $out = ['generated_at' => date('c'), 'date' => $date];
+
+    // ── (a) settlement-point prices at HB_BUSAVG ──────────────────────────────
+    $damP = array_fill(0, 24, null);
+    foreach (rows($db,
+        "SELECT hourending AS he, AVG(settlementpointprice) AS val
+           FROM np4_190_cd_dam_settlement_point_prices
+          WHERE settlementpoint = 'HB_BUSAVG' AND deliverydate = ?
+          GROUP BY hourending", $date) as $r) {
+        $damP[he_index($r['he']) - 1] = r2($r['val']);
+    }
+    $scedX = []; $scedP = [];
+    foreach (rows($db,
+        "SELECT deliveryhour AS dh, deliveryinterval AS di, settlementpointprice AS val
+           FROM np6_905_cd_settlement_point_prices_at_resource_node
+          WHERE settlementpointname = 'HB_BUSAVG' AND content_date = ?
+          ORDER BY (deliveryhour + 0), (deliveryinterval + 0)", $date) as $r) {
+        $scedX[] = frac_he($r['dh'], $r['di']);
+        $scedP[] = r2($r['val']);
+    }
+    $out['prices_hub'] = [
+        'point' => 'HB_BUSAVG',
+        'dam'   => ['hours' => range(1, 24), 'price' => $damP],
+        'sced'  => ['x' => $scedX, 'price' => $scedP],
     ];
 
-    // ── (a) DAM vs SCED energy prices ($/MWh, by hour ending) ─────────────────
-    $dam = array_fill(0, 24, null);
-    $sced = array_fill(0, 24, null);
-    foreach (rows($db,
-        "SELECT hourending AS he, AVG(systemlambda) AS val
-           FROM np4_523_cd_dam_system_lambda
-          WHERE deliverydate = ?
-          GROUP BY hourending", $date) as $r) {
-        $dam[he_index($r['he']) - 1] = r2($r['val']);
-    }
-    // scedtimestamp is a varchar in 'MM/DD/YYYY HH:MM:SS' — parse before HOUR().
-    foreach (rows($db,
-        "SELECT (HOUR(STR_TO_DATE(scedtimestamp, '%m/%d/%Y %H:%i:%s')) + 1) AS he,
-                AVG(cappedsystemlambda) AS val
-           FROM np6_322_cd_sced_system_lambda
-          WHERE content_date = ?
-          GROUP BY he", $date) as $r) {
-        if ($r['he'] === null) continue;
-        $sced[he_index($r['he']) - 1] = r2($r['val']);
-    }
-    $out['energy_prices'] = ['hours' => range(1, 24), 'dam' => $dam, 'sced' => $sced];
-
-    // ── (b) DAM vs SCED ancillary-service MCPCs by type ($/MW) ────────────────
+    // ── (b) AS MCPCs by type (DAM hourly vs SCED interval) ────────────────────
     $types = ['REGUP', 'REGDN', 'RRS', 'ECRS', 'NSPIN'];
-    $damM = array_fill_keys($types, null);
-    $rtM  = array_fill_keys($types, null);
+    $series = [];
+    foreach ($types as $t) $series[$t] = ['dam' => array_fill(0, 24, null), 'rt_x' => [], 'rt' => []];
     foreach (rows($db,
-        "SELECT ancillarytype AS t, AVG(mcpc) AS val
+        "SELECT ancillarytype AS t, hourending AS he, AVG(mcpc) AS val
            FROM np4_188_cd_dam_clearing_prices_for_capacity
           WHERE deliverydate = ?
-          GROUP BY ancillarytype", $date) as $r) {
+          GROUP BY ancillarytype, hourending", $date) as $r) {
         $k = strtoupper(trim($r['t']));
-        if (array_key_exists($k, $damM)) $damM[$k] = r2($r['val']);
+        if (isset($series[$k])) $series[$k]['dam'][he_index($r['he']) - 1] = r2($r['val']);
     }
-    // np6_331's normalized date column is content_date (deliverydate is the raw
-    // 'MM/DD/YYYY' report field).
     foreach (rows($db,
-        "SELECT astype AS t, AVG(mcpc) AS val
+        "SELECT astype AS t, deliveryhour AS dh, deliveryinterval AS di, mcpc AS val
            FROM np6_331_cd_real_time_clearing_prices_for_capacity_b
           WHERE content_date = ?
-          GROUP BY astype", $date) as $r) {
+          ORDER BY astype, (deliveryhour + 0), (deliveryinterval + 0)", $date) as $r) {
         $k = strtoupper(trim($r['t']));
-        if (array_key_exists($k, $rtM)) $rtM[$k] = r2($r['val']);
+        if (isset($series[$k])) { $series[$k]['rt_x'][] = frac_he($r['dh'], $r['di']); $series[$k]['rt'][] = r2($r['val']); }
     }
-    $out['as_mcpc'] = [
-        'types' => $types,
-        'dam'   => array_values($damM),
-        'rt'    => array_values($rtM),
-    ];
+    $out['as_mcpc'] = ['types' => $types, 'hours' => range(1, 24), 'series' => $series];
 
-    // ── (c) load forecast vs actual vs available capacity (MW, by hour) ───────
-    $forecast = array_fill(0, 24, null);
-    $actual   = array_fill(0, 24, null);
-    $headroom = array_fill(0, 24, null);
-    // Forecast: system total from the in-use model for the day.
+    // ── (c) actual load by forecast zone (stacked) + day-ahead forecast ───────
+    $zones = ['North', 'South', 'West', 'Houston'];
+    $zcol  = ['North' => 'north', 'South' => 'south', 'West' => 'west', 'Houston' => 'houston'];
+    $stacks = [];
+    foreach ($zones as $z) $stacks[$z] = array_fill(0, 24, null);
     foreach (rows($db,
-        "SELECT hourending AS he, AVG(systemtotal) AS val
-           FROM np3_565_cd_seven_day_load_forecast_by_model_and_wea
-          WHERE deliverydate = ? AND inuseflag = 'Y'
-          GROUP BY hourending", $date) as $r) {
+        "SELECT hourending AS he, north, south, west, houston
+           FROM np6_346_cd_actual_system_load_by_forecast_zone
+          WHERE operday = ?", $date) as $r) {
+        $i = he_index($r['he']) - 1;
+        foreach ($zones as $z) $stacks[$z][$i] = r1($r[$zcol[$z]]);
+    }
+    $forecast = array_fill(0, 24, null);
+    foreach (rows($db,
+        "SELECT hourending AS he, dayaheadforecast AS val
+           FROM gen_55_cd_hourly_real_time_load_vs_actual_report
+          WHERE deliverydate = ?", $date) as $r) {
         $forecast[he_index($r['he']) - 1] = r1($r['val']);
     }
-    // Actual system-wide demand — sub-hourly (timeending 'HH:MM' varchar), so
-    // average to hour ending.
-    foreach (rows($db,
-        "SELECT (HOUR(STR_TO_DATE(timeending, '%H:%i')) + 1) AS he, AVG(demand) AS val
-           FROM np6_235_cd_system_wide_demand
-          WHERE deliverydate = ?
-          GROUP BY he", $date) as $r) {
-        if ($r['he'] === null) continue;
-        $actual[he_index($r['he']) - 1] = r1($r['val']);
-    }
-    // Online headroom (available-but-not-deployed) averaged per hour.
-    // scedtimestamp is 'MM/DD/YYYY HH:MM:SS' varchar — parse before HOUR().
-    foreach (rows($db,
-        "SELECT (HOUR(STR_TO_DATE(scedtimestamp, '%m/%d/%Y %H:%i:%s')) + 1) AS he,
-                AVG(capregup_rrs_ecrs_nspintotal) AS val
-           FROM np6_328_cd_total_capability_of_resources_available
-          WHERE content_date = ?
-          GROUP BY he", $date) as $r) {
-        if ($r['he'] === null) continue;
-        $headroom[he_index($r['he']) - 1] = (float)$r['val'];
-    }
-    // available capacity = actual demand + headroom (only where both known).
-    $available = array_fill(0, 24, null);
-    for ($i = 0; $i < 24; $i++) {
-        if ($actual[$i] !== null && $headroom[$i] !== null) {
-            $available[$i] = r1($actual[$i] + $headroom[$i]);
-        }
-    }
-    $out['load_capacity'] = [
-        'hours'     => range(1, 24),
-        'forecast'  => $forecast,
-        'actual'    => $actual,
-        'available' => $available,
+    $out['load_zone'] = [
+        'hours' => range(1, 24), 'zones' => $zones,
+        'stacks' => $stacks, 'forecast' => $forecast,
     ];
 
-    // ── (d) top-20 DAM vs SCED congestion rents by fromStation -> toStation ───
-    $rent = [];  // key "from||to" => ['from','to','dam','sced']
-    $key = function ($f, $t) { return $f . '||' . $t; };
-    foreach (rows($db,
-        "SELECT fromstation AS f, tostation AS t,
-                SUM(shadowprice * constraintvalue) AS rent
+    // ── (d) congestion rents — DAM and SCED, top 20 each, independent ─────────
+    $topN = function ($rowset) {
+        return array_map(function ($r) {
+            return ['from' => $r['f'], 'to' => $r['t'], 'rent' => r1($r['rent'])];
+        }, $rowset);
+    };
+    $damC = rows($db,
+        "SELECT fromstation AS f, tostation AS t, SUM(shadowprice * constraintvalue) AS rent
            FROM np4_191_cd_dam_shadow_prices
           WHERE deliverydate = ? AND fromstation IS NOT NULL AND fromstation <> ''
-          GROUP BY fromstation, tostation", $date) as $r) {
-        $k = $key($r['f'], $r['t']);
-        $rent[$k] = ['from' => $r['f'], 'to' => $r['t'],
-                     'dam' => (float)$r['rent'], 'sced' => 0.0];
-    }
-    foreach (rows($db,
-        "SELECT fromstation AS f, tostation AS t,
-                SUM(shadowprice * `value`) * (5/60) AS rent
+          GROUP BY fromstation, tostation
+          ORDER BY rent DESC LIMIT 20", $date);
+    $scedC = rows($db,
+        "SELECT fromstation AS f, tostation AS t, SUM(shadowprice * `value`) * (5/60) AS rent
            FROM np6_86_cd_sced_shadow_prices_and_binding_transmiss
           WHERE content_date = ? AND fromstation IS NOT NULL AND fromstation <> ''
-          GROUP BY fromstation, tostation", $date) as $r) {
-        $k = $key($r['f'], $r['t']);
-        if (!isset($rent[$k])) {
-            $rent[$k] = ['from' => $r['f'], 'to' => $r['t'], 'dam' => 0.0, 'sced' => 0.0];
-        }
-        $rent[$k]['sced'] = (float)$r['rent'];
-    }
-    $rows = array_values($rent);
-    usort($rows, function ($a, $b) {   // rank by the larger of the two rents
-        return max($b['dam'], $b['sced']) <=> max($a['dam'], $a['sced']);
-    });
-    $out['congestion'] = array_map(function ($x) {
-        return ['from' => $x['from'], 'to' => $x['to'],
-                'dam' => r1($x['dam']), 'sced' => r1($x['sced'])];
-    }, array_slice($rows, 0, 20));
+          GROUP BY fromstation, tostation
+          ORDER BY rent DESC LIMIT 20", $date);
+    $out['congestion'] = ['dam' => $topN($damC), 'sced' => $topN($scedC)];
 
     echo json_encode($out);
     $db->close();
