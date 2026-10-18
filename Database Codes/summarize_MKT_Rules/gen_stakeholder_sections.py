@@ -24,6 +24,8 @@ import re
 import sys
 import json
 import hashlib
+import threading
+import subprocess
 
 from docx import Document
 import win32com.client
@@ -39,10 +41,12 @@ AI_MODEL = "claude-haiku-4-5-20251001"
 AI_MAX_TOKENS = 700
 DOC_CHAR_CAP = 4000      # per-document text fed to the model
 MAX_DOCS = 12            # cap documents per section
+WORD_OP_TIMEOUT = 120    # max seconds a single legacy .doc open+read may take
 
 _ai = {"input": 0, "output": 0, "calls": 0}
 _client = None
 _word = None
+_word_pid = None         # PID of the WINWORD.EXE we spawned (for the watchdog)
 
 
 import glossary_reference
@@ -57,22 +61,86 @@ def get_ai():
     return _client
 
 
+def _winword_pids():
+    """Set of live WINWORD.EXE PIDs, so we can tell which one we just spawned."""
+    try:
+        out = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq WINWORD.EXE", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, timeout=15).stdout
+    except Exception:
+        return set()
+    pids = set()
+    for line in out.splitlines():
+        cols = [c.strip().strip('"') for c in line.split('","')]
+        if len(cols) >= 2 and cols[0].upper().startswith("WINWORD"):
+            try:
+                pids.add(int(cols[1]))
+            except ValueError:
+                pass
+    return pids
+
+
 def get_word():
-    global _word
+    global _word, _word_pid
     if _word is None:
+        before = _winword_pids()
         _word = win32com.client.Dispatch("Word.Application")
         _word.Visible = False
+        # Suppress the modal dialogs (alerts, macro prompts) that otherwise pop
+        # on an invisible Word window and block COM indefinitely.
+        for attr, val in (("DisplayAlerts", 0),          # wdAlertsNone
+                          ("AutomationSecurity", 3)):    # msoAutomationSecurityForceDisable
+            try:
+                setattr(_word, attr, val)
+            except Exception:
+                pass
+        _word_pid = next(iter(_winword_pids() - before), None)
     return _word
 
 
+def _kill_word():
+    """Forcibly terminate the Word process we spawned, and reset state so the
+    next call re-dispatches a fresh instance."""
+    global _word, _word_pid
+    if _word_pid:
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(_word_pid)],
+                       capture_output=True, timeout=15)
+    _word = None
+    _word_pid = None
+
+
+def _word_guarded(fn):
+    """Run a Word-COM operation with a watchdog: if it blocks past
+    WORD_OP_TIMEOUT (an invisible Word modal dialog — which froze the whole
+    routine for ~10h on 2026-10-14), kill Word so the blocked COM call raises,
+    and re-raise as TimeoutError for the caller to skip that document."""
+    killed = {"v": False}
+
+    def _boom():
+        killed["v"] = True
+        _kill_word()
+
+    t = threading.Timer(WORD_OP_TIMEOUT, _boom)
+    t.start()
+    try:
+        return fn()
+    except Exception:
+        if killed["v"]:
+            raise TimeoutError(f"Word operation exceeded {WORD_OP_TIMEOUT}s; killed")
+        raise
+    finally:
+        t.cancel()
+
+
 def quit_word():
-    global _word
+    global _word, _word_pid
     if _word is not None:
         try:
             _word.Quit()
         except Exception:
             pass
         _word = None
+        _word_pid = None
 
 
 def read_doc_text(path):
@@ -86,12 +154,15 @@ def read_doc_text(path):
                     parts.append(' | '.join(c.text for c in row.cells))
             return '\n'.join(x for x in parts if x and x.strip())
         if ext == '.doc':
-            wd = get_word()
-            doc = wd.Documents.Open(os.path.abspath(path), ReadOnly=True)
-            try:
-                return doc.Content.Text.replace('\r', '\n')
-            finally:
-                doc.Close(False)
+            def _read():
+                wd = get_word()
+                doc = wd.Documents.Open(os.path.abspath(path), ReadOnly=True,
+                                        AddToRecentFiles=False)
+                try:
+                    return doc.Content.Text.replace('\r', '\n')
+                finally:
+                    doc.Close(False)
+            return _word_guarded(_read)
     except Exception as e:
         print(f"    (could not read {os.path.basename(path)}: {e})")
     return ""
@@ -228,22 +299,27 @@ def doc_table_rows(path):
                 for row in tbl.rows:
                     rows.append([re.sub(r'\s+', ' ', c.text).strip() for c in row.cells])
         elif ext == '.doc':
-            wd = get_word()
-            doc = wd.Documents.Open(os.path.abspath(path), ReadOnly=True)
-            try:
-                for ti in range(1, doc.Tables.Count + 1):
-                    t = doc.Tables(ti)
-                    for r in range(1, t.Rows.Count + 1):
-                        cells = []
-                        for c in range(1, t.Columns.Count + 1):
-                            try:
-                                cells.append(t.Cell(r, c).Range.Text
-                                             .replace('\r', ' ').replace('\x07', '').strip())
-                            except Exception:
-                                cells.append('')
-                        rows.append(cells)
-            finally:
-                doc.Close(False)
+            def _tabread():
+                local = []
+                wd = get_word()
+                doc = wd.Documents.Open(os.path.abspath(path), ReadOnly=True,
+                                        AddToRecentFiles=False)
+                try:
+                    for ti in range(1, doc.Tables.Count + 1):
+                        t = doc.Tables(ti)
+                        for r in range(1, t.Rows.Count + 1):
+                            cells = []
+                            for c in range(1, t.Columns.Count + 1):
+                                try:
+                                    cells.append(t.Cell(r, c).Range.Text
+                                                 .replace('\r', ' ').replace('\x07', '').strip())
+                                except Exception:
+                                    cells.append('')
+                            local.append(cells)
+                finally:
+                    doc.Close(False)
+                return local
+            rows = _word_guarded(_tabread)
     except Exception as e:
         print(f"    (could not read tables of {os.path.basename(path)}: {e})")
     return rows
