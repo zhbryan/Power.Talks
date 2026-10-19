@@ -79,7 +79,6 @@ const NPRR_PENDING = [
   { n: 956, title: "Designation of Providers of Transmission Additions" },
   { n: 1214, title: "Reliability Deployment Price Adder Fix to Provide Locational Price Signals, Reduce Uplift and Risk" },
   { n: 1255, title: "Introduction of Mitigation of ESRs" },
-  { n: 1272, title: "Voltage Support at Private Use Networks" },
   { n: 1278, title: "Establishing Advanced Grid Support Service as an Ancillary Service" },
   { n: 1286, title: "Establish Multi-Value Criteria for Resiliency-Related Transmission Project Evaluation" },
   { n: 1292, title: "Granular Product Type for CRR TOU" },
@@ -110,6 +109,10 @@ const NPRR_PENDING = [
   { n: 1344, title: "Move OBD to Section 19 – Texas Market Test Plan" },
   { n: 1345, title: "Extend NPRR1279 Sunset Date for Exceptional Fuel Cost Process" },
   { n: 1346, title: "Updates to the Fuel Oil Price (FOP)" },
+  { n: 1348, title: "Telemetry Offsetting for Provisional Controllable Load Resources" },
+  { n: 1349, title: "765kV Transmission Outage Priority and Modeling Timelines" },
+  { n: 1350, title: "Revisions to Section 22 Attachments A through N for the Market Participant Service Portal (MPSP)" },
+  { n: 1351, title: "Revisions to Section 23 Forms for the Market Participant Service Portal (MPSP)" },
 ];
 
 const NPRR_APPROVED = [
@@ -1283,6 +1286,7 @@ const NPRR_WITHDRAWN = [
   { n: 1235, title: "Dispatchable Reliability Reserve Service as a Stand-Alone Ancillary Service" },
   { n: 1242, title: "Related to VCMRR042, SO2 and NOx Emission Index Prices Used in Verifiable Cost Calculations" },
   { n: 1262, title: "Ancillary Service Opt Out Clarification" },
+  { n: 1272, title: "Voltage Support at Private Use Networks" },
   { n: 1284, title: "Guaranteed Reliability Load Process" },
   { n: 1321, title: "Batch Alpha" },
   { n: 1347, title: "Contract for Capacity Dispatch Process and Energy Offer Curves" },
