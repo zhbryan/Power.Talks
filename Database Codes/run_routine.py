@@ -14,6 +14,9 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
     5. download   — scrape ercot.com for new committee-meeting documents
     6. profiles   — per-meeting Profile.json (group + meeting summaries)
     7. manifest   — per-committee _manifest.json for the group homepages
+    7b. timeline  — _timeline.json: the +/-1 month stakeholder meeting window
+                    behind the Meeting Tracks homepage "Meeting Timelines"
+                    right-panel section (includes future, not-yet-held meetings)
 
   HOT TOPICS  (daily brief)
     8. scaffold   — create HOT.TOPICS/<date>/ (_prep.json + report skeleton)
@@ -146,6 +149,16 @@ def build_steps(args):
         # 7. Group manifests
         steps.append(("STKHDR group manifests",
                       [os.path.join(stk, "gen_stkhdr_manifest.py")],
+                      stk))
+
+        # 7b. Meeting Timelines feed — the rolling +/-1 month window of
+        #     stakeholder meetings shown in the Meeting Tracks homepage right
+        #     panel. Re-scrapes each committee landing page for scheduled
+        #     (future) meetings, which the document downloader never sees, and
+        #     writes ERCOT.STKHDR.MEETS/_timeline.json. Imports the downloader
+        #     for the committee registry, so it runs from the stk folder.
+        steps.append(("STKHDR meeting timeline feed",
+                      [os.path.join(stk, "gen_stkhdr_timeline.py"), "--quiet"],
                       stk))
 
         # 8. Hot Topics scaffold — reads the stakeholder meetings just

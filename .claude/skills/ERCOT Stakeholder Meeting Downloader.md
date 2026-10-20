@@ -217,6 +217,68 @@ Add one entry to the `COMMITTEES` dict at the top of the script:
 
 Then create the corresponding folder under `Documents Database/ERCOT.STKHDR.MEETS/ABBREV/` (the script will create `YYYY-MM-DD` sub-folders automatically).
 
+The `COMMITTEES` registry is also imported by `gen_stkhdr_timeline.py` (below),
+so a new committee is picked up by the Meeting Timeline feed with no extra edit.
+
+---
+
+## Companion generator — `gen_stkhdr_timeline.py` (Meeting Timeline feed)
+
+`Database Codes/download_STKHDR_Meets/gen_stkhdr_timeline.py` builds the feed
+behind the **Meeting Timeline** tab of the Meeting Tracks homepage right
+panel (see `Set-Meeting-Tracks-Homepage`). It is a *scheduling* scraper, not a
+document downloader: it records the meetings themselves, including **future ones
+that have no documents yet** — which is why neither the download tree nor
+`_manifest.json` can serve this purpose.
+
+**Output** — one file for all committees:
+
+```
+Documents Database/ERCOT.STKHDR.MEETS/_timeline.json
+{ generated, window_days, from, to, today, meeting_count,
+  meetings: [ { committee, committee_full_name, date, name, url,
+                past, on_file, doc_count } ] }      # sorted oldest first
+```
+
+**How it works**
+
+- Imports `BASE_ROOT`, `BASE_URL`, `COMMITTEES` and `HEADERS` from
+  `download_ercot_stkhdr.py` (so the registry lives in one place) and the
+  committee full-name map `C` from `gen_stkhdr_profiles.py`. Because of those
+  sibling imports it **must run with its own folder as the cwd**.
+- Window: `today ± WINDOW_DAYS` (default 31, `--window N` to change).
+- Pages: a committee's landing page lists **both the current and the next
+  year's** scheduled meetings, so one fetch covers the whole window; the
+  `/YEAR` archive page is added only when the window reaches into last year
+  (i.e. in early January).
+- Drops rows whose parent text says `CANCELLED`/`CANCELED` (same rule as the
+  downloader) **and** rows superseded by a `RESCHEDULED TO <date>` note pointing
+  at a *different* date — the destination row is kept, the vacated one is not.
+- `meeting_name(href)` derives the name from the calendar slug: strip the
+  `MMDDYYYY-` prefix, `-_-` → ` & ` (ERCOT writes `&` as `_`), remaining
+  `-`/`_` → spaces, drop the trailing conferencing suffix via
+  `VENUE_SUFFIX_RE` (`TAC Meeting & Webex` → `TAC Meeting`; also matches
+  `WebEx`, `Webex Only`, `Teams`, `Zoom` — it says how to attend, not which
+  meeting it is, and it never strips the whole name), then `NAME_FIXUPS` for
+  all-caps slugs (`TEXAS SET LP` → `Texas SET LP`). Extend `VENUE_SUFFIX_RE` /
+  `NAME_FIXUPS` if a new committee's slug reads badly. The `url` keeps the
+  original slug — only the display name is cleaned.
+- `on_file`/`doc_count` come from the local document database, so the panel can
+  mark meetings whose materials are already downloaded.
+- `url` is the ercot.com `/calendar/<MMDDYYYY>-<SLUG>` page — the meeting's own
+  homepage, and what the timeline hyperlinks each meeting name to.
+
+**Run**
+
+```bash
+cd "E:\wamp64\www\Power.Talks\Database Codes\download_STKHDR_Meets"
+python gen_stkhdr_timeline.py            # --window N, --quiet
+```
+
+It is **step 7b of the daily routine** (`Database Codes/run_routine.py`), right
+after `gen_stkhdr_manifest.py`, so the window rolls forward every night. Run it
+manually after any targeted download or registry change.
+
 ---
 
 ## Committee URL and Slug Reference

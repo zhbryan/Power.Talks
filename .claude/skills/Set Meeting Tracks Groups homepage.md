@@ -88,6 +88,12 @@ python "Database Codes/download_STKHDR_Meets/gen_stkhdr_manifest.py"
 Manifests live under `Documents Database/` (gitignored) — they're generated
 artifacts, not committed.
 
+> A manifest lists only meetings whose **documents are already downloaded**, so
+> it holds no future meetings. The Meeting Tracks homepage "Meeting Timeline"
+> tab needs scheduled meetings too and reads a separate feed,
+> `ERCOT.STKHDR.MEETS/_timeline.json` (`gen_stkhdr_timeline.py`) — see
+> `Set-Meeting-Tracks-Homepage`. Don't try to serve one from the other.
+
 ## Tree node → committee mapping
 
 `MeetingTracksGroupHome` is keyed by the **document-database committee folder**

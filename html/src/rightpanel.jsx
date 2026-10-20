@@ -371,6 +371,152 @@ function MeetingProfileCard({ committee, date }) {
   );
 }
 
+// ─── "Meeting Timeline" tab (Meeting Tracks homepage, right panel) ──────────
+// A vertical timeline of every ERCOT stakeholder meeting in a rolling window of
+// roughly a month back to a month ahead. Top-to-bottom is past → future; each
+// entry alternates to the left and right of the centre line and shows the date
+// plus the meeting name, hyperlinked to that meeting's homepage on ercot.com.
+//
+// Data: Documents Database/ERCOT.STKHDR.MEETS/_timeline.json, written by
+// `Database Codes/download_STKHDR_Meets/gen_stkhdr_timeline.py` (step 7b of the
+// daily routine). The browser cannot scrape ercot.com, so the feed is the only
+// source — nothing here falls back to the per-committee manifests.
+const TIMELINE_FEED = "/Power.Talks/Documents%20Database/ERCOT.STKHDR.MEETS/_timeline.json";
+
+const MTL_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MTL_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// "2026-10-28" → "Wed, Oct 28". Parsed as local noon so the weekday never
+// slips a day from a UTC-midnight timestamp.
+function mtlDate(iso) {
+  const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!p) return iso || "—";
+  const d = new Date(+p[1], +p[2] - 1, +p[3], 12);
+  return `${MTL_DAYS[d.getDay()]}, ${MTL_MONTHS[d.getMonth()]} ${+p[3]}`;
+}
+
+// "2026-09-19" → "Sep 19" (for the window range line, where the weekday is noise).
+function mtlShort(iso) {
+  const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  return p ? `${MTL_MONTHS[+p[2] - 1]} ${+p[3]}` : (iso || "—");
+}
+
+function MeetingTimelinesCard() {
+  const [feed, setFeed] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    setLoading(true); setError(null); setFeed(null);
+    fetch(TIMELINE_FEED, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { setFeed(d); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
+  }, []);
+
+  const note = (txt) => (
+    <div style={{ padding: "16px 0", color: "var(--muted)", fontFamily: "var(--mono)", fontSize: 11, lineHeight: 1.6 }}>{txt}</div>
+  );
+
+  if (loading) return note("Loading meeting timeline…");
+  if (error) {
+    const low = error.toLowerCase();
+    return note(
+      low.includes("failed to fetch") || low.includes("networkerror")
+        ? "No timeline loaded — open via http://localhost, not file://."
+        : error.includes("404")
+        ? "Timeline not generated yet. Run gen_stkhdr_timeline.py (or the daily routine)."
+        : `Could not load the timeline. (${error})`
+    );
+  }
+  if (!feed) return null;
+
+  const meetings = feed.meetings || [];
+  if (!meetings.length) return note("No stakeholder meetings scheduled in this window.");
+
+  // The flip from past to upcoming — where the "today" marker is drawn.
+  const todayAt = meetings.findIndex(m => !m.past);
+
+  return (
+    <div>
+      <style>{`
+        .mtl-hd { display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
+        .mtl-hd-t { font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-2); font-weight:600; }
+        .mtl-hd-n { font-family:var(--mono); font-size:9.5px; color:var(--muted); margin-left:auto; }
+        .mtl-range { font-size:11px; color:var(--muted); margin:0 0 12px; }
+
+        .mtl { position:relative; padding:2px 0 6px; }
+        .mtl::before {
+          content:""; position:absolute; left:50%; top:0; bottom:0;
+          width:2px; margin-left:-1px; border-radius:2px;
+          background:linear-gradient(180deg, var(--rule-2), var(--accent) 50%, var(--rule-2));
+        }
+        .mtl-row { position:relative; display:block; padding:5px 0; min-height:34px; }
+        .mtl-cell { width:50%; box-sizing:border-box; }
+        .mtl-row.is-l .mtl-cell { padding-right:16px; text-align:right; }
+        .mtl-row.is-r .mtl-cell { padding-left:16px; text-align:left; margin-left:50%; }
+        .mtl-dot {
+          position:absolute; left:50%; top:11px; transform:translateX(-50%);
+          width:9px; height:9px; border-radius:50%; z-index:1;
+          border:2px solid var(--accent); background:var(--panel);
+        }
+        .mtl-row.is-past .mtl-dot { border-color:var(--rule-2); }
+        .mtl-row.is-next .mtl-dot { background:var(--accent); box-shadow:0 0 0 3px color-mix(in oklab, var(--accent), transparent 82%); }
+        .mtl-date { font-family:var(--mono); font-size:9.5px; letter-spacing:.03em; color:var(--muted); white-space:nowrap; }
+        .mtl-row.is-past .mtl-date { opacity:.75; }
+        .mtl-name { font-size:11.5px; line-height:1.35; margin-top:1px; }
+        .mtl-name a { color:var(--accent-2); text-decoration:none; border-bottom:1px solid transparent; }
+        .mtl-name a:hover { color:var(--accent); border-bottom-color:var(--accent); }
+        .mtl-row.is-past .mtl-name a { color:var(--ink-2); }
+        .mtl-row.is-past .mtl-name a:hover { color:var(--accent); border-bottom-color:var(--accent); }
+        .mtl-docs { font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:2px; }
+
+        .mtl-today { position:relative; padding:7px 0; text-align:center; }
+        .mtl-today::before { content:""; position:absolute; left:0; right:0; top:50%; border-top:1px dashed var(--accent); opacity:.5; }
+        .mtl-today span {
+          position:relative; display:inline-block;
+          font-family:var(--mono); font-size:9px; letter-spacing:.14em; font-weight:600;
+          text-transform:uppercase; color:var(--accent-2);
+          background:var(--panel); padding:0 8px;
+        }
+      `}</style>
+
+      {/* The tab button already says "Meeting Timeline" — this header carries
+          the window, not a second copy of the title. */}
+      <div className="mtl-hd">
+        <span className="mtl-hd-t">{mtlShort(feed.from)} – {mtlShort(feed.to)}</span>
+        <span className="mtl-hd-n">{meetings.length} meeting{meetings.length === 1 ? "" : "s"}</span>
+      </div>
+      <p className="mtl-range">Stakeholder meetings · past above, upcoming below</p>
+
+      <div className="mtl">
+        {meetings.map((m, i) => (
+          <React.Fragment key={`${m.date}-${m.committee}-${m.name}`}>
+            {i === todayAt && <div className="mtl-today"><span>Today · {mtlDate(feed.today)}</span></div>}
+            <div className={`mtl-row ${i % 2 === 0 ? "is-l" : "is-r"} ${m.past ? "is-past" : ""} ${i === todayAt ? "is-next" : ""}`}>
+              <div className="mtl-dot" />
+              <div className="mtl-cell">
+                <div className="mtl-date">{mtlDate(m.date)}</div>
+                <div className="mtl-name">
+                  <a href={m.url} target="_blank" rel="noopener noreferrer"
+                     title={`${m.committee_full_name || m.committee} — open the meeting homepage on ercot.com`}>
+                    {m.name}
+                  </a>
+                </div>
+                {m.doc_count > 0 && (
+                  <div className="mtl-docs">{m.doc_count} doc{m.doc_count === 1 ? "" : "s"} on file</div>
+                )}
+              </div>
+            </div>
+          </React.Fragment>
+        ))}
+        {todayAt === -1 && <div className="mtl-today"><span>Today · {mtlDate(feed.today)}</span></div>}
+      </div>
+    </div>
+  );
+}
+
 const ERCOT_HOME_ARTIFACTS = [
   {
     id: "ercot-a1",
@@ -435,11 +581,19 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
     if (hasIssue) setTab("runs");
   }, [ctx.nprr, ctx.copmgrr, ctx.pgrr, ctx.scr, ctx.nogrr, ctx.rmgrr]);
 
-  // ERCOT home and the Meeting Tracks tree landing have no "For the talk" tab —
-  // force Artifacts. A Meeting Tracks group/item opens to "For the talk".
+  // ERCOT home and Stats Illustrator have no "For the talk" tab — force
+  // Artifacts. The Meeting Tracks tree landing has no "For the talk" either; it
+  // opens on its own "Meeting Timeline" tab. A group/item opens to "For the talk".
   React.useEffect(() => {
-    if (isErcotHome || onMeetingTree || isStatsHome) setTab("artifacts");
+    if (onMeetingTree) setTab("timeline");
+    else if (isErcotHome || isStatsHome) setTab("artifacts");
   }, [isErcotHome, onMeetingTree, isStatsHome]);
+
+  // "Meeting Timeline" exists only on the Meeting Tracks tree landing — leaving
+  // it (to a group, or another section) must not strand the panel on an empty tab.
+  React.useEffect(() => {
+    if (tab === "timeline" && !onMeetingTree) setTab("artifacts");
+  }, [tab, onMeetingTree]);
 
   React.useEffect(() => {
     if (isMeetingGroup) setTab("runs");
@@ -594,6 +748,12 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
             onClick={() => setTab("runs")}
           >For the talk</button>
         )}
+        {onMeetingTree && (
+          <button
+            className={`pt-right-tab ${tab === "timeline" ? "is-on" : ""}`}
+            onClick={() => setTab("timeline")}
+          >Meeting Timeline</button>
+        )}
         <button
           className={`pt-right-tab ${tab === "artifacts" ? "is-on" : ""}`}
           onClick={() => setTab("artifacts")}
@@ -601,6 +761,10 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
       </div>
 
       <div className="pt-right-scroll">
+        {/* Meeting Tracks homepage (tree landing) — its own tab, kept separate
+            from the Artifacts list. */}
+        {tab === "timeline" && onMeetingTree && <MeetingTimelinesCard />}
+
         {tab === "runs" && !isErcotHome && !onMeetingTree && !isStatsHome && (
           isMeetingGroup
             ? <MeetingProfileCard committee={ctx.meetingGroup || (ctx.meetingDoc && ctx.meetingDoc.committee)} date={ctx.meetingDate} />
