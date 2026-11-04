@@ -113,6 +113,7 @@ const NPRR_PENDING = [
   { n: 1349, title: "765kV Transmission Outage Priority and Modeling Timelines" },
   { n: 1350, title: "Revisions to Section 22 Attachments A through N for the Market Participant Service Portal (MPSP)" },
   { n: 1351, title: "Revisions to Section 23 Forms for the Market Participant Service Portal (MPSP)" },
+  { n: 1352, title: "QSE Receipt and Payment of Weatherization Inspection Fee Invoices" },
 ];
 
 const NPRR_APPROVED = [
