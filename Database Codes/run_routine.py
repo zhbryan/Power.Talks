@@ -41,6 +41,13 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
     8e. glossary  — refresh the ERCOT glossary doc from ercot.com/glossary
                     (Database Codes/reference_info/ERCOT_Glossary.md + .json).
 
+  STUDY INDEX
+    8f. index     — rebuild Database Codes/study_index/study_index.db, the
+                    SQLite+FTS5 tiered retrieval index over the derived layer
+                    (issue profiles/summaries, meeting profiles, glossary) that
+                    backs the Study-a-Topic skill. Runs after profile/summarize
+                    so it never indexes a half-rewritten profile.
+
   BUILD
     9. rebuild    — patch the standalone Power.Talks home page bundle
 
@@ -213,6 +220,17 @@ def build_steps(args):
                        "--quiet"],
                       PROJECT_ROOT))
 
+    # 8f. Study index — tiered retrieval (SQLite + FTS5) over the derived layer
+    #     written above: issue profiles/summaries, meeting profiles, and the
+    #     glossary refreshed in 8e. Must come AFTER the profile/summarize steps,
+    #     because the profilers rewrite Profile.json in place and a build taken
+    #     mid-run captures a torn snapshot. Backs the Study-a-Topic skill.
+    if not args.no_study_index:
+        steps.append(("STUDY INDEX rebuild (SQLite + FTS5)",
+                      [os.path.join(DB, "study_index", "build_index.py"),
+                       "--quiet"],
+                      PROJECT_ROOT))
+
     # 9. Rebuild the standalone web bundle (once, at the end)
     if not args.no_rebuild:
         steps.append(("BUILD rebuild standalone page",
@@ -248,6 +266,8 @@ def run(logf):
     parser.add_argument("--no-ai", action="store_true",
                         help="skip paid-Anthropic-API steps (summarize + "
                              "stakeholder sections) to suspend API cost")
+    parser.add_argument("--no-study-index", action="store_true",
+                        help="skip the study-index rebuild")
     args = parser.parse_args()
 
     steps = build_steps(args)

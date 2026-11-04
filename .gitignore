@@ -18,6 +18,10 @@ html/paper_trails_run_log.txt
 # Processed files index (local state)
 Database Codes/processed_files.json
 
+# Study index — generated from the derived layer, rebuilt by run_routine.py
+Database Codes/study_index/*.db
+Database Codes/study_index/*.db.tmp
+
 # Downloaded documents — too large for git
 Documents Database/
 
