@@ -51,6 +51,8 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
     7c. calendar  — ERCOT calendar meeting log: one .log/.json per meeting
                     date (time, status, Webex number/password, webcast link)
                     under ERCOT.STKHDR.MEETS/_calendar_log/ for the recorder
+    7d. committees— derive the live committee set from 7c and create a folder
+                    for any committee ERCOT has newly stood up
 
   BUILD
     9. rebuild    — patch the standalone Power.Talks home page bundle
@@ -180,6 +182,17 @@ def build_steps(args):
         #     Feeds the meeting-recording agent.
         steps.append(("STKHDR calendar meeting log",
                       [os.path.join(stk, "ercot_calendar_logger.py"), "--quiet"],
+                      stk))
+
+        # 7d. Committee sync — derives the live committee set from the calendar
+        #     log just written and creates ERCOT.STKHDR.MEETS/<ACRONYM>/ for any
+        #     committee ERCOT has stood up since the downloader's COMMITTEES
+        #     dict was last edited, so its meetings and recordings are filed
+        #     under their own folder instead of _unfiled. Must run AFTER 7c,
+        #     which is what gives it the verified committee names.
+        steps.append(("STKHDR committee sync (new committees -> folders)",
+                      [os.path.join(stk, "committee_registry.py"),
+                       "--create", "--quiet"],
                       stk))
 
         # 8. Hot Topics scaffold — reads the stakeholder meetings just

@@ -202,9 +202,57 @@ Run it standalone without downloading via:
 
 ---
 
-## Adding a New Committee
+## Committees change — folders keep up on their own
 
-Add one entry to the `COMMITTEES` dict at the top of the script:
+ERCOT's stakeholder structure moves: working groups are stood up, renamed and
+retired. `COMMITTEES` is hand-maintained, so it goes stale, and until someone
+edits it a new group's meetings have nowhere to be filed.
+
+**`committee_registry.py` closes that gap automatically.** It derives the live
+committee set from the calendar log and creates
+`Documents Database/ERCOT.STKHDR.MEETS/<ACRONYM>/` for anything new, so a
+newly formed group is filed under its own folder rather than `_unfiled/`.
+It runs as **step 7d of the nightly routine**, right after the calendar log
+that feeds it, and can be run by hand:
+
+```bash
+python committee_registry.py            # report only, creates nothing
+python committee_registry.py --create   # create folders + write the ledger
+```
+
+It writes a ledger at `ERCOT.STKHDR.MEETS/_committees.json`:
+
+```json
+{"CIPWG": {"name": "Critical Infrastructure Protection Working Group",
+           "first_seen": "2026-11-05", "in_downloader_registry": false}}
+```
+
+**Where the names come from.** `ercot_calendar_logger.py` records each
+meeting's committee name from ERCOT's calendar and sets `group_verified` when
+the meeting title's acronym corroborates it. A verified pair is an acronym
+plus its full name — exactly what a registry entry needs.
+
+**Discovery is stricter than that verification**, deliberately. Verification
+accepts a name whose letters merely run in order through the acronym, which is
+right for keeping ERCOT's own label but too loose for inventing a committee:
+"Batch/CTP Workshop 4a" carries the TXSETLP group name, and C-T-P does run
+through "Texas Standard Electronic TransacTions/Load Profiling", so a loose
+test invents a bogus `CTP` committee. For discovery the acronym must **be** the
+name's initials, or the name must start with it.
+
+Workshops, Q&A sessions and holidays have no committee acronym and are not
+invented as committees; they file under `_unfiled/<date>`.
+
+Callers should use `committee_registry.known_committees()` — the registry, the
+folders on disk and the ledger combined — rather than importing `COMMITTEES`
+directly. `webex_recorder.py` does this, which is how CIPWG and TWG
+recordings stopped landing in `_unfiled`.
+
+### Still add a registry entry to scrape a committee's documents
+
+Creating a folder files *meetings*; it does not scrape *documents*. For that,
+the committee still needs an entry in `COMMITTEES`, because only that carries
+its URL and filename slug:
 
 ```python
 "ABBREV": {
@@ -215,10 +263,12 @@ Add one entry to the `COMMITTEES` dict at the top of the script:
 },
 ```
 
-Then create the corresponding folder under `Documents Database/ERCOT.STKHDR.MEETS/ABBREV/` (the script will create `YYYY-MM-DD` sub-folders automatically).
+`committee_registry.py` prints exactly which committees are in this state —
+active on the calendar but absent from `COMMITTEES` — so the list of entries
+worth adding is never a guess. As of 2026-11-05 that is CIPWG, TWG and PUCT.
 
 The `COMMITTEES` registry is also imported by `gen_stkhdr_timeline.py` (below),
-so a new committee is picked up by the Meeting Timeline feed with no extra edit.
+so a new entry is picked up by the Meeting Timeline feed with no extra edit.
 
 ---
 
