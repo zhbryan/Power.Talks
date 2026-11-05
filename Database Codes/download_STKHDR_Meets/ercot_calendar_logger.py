@@ -88,6 +88,7 @@ class Meeting:
     time: str = ""
     end_time: str = ""
     group: str = ""
+    group_verified: bool = False
     location: str = ""
     status: str = "Active"
     webex_url: str = ""
@@ -111,6 +112,69 @@ def clean(text: str) -> str:
 def digits_grouped(raw: str) -> str:
     d = re.sub(r"\D", "", raw)
     return " ".join(filter(None, [d[:-7], d[-7:-4], d[-4:]])) if len(d) >= 9 else d
+
+
+# ------------------------------------------------------------------ group check
+# The committee name comes from the title= attribute ERCOT puts on each
+# calendar link, and ERCOT populates it unreliably: a workshop or Q&A session
+# -- and sometimes the next committee meeting -- inherits the attribute of an
+# earlier event. The 2026-11-06 "SB6 Large Load Curtailment" workshop and the
+# 2026-11-09 PLWG meeting both arrived labelled "Critical Infrastructure
+# Protection Working Group". The detail pages carry no committee of their own
+# (every page embeds the same site-wide committee nav), so the attribute is the
+# only source and has to be corroborated against the meeting title instead.
+_GROUP_STOP = {"of", "and", "the", "for", "to", "a", "in", "on", "at"}
+
+# "CANCELLED" / "canceled", as a word -- not "cancellation policy" and not the
+# "cancel" inside some unrelated control label.
+CANCELLED_PAT = re.compile(r"\bcancell?ed\b", re.IGNORECASE)
+
+
+def title_acronyms(title: str) -> list[str]:
+    """All-caps tokens in a meeting title -- its candidate committee acronym."""
+    return [a for a in re.findall(r"\b([A-Z][A-Z0-9&]{1,9})\b", title or "")
+            if a not in {"AND", "THE", "OF", "ERCOT"}]
+
+
+def corroborates(acronym: str, phrase: str) -> bool:
+    """True when `acronym` could be the acronym of `phrase`: either the phrase
+    already starts with it, or its letters occur in order through the phrase
+    (how "TXSETLP" sits inside "Texas Standard Electronic Transactions/Load
+    Profiling Working Group"). Rejects a carried-over name, whose letters do
+    not line up -- "PLWG" cannot be drawn from "Critical Infrastructure
+    Protection Working Group"."""
+    letters = re.sub(r"[^a-z]", "", (phrase or "").lower())
+    want = re.sub(r"[^a-z]", "", (acronym or "").lower())
+    if not want or not letters:
+        return False
+    if letters.startswith(want):
+        return True
+    i = 0
+    for ch in want:
+        i = letters.find(ch, i)
+        if i < 0:
+            return False
+        i += 1
+    return True
+
+
+def verify_group(mt: "Meeting") -> None:
+    """Keep the calendar's committee name only when the meeting title backs it
+    up; otherwise drop it and keep what ERCOT claimed in the notes."""
+    if not mt.group:
+        return
+    acronyms = title_acronyms(mt.title)
+    if not acronyms:
+        # Nothing in the title to check against: keep it, but say so.
+        mt.notes.append(f"Group '{mt.group}' comes from the ERCOT calendar "
+                        f"listing and could not be verified against the title")
+        return
+    if any(corroborates(a, mt.group) for a in acronyms):
+        mt.group_verified = True
+        return
+    mt.notes.append(f"ERCOT calendar lists this under '{mt.group}', which does "
+                    f"not match the meeting title; group omitted")
+    mt.group = ""
 
 
 class Fetcher:
@@ -179,7 +243,7 @@ def parse_calendar(html: str) -> list[Meeting]:
                 break
             block = parent
         btext = clean(block.get_text(" "))
-        if "cancel" in btext.lower():
+        if CANCELLED_PAT.search(btext):
             mt.status = "Cancelled"
         elif "reschedul" in btext.lower():
             mt.status = "Rescheduled"
@@ -204,6 +268,15 @@ def parse_detail(html: str, mt: Meeting) -> Meeting:
     main = soup.find("main") or soup.find(id=re.compile("content|main", re.I)) or soup.body or soup
     for tag in main.find_all(["script", "style", "nav", "header", "footer"]):
         tag.decompose()
+    # Every committee meeting page ends with a "Scheduled <X> Meetings" list of
+    # that committee's other dates, and a past date in it may be marked
+    # "(CANCELLED)". Reading it as part of this page's text cancelled live
+    # meetings wholesale -- the 2026-11-05 ROS meeting was reported cancelled
+    # because the list below it carries "Sep 03, 2026 - ROS Meeting
+    # (CANCELLED)". It is also a second set of dates and times competing with
+    # this meeting's own, so drop it before reading anything.
+    for tag in main.find_all("section", id="otherMeetings"):
+        tag.decompose()
     text = main.get_text("\n")
     flat = clean(text)
 
@@ -224,7 +297,7 @@ def parse_detail(html: str, mt: Meeting) -> Meeting:
         if tm:
             mt.time, mt.end_time = clean(tm.group(1)), clean(tm.group(2) or "")
 
-    if re.search(r"\bcancel+ed\b", flat, re.I):
+    if CANCELLED_PAT.search(flat):
         mt.status = "Cancelled"
 
     for a in main.find_all("a", href=True):
@@ -298,7 +371,8 @@ def write_logs(meetings: list[Meeting], out: Path, run_ts: str) -> list[Path]:
                 f"[{i}] {m.title}",
                 f"    Time:            {when or 'n/a'} (Central)",
                 f"    Status:          {m.status}",
-                f"    Group:           {m.group or 'n/a'}",
+                f"    Group:           {m.group or 'n/a'}"
+                + ("" if not m.group or m.group_verified else "  (unverified)"),
                 f"    Location:        {m.location or 'n/a'}",
                 f"    Webex link:      {m.webex_url or 'n/a'}",
                 f"    Meeting number:  {m.webex_meeting_number or 'not posted yet'}",
@@ -366,6 +440,8 @@ def run(out: Path, days: int | None, delay: float, html_dir: Path | None, includ
             mt.notes.append(f"Detail page could not be read: {e}")
             meetings.append(mt)
             logging.error("Detail failed for %s: %s", mt.url, e)
+        # After the detail page, so the check runs against its final title.
+        verify_group(meetings[-1])
     written = write_logs(meetings, out, run_ts)
     ready = sum(m.webex_details_complete for m in meetings)
     summary = (
