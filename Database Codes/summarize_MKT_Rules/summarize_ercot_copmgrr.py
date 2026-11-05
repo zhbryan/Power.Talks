@@ -125,33 +125,16 @@ def extract_text(path):
     return ''
 
 # ─── BALLOT VOTE EXTRACTION ──────────────────────────────────────────────────
-def extract_votes(xls_path):
-    try:
-        with open(xls_path, 'rb') as f:
-            data = f.read()
-        strings = [s.decode('ascii', errors='ignore')
-                   for s in re.findall(rb'[\x20-\x7e]{8,}', data)]
-        text = ' '.join(strings)
-        for_m     = re.search(r'(\d+)\s*(?:For|Aye)\b', text, re.IGNORECASE)
-        against_m = re.search(r'(\d+)\s*(?:Against|Nay|No)\b', text, re.IGNORECASE)
-        abstain_m = re.search(r'(\d+)\s*Abstain', text, re.IGNORECASE)
-        if for_m or against_m:
-            f_val  = int(for_m.group(1)) if for_m else 0
-            a_val  = int(against_m.group(1)) if against_m else 0
-            ab_val = int(abstain_m.group(1)) if abstain_m else 0
-            passed = "Passed" if f_val > a_val else "Failed"
-            parts  = [f"{f_val} For", f"{a_val} Against"]
-            if ab_val:
-                parts.append(f"{ab_val} Abstain")
-            return f"{', '.join(parts)} — {passed}"
-        if re.search(r'\bpassed\b', text, re.IGNORECASE):
-            return "Motion Passed"
-        if re.search(r'\b(failed|defeated|withdrawn)\b', text, re.IGNORECASE):
-            return "Motion Failed/Withdrawn"
-    except Exception:
-        pass
-    return "Vote recorded"
-
+# Ballot tallies come from ballot_votes.extract_votes, which opens the ballot
+# workbook and reads the "All Sectors Voting Totals" row. The old inline
+# version scraped printable byte runs and regex'd for "<n> For", so motion
+# text like "table NPRR1343 for further review" was reported as "1343 For".
+try:
+    from ballot_votes import extract_votes
+except ImportError:  # running from another cwd
+    import sys as _sys
+    _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from ballot_votes import extract_votes
 # ─── DATE FROM FILENAME ──────────────────────────────────────────────────────
 def date_from_fname(fname):
     m = re.search(r'[_\-](\d{6}|\d{8})(?:\.|$)', fname)
