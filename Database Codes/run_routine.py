@@ -48,6 +48,10 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
                     backs the Study-a-Topic skill. Runs after profile/summarize
                     so it never indexes a half-rewritten profile.
 
+    7c. calendar  — ERCOT calendar meeting log: one .log/.json per meeting
+                    date (time, status, Webex number/password, webcast link)
+                    under ERCOT.STKHDR.MEETS/_calendar_log/ for the recorder
+
   BUILD
     9. rebuild    — patch the standalone Power.Talks home page bundle
 
@@ -166,6 +170,16 @@ def build_steps(args):
         #     for the committee registry, so it runs from the stk folder.
         steps.append(("STKHDR meeting timeline feed",
                       [os.path.join(stk, "gen_stkhdr_timeline.py"), "--quiet"],
+                      stk))
+
+        # 7c. ERCOT calendar meeting log — reads ercot.com/calendar and every
+        #     upcoming meeting page, writing one log (.log + .json) per meeting
+        #     date with time, status, Webex link/number/password and webcast
+        #     link, under ERCOT.STKHDR.MEETS/_calendar_log/. Re-checks every run
+        #     because ERCOT posts Webex numbers/passwords close to the date.
+        #     Feeds the meeting-recording agent.
+        steps.append(("STKHDR calendar meeting log",
+                      [os.path.join(stk, "ercot_calendar_logger.py"), "--quiet"],
                       stk))
 
         # 8. Hot Topics scaffold — reads the stakeholder meetings just
