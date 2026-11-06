@@ -303,22 +303,43 @@ def parse_detail(html: str, mt: Meeting) -> Meeting:
     for a in main.find_all("a", href=True):
         href = a["href"]
         low = href.lower()
-        if "webex.com" in low and not mt.webex_url:
-            mt.webex_url = href
-        elif any(k in low for k in ("swagit", "webcast", "livestream")) and not mt.webcast_url:
+        if any(k in low for k in ("swagit", "webcast", "livestream")) and not mt.webcast_url:
             mt.webcast_url = urljoin(BASE_URL, href)
         elif "/ical/" in low and not mt.ical_url:
             mt.ical_url = urljoin(BASE_URL, href)
     if not mt.webcast_url and re.search(r"\bwebcast\b", flat, re.I):
         mt.notes.append("Page mentions a webcast")
 
-    if (m := MEETING_NO_RE.search(flat)):
+    # Every Webex fact lives in one cell of the meeting's detail table:
+    #
+    #   <td class="webex">
+    #     <a href="https://ercot.webex.com/ercot">WebEx Conference</a>
+    #     Teleconference: 877-668-4493
+    #     Meeting number: 2553 140 5933
+    #     Meeting password: Xm#74
+    #
+    # so read them from that cell and nowhere else. This logger has already
+    # shipped two bugs of exactly the opposite shape -- a past "(CANCELLED)"
+    # in the page's own list of other meeting dates cancelling a live meeting,
+    # and a neighbouring committee's name picked off an unrelated anchor --
+    # and "password", "meeting number" and a phone number are all phrases that
+    # recur further down a page in Comments and contact blurbs. The cell is
+    # also the authority for the Webex address: the recorder opens the link
+    # ERCOT publishes for this meeting rather than a constant of our own.
+    cell = main.find("td", class_="webex")
+    webex_text = clean(cell.get_text("\n")) if cell is not None else flat
+    for a in (cell if cell is not None else main).find_all("a", href=True):
+        if "webex.com" in a["href"].lower():
+            mt.webex_url = urljoin(BASE_URL, a["href"])
+            break
+
+    if (m := MEETING_NO_RE.search(webex_text)):
         mt.webex_meeting_number = digits_grouped(m.group(1))
-    if (m := ACCESS_CODE_RE.search(flat)):
+    if (m := ACCESS_CODE_RE.search(webex_text)):
         mt.webex_access_code = digits_grouped(m.group(1))
         if not mt.webex_meeting_number:
             mt.webex_meeting_number = mt.webex_access_code
-    if (m := PASSWORD_RE.search(flat)):
+    if (m := PASSWORD_RE.search(webex_text)):
         pw = m.group(1).strip(".")
         if pw.lower() not in {"required", "is", "protected", "n/a"}:
             mt.webex_password = pw
@@ -326,7 +347,7 @@ def parse_detail(html: str, mt: Meeting) -> Meeting:
     if not mt.webex_meeting_number and mt.webex_url:
         if (m := re.search(r"[?&](?:MN|meetingNumber|mn)=(\d{9,11})", mt.webex_url)):
             mt.webex_meeting_number = digits_grouped(m.group(1))
-    if (m := PHONE_RE.search(flat)):
+    if (m := PHONE_RE.search(webex_text)):
         mt.teleconference = clean(m.group(1))
 
     if not mt.location:

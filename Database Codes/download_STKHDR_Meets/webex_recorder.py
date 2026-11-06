@@ -257,6 +257,140 @@ def skip_reason(meeting: dict) -> str | None:
     return None
 
 
+# ─── THE WEBEX JOIN SEQUENCE ─────────────────────────────────────────────────
+# Every selector below was read off the live site, not guessed. The first real
+# run (ROS, 2026-11-05) died on step 1: the join box carries no placeholder and
+# its aria-label is "Enter meeting information", so every selector that looked
+# for "meeting number" or a placeholder missed it. The steps after it were
+# wrong too and would have failed in turn -- the password gate's submit button
+# is "OK" rather than "Join", "Join Meeting" is a <div> and not a <button>, and
+# the name box is a web component inside an iframe from web.webex.com with a
+# generated id. The shape of the flow is:
+#
+#   ERCOT's "WebEx Conference" link -> #ipt-joinmeeting + Enter
+#     -> #meetingInfoPassword + "OK"
+#     -> the meeting-info page, which publishes the real .../j.php?MTID=... link
+#     -> "Join from this browser"  (#broadcom-center-right)
+#     -> name + mute + #join-button, inside the web.webex.com iframe
+JOIN_BOX_SELECTORS = (
+    "#ipt-joinmeeting",
+    'input[aria-label*="Enter meeting" i]',
+    'input[placeholder*="meeting number" i]',
+    'input[aria-label*="meeting number" i]',
+    "#join-meeting-input",
+    'input[type="search"]',
+)
+PASSWORD_GATE_SELECTORS = ("#meetingInfoPassword", 'input[type="password"]')
+BROWSER_JOIN_SELECTORS = (
+    "#broadcom-center-right",
+    'text="Join from this browser"',
+    'text="Join from your browser"',
+    'text="Use web app"',
+)
+MTID_RE = re.compile(r"https://[^\s\"'<>|]*j\.php\?MTID=[A-Za-z0-9]+")
+
+
+def dismiss_cookies(page) -> None:
+    """Webex's cookie banner covers the bottom of every page and eats clicks
+    aimed at what is behind it."""
+    for name in ("Accept", "Allow all", "Reject"):
+        try:
+            btn = page.get_by_role("button", name=name, exact=True).first
+            if btn.count():
+                btn.click(timeout=4000)
+                return
+        except Exception:
+            continue
+
+
+def first_visible(scope, selectors, timeout: int = 8000):
+    for sel in selectors:
+        try:
+            loc = scope.locator(sel).first
+            if loc.count():
+                loc.wait_for(state="visible", timeout=timeout)
+                return loc
+        except Exception:
+            continue
+    return None
+
+
+def click_first(scope, labels) -> bool:
+    """Click the first of `labels` that exists anywhere in the page or its
+    frames, then stop. The version this replaces walked every label in turn,
+    so a screen carrying both "Next" and "Join" received both clicks."""
+    frames = [scope] + list(getattr(scope, "frames", None) or [])
+    for label in labels:
+        for frame in frames:
+            try:
+                btn = frame.get_by_role(
+                    "button", name=re.compile(f"^{re.escape(label)}$", re.I)).first
+                if btn.count():
+                    btn.click(timeout=10_000)
+                    return True
+            except Exception:
+                continue
+    return False
+
+
+def set_av_off(scope) -> None:
+    """Mute the microphone and keep the camera off.
+
+    Webex states the *current* state in the aria-label ("Microphone is
+    currently unmuted - click to mute"), so read it instead of clicking
+    blindly: a blind click on an already-muted mic opens it into the meeting.
+    """
+    try:
+        buttons = scope.get_by_role("button")
+        count = min(buttons.count(), 30)
+    except Exception:
+        return
+    for i in range(count):
+        button = buttons.nth(i)
+        try:
+            label = (button.get_attribute("aria-label") or "").lower()
+        except Exception:
+            continue
+        if "currently unmuted" in label:
+            want = "mute the microphone"
+        elif "video is currently enabled" in label:
+            want = "stop the camera"
+        else:
+            continue
+        try:
+            button.click(timeout=5000)
+            logging.info("Clicked to %s", want)
+        except Exception as e:
+            logging.warning("Could not %s: %s", want, e)
+
+
+def webex_app_frame(page):
+    """The join screen is served in an iframe from web.webex.com."""
+    for frame in page.frames:
+        if "web.webex.com" in (frame.url or ""):
+            return frame
+    return page
+
+
+def describe_page(page) -> str:
+    """What is actually on screen, for the log when a step finds nothing. The
+    first failure cost a whole meeting because the log said only that a
+    selector had missed."""
+    try:
+        return json.dumps(page.evaluate(
+            "() => ({url: location.href,"
+            " inputs: [...document.querySelectorAll('input')]"
+            "   .filter(e => e.type !== 'hidden')"
+            "   .map(e => [e.id, e.type, e.placeholder,"
+            "              e.getAttribute('aria-label')]),"
+            " clickable: [...document.querySelectorAll('button,a,[role=button]')]"
+            "   .filter(e => e.offsetWidth || e.offsetHeight)"
+            "   .map(e => (e.textContent || '').trim().slice(0, 40))"
+            "   .filter(Boolean).slice(0, 25)})"), ensure_ascii=False)[:1600]
+    except Exception as e:
+        return f"(could not read the page: {e})"
+
+
 # ─── JOIN + RECORD ───────────────────────────────────────────────────────────
 def record(meeting: dict, out_dir: Path, base: str, display_name: str,
            email: str, hard_cap_min: int, keep_webm: bool,
@@ -300,78 +434,102 @@ def record(meeting: dict, out_dir: Path, base: str, display_name: str,
             page.expose_function("__ptChunk", on_chunk)
             page.add_init_script(INIT_SCRIPT.replace("__CHUNK_MS__", str(CHUNK_MS)))
 
-            logging.info("Opening %s", WEBEX_SITE)
-            page.goto(WEBEX_SITE, wait_until="domcontentloaded", timeout=90_000)
+            # ERCOT's meeting page links its own "WebEx Conference" address;
+            # use that rather than this project's idea of the site.
+            site = meeting.get("webex_url") or WEBEX_SITE
+            logging.info("Opening %s", site)
+            page.goto(site, wait_until="domcontentloaded", timeout=90_000)
+            page.wait_for_timeout(6000)
+            dismiss_cookies(page)
             shot(page, "site")
 
-            # Meeting number -> join
-            for sel in ('input[placeholder*="meeting number" i]',
-                        'input[placeholder*="Enter meeting" i]',
-                        'input[aria-label*="meeting number" i]',
-                        "#join-meeting-input", 'input[type="search"]'):
-                box = page.locator(sel).first
-                if box.count():
-                    box.fill(number, timeout=20_000)
-                    box.press("Enter")
-                    break
-            else:
+            # 1. Meeting number.
+            box = first_visible(page, JOIN_BOX_SELECTORS, timeout=20_000)
+            if box is None:
+                logging.error("Join box not found. Page: %s", describe_page(page))
                 raise RuntimeError("could not find the meeting-number box on the Webex site")
-            page.wait_for_timeout(6000)
+            box.fill(number, timeout=20_000)
+            box.press("Enter")
+            page.wait_for_timeout(10_000)
             shot(page, "number")
 
-            # Prefer the browser client over the desktop app.
-            for name in ("Join from your browser", "Join from browser",
-                         "Use web app", "Join from this browser"):
-                link = page.get_by_text(re.compile(name, re.I)).first
-                if link.count():
-                    link.click(timeout=15_000)
-                    break
-            page.wait_for_timeout(5000)
+            # 2. The password gate on the meeting-info page.
+            gate = first_visible(page, PASSWORD_GATE_SELECTORS, timeout=15_000)
+            if gate is None:
+                logging.info("No password gate shown; continuing")
+            else:
+                gate.fill(password, timeout=10_000)
+                if not click_first(page, ("OK", "Continue", "Submit", "Next")):
+                    gate.press("Enter")
+                page.wait_for_timeout(10_000)
+            shot(page, "meeting-info")
+
+            # 3. That page publishes the meeting's real join link. Following it
+            #    beats clicking "Join Meeting", which is a <div>, and it lands
+            #    directly on the browser/desktop choice.
+            link = page.evaluate(
+                "() => { const a = [...document.querySelectorAll('a')]"
+                "  .find(x => (x.href || '').includes('j.php?MTID='));"
+                "  return a ? a.href : ''; }")
+            if not link:
+                found = MTID_RE.search(page.inner_text("body", timeout=5000) or "")
+                link = found.group(0) if found else ""
+            if link:
+                logging.info("Join link: %s", link)
+                page.goto(link, wait_until="domcontentloaded", timeout=90_000)
+                page.wait_for_timeout(12_000)
+            elif not click_first(page, ("Join Meeting", "Join meeting")):
+                logging.error("Nothing to join with. Page: %s", describe_page(page))
+                raise RuntimeError("the meeting-info page offered no way to join")
+            dismiss_cookies(page)
+            shot(page, "join-page")
+
+            # 4. The browser client, not the desktop app.
+            webapp = first_visible(page, BROWSER_JOIN_SELECTORS, timeout=25_000)
+            if webapp is None:
+                logging.error("No browser-client choice. Page: %s", describe_page(page))
+                raise RuntimeError("Webex did not offer to join from this browser")
+            webapp.click(timeout=15_000)
+            page.wait_for_timeout(20_000)
             shot(page, "browser-client")
 
-            # Guest identity + password, in whichever frame holds them.
-            def fill_first(selectors, value) -> bool:
-                for frame in [page] + list(page.frames):
-                    for sel in selectors:
-                        try:
-                            loc = frame.locator(sel).first
-                            if loc.count():
-                                loc.fill(value, timeout=10_000)
-                                return True
-                        except Exception:
-                            continue
-                return False
-
-            fill_first(['input[placeholder*="name" i]', 'input[aria-label*="name" i]',
-                        'input[name="displayName"]'], display_name)
-            fill_first(['input[type="email"]', 'input[placeholder*="email" i]',
-                        'input[aria-label*="email" i]'], email)
-            fill_first(['input[type="password"]', 'input[placeholder*="password" i]',
-                        'input[aria-label*="password" i]'], password)
+            # 5. Name, mute, join -- inside the web.webex.com iframe, whose
+            #    fields are web components with generated ids, so go by role.
+            app = webex_app_frame(page)
+            try:
+                app.get_by_role("textbox").first.fill(display_name, timeout=20_000)
+            except Exception as e:
+                logging.warning("Could not type the display name: %s", e)
+            for sel in ('input[type="email"]', 'input[placeholder*="email" i]',
+                        'input[aria-label*="email" i]'):
+                try:
+                    loc = app.locator(sel).first
+                    if loc.count():
+                        loc.fill(email, timeout=8000)
+                        break
+                except Exception:
+                    continue
+            set_av_off(app)
             shot(page, "identity")
 
-            for label in ("Next", "Join meeting", "Join now", "Join"):
-                for frame in [page] + list(page.frames):
-                    btn = frame.get_by_role("button", name=re.compile(f"^{label}$", re.I)).first
-                    try:
-                        if btn.count():
-                            btn.click(timeout=10_000)
-                            page.wait_for_timeout(3000)
-                            break
-                    except Exception:
-                        continue
+            joined = False
+            try:
+                button = app.locator("#join-button").first
+                if button.count():
+                    button.click(timeout=15_000)
+                    joined = True
+            except Exception as e:
+                logging.warning("#join-button did not take the click: %s", e)
+            if not joined:
+                joined = click_first(app, ("Join meeting", "Join now", "Join"))
+            if not joined:
+                logging.error("No join button. Page: %s", describe_page(page))
+                raise RuntimeError("could not press Join on the Webex join screen")
+            page.wait_for_timeout(20_000)
             shot(page, "joined")
 
-            # Mute and stop video defensively; the join screen usually does it.
-            for label in ("Mute", "Stop video"):
-                for frame in [page] + list(page.frames):
-                    b = frame.get_by_role("button", name=re.compile(label, re.I)).first
-                    try:
-                        if b.count():
-                            b.click(timeout=4000)
-                            break
-                    except Exception:
-                        continue
+            # Once inside, confirm we are muted and dark.
+            set_av_off(webex_app_frame(page))
 
             page.evaluate("window.__ptStart && window.__ptStart()")
             logging.info("Recording started -> %s", webm.name)
@@ -599,10 +757,15 @@ def main() -> int:
     logging.info("Meeting : %s (%s %s)", meeting.get("title"), args.date,
                  meeting.get("time") or "time unknown")
     logging.info("Folder  : %s", out_dir)
+    # The password is printed, not masked: ERCOT publishes it on the public
+    # meeting page, and "password: set" told us nothing when the first run
+    # failed -- there was no way to tell a mis-read password from a mis-read
+    # page without re-scraping by hand.
     logging.info("Status  : %s   Webex number: %s   password: %s",
                  meeting.get("status"),
                  meeting.get("webex_meeting_number") or "not posted",
-                 "set" if meeting.get("webex_password") else "not posted")
+                 meeting.get("webex_password") or "not posted")
+    logging.info("Webex   : %s", meeting.get("webex_url") or WEBEX_SITE)
 
     reason = skip_reason(meeting)
     if reason:
@@ -611,7 +774,8 @@ def main() -> int:
 
     if args.plan:
         logging.info("--plan: would join %s as '%s' and write %s",
-                     WEBEX_SITE, args.display_name, out_dir / f"{base}.mp3")
+                     meeting.get("webex_url") or WEBEX_SITE,
+                     args.display_name, out_dir / f"{base}.mp3")
         return 0
 
     shots = out_dir / f"{base}.screenshots"
