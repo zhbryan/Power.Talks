@@ -77,36 +77,18 @@ const MESSAGES = [];
 // Pending NPRRs — updated 2026-04-21 from ERCOT tracker
 const NPRR_PENDING = [
   { n: 956, title: "Designation of Providers of Transmission Additions" },
-  { n: 1214, title: "Reliability Deployment Price Adder Fix to Provide Locational Price Signals, Reduce Uplift and Risk" },
   { n: 1255, title: "Introduction of Mitigation of ESRs" },
   { n: 1278, title: "Establishing Advanced Grid Support Service as an Ancillary Service" },
-  { n: 1286, title: "Establish Multi-Value Criteria for Resiliency-Related Transmission Project Evaluation" },
-  { n: 1292, title: "Granular Product Type for CRR TOU" },
   { n: 1295, title: "GTC Exit Solutions" },
   { n: 1296, title: "Residential Demand Response Program" },
-  { n: 1301, title: "Align Protocols to Constraint Activation Procedure" },
   { n: 1310, title: "Dispatchable Reliability Reserve Service Plus Energy Storage Resource Participation and Release Factor" },
   { n: 1312, title: "Revisions to the Standard Form Agreement (SFA)" },
   { n: 1317, title: "Creation of Non-Settled Generator (NSG) and Clarification of the Types, Usage, and Registration of Distributed Generation" },
-  { n: 1319, title: "Modifications to Seasonal Mothball Periods and Clarification to Evaluation Process" },
-  { n: 1320, title: "Reserve Margin Reporting and Miscellaneous Changes for the Report on Capacity, Demand, and Reserves in the ERCOT Region (CDR)" },
-  { n: 1326, title: "Add Energy Storage Resource (ESR) State of Charge (SOC) Information to the Ancillary Services Capacity Monitor" },
-  { n: 1328, title: "Establishment of Generation Firming Program" },
-  { n: 1329, title: "Resource Entity Requirements for Self-Limiting Facilities" },
-  { n: 1331, title: "Unannounced Generation Capacity Testing" },
   { n: 1332, title: "Related to PGRR146, Rename Quarterly Stability Assessment and Modify the Assessment Schedule" },
   { n: 1333, title: "Establish an Incentive Program for Advanced Grid Support" },
   { n: 1334, title: "Revision to Cybersecurity Incident Notification" },
-  { n: 1335, title: "Implementation of PUCT Changes to Firm Fuel Supply Service for Phase 3" },
-  { n: 1336, title: "Language Clean-up for NPRR1188 Implementation" },
-  { n: 1337, title: "ERS Enhancements" },
-  { n: 1338, title: "Restructure Long-Term Auction Sequence Auctions to Six Monthly Optimizations" },
-  { n: 1339, title: "Protocol Clean Up and Alignment with RTC+B Implementation" },
   { n: 1340, title: "Dispatchable Reliability Reserve Service Ancillary Service with Energy Storage Resource Participation" },
-  { n: 1341, title: "Related to LPGRR077, Profile Decision Tree Excel-to-Word Conversion" },
-  { n: 1342, title: "Mitigated Offer Caps for Contract for Capacity Resources" },
   { n: 1343, title: "Introduction of PTP Obligation Bid Fee in DAM" },
-  { n: 1344, title: "Move OBD to Section 19 – Texas Market Test Plan" },
   { n: 1345, title: "Extend NPRR1279 Sunset Date for Exceptional Fuel Cost Process" },
   { n: 1346, title: "Updates to the Fuel Oil Price (FOP)" },
   { n: 1348, title: "Telemetry Offsetting for Provisional Controllable Load Resources" },
@@ -114,6 +96,7 @@ const NPRR_PENDING = [
   { n: 1350, title: "Revisions to Section 22 Attachments A through N for the Market Participant Service Portal (MPSP)" },
   { n: 1351, title: "Revisions to Section 23 Forms for the Market Participant Service Portal (MPSP)" },
   { n: 1352, title: "QSE Receipt and Payment of Weatherization Inspection Fee Invoices" },
+  { n: 1353, title: "SCED Constraint Data and Shift Factor Reports" },
 ];
 
 const NPRR_APPROVED = [
@@ -1115,6 +1098,7 @@ const NPRR_APPROVED = [
   { n: 1211, title: "Move OBD to Section 22 – Methodology for Setting Maximum Shadow Prices for Network and Power Balance Constraints" },
   { n: 1212, title: "Clarification of Distribution Service Provider’s Obligation to Provide an ESI ID" },
   { n: 1213, title: "Allow DGRs and DESRs on Circuits Subject to Load Shed to Provide ECRS" },
+  { n: 1214, title: "Reliability Deployment Price Adder Fix to Provide Locational Price Signals, Reduce Uplift and Risk" },
   { n: 1215, title: "Clarifications to the Day-Ahead Market (DAM) Energy-Only Offer Calculation" },
   { n: 1216, title: "Implementation of Emergency Pricing Program" },
   { n: 1217, title: "Remove Verbal Dispatch Instruction (VDI) Requirement for Deployment and Recall of Load Resources and Emergency Response Service (ERS) Resources" },
@@ -1177,16 +1161,19 @@ const NPRR_APPROVED = [
   { n: 1282, title: "Ancillary Service Duration under Real-Time Co-Optimization" },
   { n: 1283, title: "Modification of SSR Mitigation Timeline" },
   { n: 1285, title: "Improve Self-Commitment within RUC Opt Out Window" },
+  { n: 1286, title: "Establish Multi-Value Criteria for Resiliency-Related Transmission Project Evaluation" },
   { n: 1287, title: "Revisions to Outage Coordination" },
   { n: 1288, title: "Remove Multiple Month Transactions in CRR Auctions" },
   { n: 1289, title: "Option Price Report and Establish 1 MW Bid Minimum" },
   { n: 1290, title: "Gap Resolutions and Clarifications for the Implementation of RTC+B" },
   { n: 1291, title: "Modify Annual Demand Response Report Posting Date and Include Language to Address PUCT SUBST. R. 25.186" },
+  { n: 1292, title: "Granular Product Type for CRR TOU" },
   { n: 1293, title: "Clarifications to the Modeling Timelines" },
   { n: 1294, title: "Move OBD to Section 22 – Demand Response Data Definitions and Technical Specifications" },
   { n: 1298, title: "Timing Requirements for Comments to Subcommittee Reports" },
   { n: 1299, title: "Clarifications to Emergency Response Service (ERS)" },
   { n: 1300, title: "Protected Information and ECEII to OPUC" },
+  { n: 1301, title: "Align Protocols to Constraint Activation Procedure" },
   { n: 1302, title: "Addition of a Market Participant Service Portal within the MIS Certified Area and Revision of Forms" },
   { n: 1303, title: "Modernize Submission of Declarations of Natural Gas Pipeline Coordination" },
   { n: 1304, title: "Move OBD to Section 22 – Procedure for Identifying Resource Nodes" },
@@ -1201,12 +1188,26 @@ const NPRR_APPROVED = [
   { n: 1315, title: "Changes to Process of Evaluating the Potential Needs for Additional Capacity" },
   { n: 1316, title: "Implement an Annual ERCOT RFI Process to Gather Information Related to Retirement and Mothballing Plans of Select Resources" },
   { n: 1318, title: "Specific Exclusion of the Incentive Factor to ERCOT Approved Outside Attorney Fees and Approved Emissions Costs" },
+  { n: 1319, title: "Modifications to Seasonal Mothball Periods and Clarification to Evaluation Process" },
+  { n: 1320, title: "Reserve Margin Reporting and Miscellaneous Changes for the Report on Capacity, Demand, and Reserves in the ERCOT Region (CDR)" },
   { n: 1322, title: "60-Day Disclosure of the Day-Ahead Market (DAM) Ancillary Service Only Offer Awards" },
   { n: 1323, title: "Correction to Inadvertent Removal of Real-Time MCPC Capping for NPRR1290 Phase 2" },
   { n: 1324, title: "Clarification of the Process to Determine RUC Warmth State" },
   { n: 1325, title: "Related to PGRR145, Batch Zero Process for Large Load Interconnections" },
+  { n: 1326, title: "Add Energy Storage Resource (ESR) State of Charge (SOC) Information to the Ancillary Services Capacity Monitor" },
   { n: 1327, title: "As-Built for NPRR1281, Improvements to Alternate FFSS Resource Designation" },
+  { n: 1328, title: "Establishment of Generation Firming Program" },
+  { n: 1329, title: "Resource Entity Requirements for Self-Limiting Facilities" },
   { n: 1330, title: "Mitigated Offer Caps for RMR Units" },
+  { n: 1331, title: "Unannounced Generation Capacity Testing" },
+  { n: 1335, title: "Implementation of PUCT Changes to Firm Fuel Supply Service for Phase 3" },
+  { n: 1336, title: "Language Clean-up for NPRR1188 Implementation" },
+  { n: 1337, title: "ERS Enhancements" },
+  { n: 1338, title: "Restructure Long-Term Auction Sequence Auctions to Six Monthly Optimizations" },
+  { n: 1339, title: "Protocol Clean Up and Alignment with RTC+B Implementation" },
+  { n: 1341, title: "Related to LPGRR077, Profile Decision Tree Excel-to-Word Conversion" },
+  { n: 1342, title: "Mitigated Offer Caps for Contract for Capacity Resources" },
+  { n: 1344, title: "Move OBD to Section 19 – Texas Market Test Plan" },
 ];
 
 const NPRR_WITHDRAWN = [
@@ -1332,7 +1333,7 @@ const CONTEXTUAL_RUNS = {
 };
 
 const COPMGRR_PENDING = [
-  { n: 51, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
+
 ];
 
 const COPMGRR_APPROVED = [
@@ -1383,6 +1384,7 @@ const COPMGRR_APPROVED = [
   { n: 48, title: "Related to NPRR1039, Replace the Term MIS Public Area with ERCOT Website" },
   { n: 49, title: "Related to NPRR1157, Incorporation of PUCT Approval into Revision Request Process" },
   { n: 50, title: "Administrative Change for Commercial Operations Market Guide – Remove Obsolete Reference from List of Appealable TAC Actions" },
+  { n: 51, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
   { n: 52, title: "Related to NPRR1306, Removal of Digital Certificate References for Market Participants with ERCOT MIS Access" },
   { n: 53, title: "Administrative Change for Commercial Operations Market Guide –  NPRR1298" },
 ];
@@ -1396,12 +1398,9 @@ const COPMGRR_WITHDRAWN = [
 // Pending PGRRs — updated 2026-05-09 from ERCOT tracker
 const PGRR_PENDING = [
   { n: 122, title: "Reliability Performance Criteria for Loss of Load" },
-  { n: 123, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
   { n: 124, title: "ESR Maintenance Exception to Modifications" },
-  { n: 128, title: "Regional Transmission Plan Review of Grid Enhancing Technologies" },
   { n: 140, title: "Related to NPRR1317, Creation of Non-Settled Generator (NSG) and Clarification of the Types, Usage, and Registration of Distributed Generation" },
   { n: 142, title: "In-kind Definition for Generation" },
-  { n: 144, title: "Dynamic Model Submission and Review Requirements for Large Loads including Large Electronic Loads" },
   { n: 146, title: "Rename Quarterly Stability Assessment and Modify the Assessment Schedule" },
   { n: 147, title: "Allowable Non-Consequential Load Loss Alignment" },
 ];
@@ -1427,8 +1426,10 @@ const PGRR_APPROVED = [
   { n: 119, title: "Stability Constraint Modeling Assumptions in the Regional Transmission Plan" },
   { n: 120, title: "SSO Prevention for Generator Interconnection" },
   { n: 121, title: "Related to NOGRR272, Advanced Grid Support Requirements for Inverter-Based ESRs" },
+  { n: 123, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
   { n: 125, title: "Update of LSIPA Compliance Attestation" },
   { n: 127, title: "Addition of Proposed Generation to the Planning Models" },
+  { n: 128, title: "Regional Transmission Plan Review of Grid Enhancing Technologies" },
   { n: 129, title: "Establish Grid Reliability and Resiliency Assessment (GRRA) Posting Requirements" },
   { n: 131, title: "Requirements for Interconnection Cost Reporting for Transmission-Connected Generators" },
   { n: 132, title: "Update to Standard Generation Interconnection Agreement (SGIA) Requirement" },
@@ -1436,6 +1437,7 @@ const PGRR_APPROVED = [
   { n: 137, title: "Administrative Change for Planning Guide –  NPRR1298" },
   { n: 139, title: "Related to NPRR1314, Planning Guide Glossary Transition" },
   { n: 143, title: "Steady State Planning Schedule Posting Location Update" },
+  { n: 144, title: "Dynamic Model Submission and Review Requirements for Large Loads including Large Electronic Loads" },
   { n: 145, title: "Batch Zero Process for Large Load Interconnections" },
 ];
 
@@ -1587,12 +1589,10 @@ const SCR_REJECTED = [
 
 // ── NOGRR ────────────────────────────────────────────────────────────────────
 const NOGRR_PENDING = [
-  { n: 273, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
   { n: 284, title: "Related to NPRR1310, Dispatchable Reliability Reserve Service Plus Energy Storage Resource Participation and Release Factor" },
-  { n: 286, title: "Addition of 765-kV Operational Voltage Limits" },
-  { n: 287, title: "Load Shed Provisions to Identify and Minimize Overlap of Essential Loads" },
   { n: 288, title: "Related to NPRR1340, Dispatchable Reliability Reserve Service Ancillary Service with Energy Storage Resource Participation" },
   { n: 289, title: "Extension for LCL Cooling Load Ride-Through Compliance" },
+  { n: 290, title: "Update to Section 1.5.4, ERCOT Severe Weather Drill" },
 ];
 
 const NOGRR_APPROVED = [
@@ -1759,6 +1759,7 @@ const NOGRR_APPROVED = [
   { n: 270, title: "Alignment Changes for December 1, 2024 Nodal Operating Guide – NPRR1221" },
   { n: 271, title: "Related to NPRR1257, Limit on Amount of RRS a Resource can Provide Using Primary Frequency Response" },
   { n: 272, title: "Advanced Grid Support Requirements for Inverter-Based ESRs" },
+  { n: 273, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
   { n: 274, title: "Conform Nodal Operating Guide to Revisions Implemented for NPRR1217, Remove Verbal Dispatch Instruction (VDI) Requirement for Deployment and Recall of Load Resources and Emergency Response Service (ERS) Resources" },
   { n: 275, title: "Eliminate Scheduling Center Requirements for QSEs That Are Not WAN Participants" },
   { n: 276, title: "Alignment Changes for June 1, 2025 Nodal Operating Guide – NPRR1246 and NPRR1270" },
@@ -1770,6 +1771,8 @@ const NOGRR_APPROVED = [
   { n: 282, title: "Large Electronic Load Ride-Through Requirements" },
   { n: 283, title: "Board Priority - Related to NPRR1309, Dispatchable Reliability Reserve Service Ancillary Service" },
   { n: 285, title: "Administrative Change for Nodal Operating Guides –  NPRR1298" },
+  { n: 286, title: "Addition of 765-kV Operational Voltage Limits" },
+  { n: 287, title: "Load Shed Provisions to Identify and Minimize Overlap of Essential Loads" },
 ];
 
 const NOGRR_WITHDRAWN = [
@@ -1790,8 +1793,7 @@ const NOGRR_REJECTED = [
 
 // ── RMGRR ────────────────────────────────────────────────────────────────────
 const RMGRR_PENDING = [
-  { n: 182, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
-  { n: 186, title: "Related to LPGRR077, Profile Decision Tree Excel-to-Word Conversion" },
+
 ];
 
 const RMGRR_APPROVED = [
@@ -1872,9 +1874,11 @@ const RMGRR_APPROVED = [
   { n: 179, title: "TDSP Temporary Emergency Electric Energy Facility (TEEEF) Deployment Transactional Processing" },
   { n: 180, title: "Administrative Change for Retail Market Guide – Update LP&L After-Hour RNP Email Addresses" },
   { n: 181, title: "Alignment of Defined Term Usage and Resolution of Inconsistencies" },
+  { n: 182, title: "Related to NPRR1264, Creation of a New Energy Attribute Certificate Program" },
   { n: 183, title: "Competitive Retailer Information Portal (CRIP) and Weather Moratorium Updates" },
   { n: 184, title: "Related to NPRR1306, Removal of Digital Certificate References for Market Participants with ERCOT MIS Access" },
   { n: 185, title: "Administrative Change for Retail Market Guide –  NPRR1298" },
+  { n: 186, title: "Related to LPGRR077, Profile Decision Tree Excel-to-Word Conversion" },
 ];
 
 const RMGRR_WITHDRAWN = [
