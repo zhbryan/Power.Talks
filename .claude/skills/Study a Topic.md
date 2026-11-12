@@ -175,8 +175,8 @@ The index covers the derived layer, and that layer is uneven:
   recorded sections only as titles, so a `--section` query cannot see them.
 - Meeting profiles are AI-written from meeting materials; several have empty
   `topics`/`agenda_items`, so a quiet meeting may be under-represented.
-- Nothing from `ERCOT.PUBAPI`, `HOT.TOPICS` or `STATS.ILLUSTRATOR` is indexed —
-  those are market data and daily reports, not rule or meeting knowledge.
+- Nothing from `ERCOT.PUBAPI` or `STATS.ILLUSTRATOR` is indexed — those are
+  market data, not rule or meeting knowledge.
 - A topic that appears only inside a PDF body, and never in a title, summary or
   profile field, will not be found. Say so when a search comes back thin, rather
   than concluding the topic is absent.

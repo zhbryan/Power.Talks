@@ -123,7 +123,7 @@ issue and meeting search still work — only document-level search is empty.
   PDFs. A topic mentioned only in a PDF body is not findable here.
 - 144 issues have no extractable section number, so `--section` cannot see them.
 - Several meeting profiles have empty `topics` / `agenda_items`.
-- `ERCOT.PUBAPI`, `HOT.TOPICS` and `STATS.ILLUSTRATOR` are not indexed.
+- `ERCOT.PUBAPI` and `STATS.ILLUSTRATOR` are not indexed.
 
 The `Study-a-Topic` skill (`.claude/skills/Study a Topic.md`) wraps this CLI into
 a research workflow and is required to state these limits in any brief it writes.

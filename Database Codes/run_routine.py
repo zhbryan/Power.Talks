@@ -18,13 +18,6 @@ Runs the full pipeline end-to-end for both tracks and rebuilds the web page:
                     behind the Meeting Tracks homepage "Meeting Timelines"
                     right-panel section (includes future, not-yet-held meetings)
 
-  HOT TOPICS  (daily brief)
-    8. scaffold   — create HOT.TOPICS/<date>/ (_prep.json + report skeleton)
-                    from the week's meetings + source registry, and refresh
-                    index.json (the website's date dropdown). Deterministic /
-                    headless — the AI summaries + topic ranking are filled in
-                    afterward by the Hot Topics Generator skill.
-
   ERCOT PUBLIC API
     8b. emil      — refresh the EMIL product catalog (full run only), rewriting
                     Documents Database/ERCOT.PUBAPI/emil_products_{<date>,latest}.
@@ -88,10 +81,6 @@ HTML         = os.path.join(PROJECT_ROOT, "html")
 LOG_DIR      = os.path.join(DB, "logs")
 
 MKT_CATS = ["nprr", "nogrr", "pgrr", "rmgrr", "scr", "copmgrr"]
-
-# Suspend the nightly Hot Topics scaffold/index step without touching the Market
-# Rules or Stakeholder tracks. Set back to False to resume (suspended 2026-08-26).
-HOT_TOPICS_SUSPENDED = True
 
 PY = sys.executable  # the interpreter running this driver
 
@@ -212,16 +201,6 @@ def build_steps(args):
                       [os.path.join(stk, "committee_registry.py"),
                        "--create", "--quiet"],
                       stk))
-
-        # 8. Hot Topics scaffold — reads the stakeholder meetings just
-        #    downloaded above to find "within the week" meetings, writes
-        #    HOT.TOPICS/<date>/{_prep.json, skeleton}, and refreshes index.json
-        #    (the website's date dropdown). No web/AI calls; the summaries and
-        #    ranking are filled later by the Hot Topics Generator skill.
-        if not HOT_TOPICS_SUSPENDED:
-            steps.append(("HOT TOPICS scaffold + index",
-                          [os.path.join(DB, "hot_topics", "gen_hot_topics.py")],
-                          PROJECT_ROOT))
 
     # 8b. ERCOT Public API: refresh the EMIL product catalog (independent of the
     #     market/stkhdr tracks, so only on a full run). Re-auths on its own and

@@ -38,8 +38,7 @@ Use `WebSearch` / `WebFetch`, prioritizing recent (last ~6–12 months) signals:
   (ercot.com/committees, ercot.com/calendar), new **NPRR/NOGRR/other revision
   requests**, market notices. The project already tracks these — cross-check
   recent titles under `Documents Database/ERCOT.MKT.RULES/` and
-  `Documents Database/ERCOT.STKHDR.MEETS/`, and any recent
-  `Documents Database/HOT.TOPICS/` reports.
+  `Documents Database/ERCOT.STKHDR.MEETS/`.
 - **PUCT** — open meetings, rulemakings, legislation (SB/HB) affecting ERCOT.
 - **Analyst / trade coverage** — Modo Energy, Enverus, Ascend, Utility Dive, RBN,
   law-firm alerts — for what practitioners are focused on.
@@ -101,9 +100,9 @@ table label, so **spell the trending label consistently** with its section bulle
 
 On-demand / periodic (e.g. monthly, or whenever the market shifts) — **not** wired
 into the 2 AM `run_routine.py` refresh, because the content needs editorial
-judgment, not a deterministic scrape. If you want it automated, run it like the
-Hot Topics fill: a headless `claude.exe -p` job that performs steps 1–4 and is
-registered as its own scheduled task. The JSON build (step 4) is pure-stdlib
+judgment, not a deterministic scrape. If you want it automated, run it as a
+headless `claude.exe -p` job that performs steps 1–4, registered as its own
+scheduled task. The JSON build (step 4) is pure-stdlib
 Python; the research (step 2) needs web access.
 
 ## Notes
@@ -111,5 +110,4 @@ Python; the research (step 2) needs web access.
 - Keep it **distinct from the glossary**: this file lists *topics people discuss*,
   the glossary lists *official definitions*. A term can appear in both.
 - Prefer concise, plain-English one-liners over protocol language.
-- Related: `ERCOT Glossary Updater` (definitions), `Hot Topics Generator` (daily
-  brief — a natural consumer of the trending set).
+- Related: `ERCOT Glossary Updater` (definitions).

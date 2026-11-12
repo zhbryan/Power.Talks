@@ -144,7 +144,7 @@ endpoint reads the tables live; the data is as current as the last seed run.
 ## The component
 
 `StatsIllustratorHome` — **append it inside `html/src/illustration.jsx`** (exports
-`window.StatsIllustratorHome`), same reasoning as `HotTopicsHome`:
+`window.StatsIllustratorHome`), for this reason:
 `rebuild_standalone.py` only *updates* the 11 known entries, so reuse an existing
 module rather than adding a `src/*.jsx` file (which would need a manifest + ANCHORS
 entry and bump the count).

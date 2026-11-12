@@ -4,7 +4,7 @@ ERCOT market keyword list.
 
 Parses the curated `ercot_market_keywords.md` (the human-authored source of
 truth) and writes `ercot_market_keywords.json` alongside it, so downstream code
-(Hot Topics ranking, search, the AI pipeline) can consume the list structurally.
+(search, the AI pipeline) can consume the list structurally.
 
 The Markdown is the authored artifact; this script never edits it — it only
 mirrors it into JSON. Run it after every edit to the .md:

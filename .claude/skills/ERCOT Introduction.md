@@ -99,7 +99,6 @@ function ERCOTHome({ onSectionChange }) {
   const LINKS = [
     { id: "paper-trails",     icon: "Book",      label: "Paper Trails",     desc: "NPRRs, NOGRRs, COPMGRRs and more"  },
     { id: "meeting-tracks",   icon: "Waveform",  label: "Meeting Tracks",   desc: "TAC, COPS, RMS committee activity"  },
-    { id: "hot-topics",       icon: "Flame",     label: "Hot Topics",       desc: "Market design issues and debates"   },
     { id: "stats-illustrated",icon: "Chart",     label: "Stats Illustrator",desc: "Charts, data, and market analytics" },
     { id: "gallery",          icon: "Folder",    label: "Gallery",          desc: "Documents, filings, and archives"   },
   ];

@@ -12,7 +12,6 @@ function Sidebar({ expanded, onToggle, activeSection, onSectionChange, activeId,
   const SECTIONS = [
     { id: "paper-trails",     label: "Paper Trails",     icon: "Book" },
     { id: "meeting-tracks",   label: "Meeting Tracks",   icon: "Waveform" },
-    { id: "hot-topics",       label: "Hot Topics",       icon: "Flame" },
     { id: "stats-illustrated",label: "Stats Illustrator",icon: "Chart" },
     { id: "gallery",          label: "Gallery",          icon: "Folder" },
   ];
