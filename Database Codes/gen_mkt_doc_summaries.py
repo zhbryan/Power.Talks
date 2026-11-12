@@ -144,8 +144,13 @@ def seq_key(fname):
 
 
 # ── AI per-document report (--ai): read the document, ask Claude ─────────────
-AI_MODEL = "claude-haiku-4-5-20251001"
+AI_MODEL = "claude-haiku-5-5"      # $0.10/$0.50 per MTok vs haiku-4-5's $1/$5
 AI_MAX_TOKENS = 1200
+# Stop the run after this many AI failures in a row -- the subscription window is
+# used up, and the rest of the budget would be spent on failures.
+STOP_AFTER_CONSEC_FAILS = 3
+# Per-run pacing state: how many AI calls are left, and whether to stop asking.
+_run_state = {"left": None, "stop": False}
 _REPORT_KEYS = ("revision_reason", "description", "justification",
                 "detailed_background", "submitter")
 _SUMM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "summarize_MKT_Rules")
@@ -157,13 +162,17 @@ _ai_usage = {"calls": 0, "in": 0, "out": 0}
 
 
 def _get_ai():
+    """Go through ai_backend like every other summarizer, so POWERTALKS_AI_BACKEND
+    picks the backend: "cli" (default) bills the Claude subscription and is what
+    the paced nightly backfill uses; "api" is the metered API, for a one-off bulk
+    finish. This used to construct a metered anthropic.Anthropic() directly, so
+    --ai could only ever run on the paid API."""
     global _ai_client
     if _ai_client is None:
-        import anthropic
         if _SUMM_DIR not in sys.path:
             sys.path.insert(0, _SUMM_DIR)
-        from anthropic_key import get_anthropic_key
-        _ai_client = anthropic.Anthropic(api_key=get_anthropic_key())
+        import ai_backend
+        _ai_client = ai_backend.get_client()
     return _ai_client
 
 
@@ -265,6 +274,7 @@ def ai_document_report(text, issue_id, fname, doc_type):
             model=AI_MODEL, max_tokens=AI_MAX_TOKENS,
             messages=[{"role": "user", "content": prompt}])
         _ai_usage["calls"] += 1
+        _ai_usage["consec"] = 0
         _ai_usage["in"] += msg.usage.input_tokens
         _ai_usage["out"] += msg.usage.output_tokens
         raw = msg.content[0].text.strip()
@@ -272,6 +282,8 @@ def ai_document_report(text, issue_id, fname, doc_type):
         data = json.loads(m.group(0) if m else raw)
         return {k: (data.get(k) or None) for k in _REPORT_KEYS}
     except Exception as e:
+        _ai_usage["fails"] = _ai_usage.get("fails", 0) + 1
+        _ai_usage["consec"] = _ai_usage.get("consec", 0) + 1
         print(f"    [AI-ERR] {fname}: {e}")
         return {}
 
@@ -282,8 +294,12 @@ def _aslist(v):
     return v or None
 
 
-def build_source_documents(cat, issue_id, folder, ai=False, profile=None):
+def build_source_documents(cat, issue_id, folder, ai=False, profile=None, prev=None):
     profile = profile or {}
+    # Carry forward per-document AI text already earned, keyed by filename. Without
+    # this the nightly rebuild dropped every AI field it had (the profilers rewrite
+    # Profile.json without source_documents, and this rebuilt each entry fresh).
+    prev_by_file = {e.get("file"): e for e in (prev or []) if isinstance(e, dict)}
     # The primary revision-request submission carries the issue's own
     # Reason/Description/Business Case — already extracted into the Profile by the
     # profile generator. Use them to fill the -01's report fields the AI leaves blank.
@@ -303,15 +319,31 @@ def build_source_documents(cat, issue_id, folder, ai=False, profile=None):
     for i, f in enumerate(files, 1):
         entry = summarize_file(f, issue_id, i)
         entry["download_url"] = f"{WEB_BASE}/{quote(cat)}/{quote(issue_id)}/{quote(f)}"
-        if ai:
-            rep = ai_document_report(extract_text_any(os.path.join(folder, f)),
-                                     issue_id, f, entry["doc_type"])
-            for k in _REPORT_KEYS:
-                if rep.get(k):
-                    entry[k] = rep[k]
-            if rep.get("submitter"):
-                entry["submitter"] = rep["submitter"]
-            print(f"    [AI] {f}")
+        old = prev_by_file.get(f) or {}
+        for k in _REPORT_KEYS:
+            if old.get(k) and not entry.get(k):
+                entry[k] = old[k]
+        # Ask the AI only for documents that still lack the AI-only field, so a
+        # paced backfill resumes per document rather than per issue.
+        if ai and not (entry.get("detailed_background") or "").strip():
+            if _run_state["stop"]:
+                pass                       # budget spent / backend unavailable
+            elif _run_state["left"] is not None and _run_state["left"] <= 0:
+                _run_state["stop"] = True
+            else:
+                rep = ai_document_report(extract_text_any(os.path.join(folder, f)),
+                                         issue_id, f, entry["doc_type"])
+                if _run_state["left"] is not None:
+                    _run_state["left"] -= 1
+                for k in _REPORT_KEYS:
+                    if rep.get(k):
+                        entry[k] = rep[k]
+                if rep.get("submitter"):
+                    entry["submitter"] = rep["submitter"]
+                if rep:
+                    print(f"    [AI] {f}")
+                if _ai_usage.get("consec", 0) >= STOP_AFTER_CONSEC_FAILS:
+                    _run_state["stop"] = True
         # Primary submission (-01 / Revision Request): backfill any blank
         # Reason/Description/Justification from the issue Profile.
         if i == 1 or entry["doc_type"] == "Revision Request":
@@ -323,13 +355,21 @@ def build_source_documents(cat, issue_id, folder, ai=False, profile=None):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    # `--budget N` takes a value, so N must not also be read as a positional
+    # category/issue filter -- drop it by position, not by looking like a flag.
+    opt_values = set()
+    if "--budget" in sys.argv:
+        vi = sys.argv.index("--budget") + 1
+        _run_state["left"] = int(sys.argv[vi])
+        opt_values.add(vi)
+    args = [a for i, a in enumerate(sys.argv) if i >= 1
+            and not a.startswith("--") and i not in opt_values]
     ai = "--ai" in sys.argv
     # Positional args that look like an issue id (e.g. NPRR1340) target single
     # issues; bare category names (e.g. NPRR) limit to a category.
     issue_targets = {a.upper() for a in args if re.match(r"^[A-Za-z]+\d+$", a)}
     cat_only = {a.upper() for a in args if not re.match(r"^[A-Za-z]+\d+$", a)}
-    updated = skipped = 0
+    updated = skipped = unchanged = 0
     try:
         for cat in sorted(os.listdir(ROOT)):
             if cat_only and cat.upper() not in cat_only:
@@ -350,17 +390,32 @@ def main():
                 try:
                     with open(profile, encoding="utf-8") as fh:
                         data = json.load(fh)
-                    # Resume: skip issues already AI-processed (unless --force) so a
-                    # long run can be restarted without re-spending on done issues.
-                    if ai and "--force" not in sys.argv:
-                        sd = data.get("source_documents") or []
-                        if sd and any(e.get("detailed_background") or e.get("revision_reason")
-                                      or e.get("justification") for e in sd):
+                    # Resume is per DOCUMENT now (see build_source_documents): an
+                    # issue is skipped only when every document already has its AI
+                    # text. The old per-issue test skipped the whole issue if ANY
+                    # document had any of three fields -- and `justification` is
+                    # backfilled from the profile, so it skipped 1,235 of 1,713
+                    # issues that had no AI text at all.
+                    prev_sd = data.get("source_documents") or []
+                    if ai and "--force" not in sys.argv and prev_sd:
+                        if all((e.get("detailed_background") or "").strip()
+                               for e in prev_sd):
                             skipped += 1
                             continue
                     if ai:
                         print(f"  {issue_id} …")
-                    data["source_documents"] = build_source_documents(cat, issue_id, folder, ai=ai, profile=data)
+                    new_sd = build_source_documents(
+                        cat, issue_id, folder, ai=ai, profile=data, prev=prev_sd)
+                    # Never rewrite an unchanged file. This step used to write all
+                    # 1,714 profiles every night, which pushed every Profile.json
+                    # mtime past its Summary.json; the summarizers then saw every
+                    # issue as stale and re-summarized the lot the next night --
+                    # ~1,000 needless subscription calls that drained the 5-hour
+                    # window hours before the paced backfill got to run.
+                    if new_sd == prev_sd:
+                        unchanged += 1
+                        continue
+                    data["source_documents"] = new_sd
                     with open(profile, "w", encoding="utf-8") as fh:
                         json.dump(data, fh, indent=2, ensure_ascii=False)
                     updated += 1
@@ -368,9 +423,16 @@ def main():
                         print(f"  ... {updated} profiles updated")
                 except Exception as e:
                     print(f"  ERROR {cat}/{issue_id}: {e}")
+                if _run_state["stop"]:
+                    print(f"  [stop] budget spent or backend unavailable after "
+                          f"{_ai_usage['calls']} call(s); remaining documents keep "
+                          f"their blanks and are picked up by the next run.")
+                    break
+            if _run_state["stop"]:
+                break
     finally:
         _quit_word()
-    print(f"\nDone. profiles updated={updated}  (no profile){skipped}")
+    print(f"\nDone. profiles updated={updated}, unchanged={unchanged}, skipped={skipped} (no profile, or every document already filled)")
     if _ai_usage["calls"]:
         print(f"AI: {_ai_usage['calls']} calls, in={_ai_usage['in']} out={_ai_usage['out']} tokens ({AI_MODEL})")
 

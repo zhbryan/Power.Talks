@@ -38,6 +38,12 @@ import json
 import os
 import subprocess
 
+
+class AIUnavailable(RuntimeError):
+    """The backend refused the call for a reason that retrying now won't fix --
+    above all the Claude subscription usage limit. Callers should stop making
+    calls and leave their output unwritten, so a later run can fill it in."""
+
 DEFAULT_CLAUDE_EXE = os.path.join(
     os.environ.get("USERPROFILE", r"C:\Users\chunl"), ".local", "bin", "claude.exe"
 )
@@ -143,10 +149,18 @@ class _CliMessages:
             encoding="utf-8", errors="replace", timeout=self._p.timeout,
         )
         if proc.returncode != 0:
-            raise RuntimeError(
-                f"claude CLI exited {proc.returncode}: "
-                f"{(proc.stderr or proc.stdout or '').strip()[:300]}"
-            )
+            # Keep the WHOLE payload: the reason lives in the JSON's `result`
+            # field, near the end, and a 300-char truncation cut it off -- which
+            # is why a week of nightly runs never recorded why the AI failed.
+            detail = (proc.stderr or proc.stdout or "").strip()
+            low = detail.lower()
+            # No API request was made (duration_api_ms 0 / no tokens) and the CLI
+            # exited non-zero -> it declined locally, which in practice means the
+            # subscription window is used up.
+            quota = ("usage limit" in low or "limit reached" in low
+                     or "rate limit" in low or '"duration_api_ms":0' in low.replace(" ", ""))
+            err = AIUnavailable if quota else RuntimeError
+            raise err(f"claude CLI exited {proc.returncode}: {detail}")
         try:
             data = json.loads(proc.stdout)
         except ValueError as e:

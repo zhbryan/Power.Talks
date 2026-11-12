@@ -471,8 +471,14 @@ def process_issue(folder, n):
     if os.path.exists(_summ_path):
         try:
             _prev = json.load(open(_summ_path, encoding='utf-8'))
-            for _k in ('ercot_opinion', 'imm_opinion', 'stakeholder_key_debates'):
-                if _prev.get(_k):
+            # Keep the key even when its value is blank, and keep the source
+            # fingerprint too: gen_stakeholder_sections.py skips an issue only
+            # when `stakeholder_key_debates` is present AND the stored signature
+            # still matches, so dropping either one makes it reprocess every
+            # issue -- hours of Word COM reads for nothing.
+            for _k in ('ercot_opinion', 'imm_opinion', 'stakeholder_key_debates',
+                       'stakeholder_sections_sig'):
+                if _k in _prev:
                     summary_json[_k] = _prev[_k]
         except Exception:
             pass

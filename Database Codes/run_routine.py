@@ -147,6 +147,24 @@ def build_steps(args):
                       [os.path.join(HTML, "regen_paper_trails_data.py")],
                       HTML))
 
+    # 8e2. Gradual gap backfill. Two passes, both resumable and both capped by
+    #      --backfill-budget so a night's AI spend stays inside the subscription
+    #      window: first the issues still missing Key Debates (cheap, usually
+    #      none), then the per-document reports, which are filled a slice at a
+    #      time. Nothing is written for a failed call, so whatever is left over
+    #      is simply picked up by the next night.
+    if args.backfill_budget > 0 and not args.no_ai:
+        for cat in ("NPRR", "NOGRR", "PGRR", "RMGRR", "SCR", "COPMGRR"):
+            steps.append((f"BACKFILL key debates {cat}",
+                          [os.path.join(DB, "summarize_MKT_Rules",
+                                        "gen_stakeholder_sections.py"),
+                           cat, "--refill", "--budget", str(args.backfill_budget)],
+                          os.path.join(DB, "summarize_MKT_Rules")))
+        steps.append(("BACKFILL per-document reports (paced)",
+                      [os.path.join(DB, "gen_mkt_doc_summaries.py"),
+                       "--ai", "--budget", str(args.backfill_budget)],
+                      PROJECT_ROOT))
+
     if args.only in (None, "stkhdr"):
         stk = os.path.join(DB, "download_STKHDR_Meets")
         # 5. Download
@@ -293,6 +311,10 @@ def run(logf):
     parser.add_argument("--no-ai", action="store_true",
                         help="skip paid-Anthropic-API steps (summarize + "
                              "stakeholder sections) to suspend API cost")
+    parser.add_argument("--backfill-budget", type=int, default=1500,
+                        help="AI calls the nightly gap backfill may spend "
+                             "(0 disables it). Paces the per-document report "
+                             "backfill inside the subscription window.")
     parser.add_argument("--no-study-index", action="store_true",
                         help="skip the study-index rebuild")
     args = parser.parse_args()
@@ -305,7 +327,9 @@ def run(logf):
          + (f"  (only={args.only})" if args.only else "")
          + ("  [skip-download]" if args.skip_download else "")
          + ("  [no-rebuild]" if args.no_rebuild else "")
-         + ("  [no-ai: API cost suspended]" if args.no_ai else ""))
+         + ("  [no-ai: API cost suspended]" if args.no_ai else "")
+         + (f"  [backfill budget={args.backfill_budget}]"
+            if args.backfill_budget > 0 and not args.no_ai else "  [no backfill]"))
     emit("=" * 72)
 
     results = []

@@ -6,7 +6,7 @@ Reads each -01 document, extracts 18 profile fields, saves JSON to
 <ISSUE_ID>/Quick runs/<ISSUE_ID> Profile.json
 """
 
-import os, re, json
+import os, re, json, sys
 from datetime import datetime
 from docx import Document
 import openpyxl
@@ -323,15 +323,23 @@ def build_profile(folder, issue_num, status):
 
 # ─── MAIN ────────────────────────────────────────────────────────────────────
 def main():
+    # --dry prints what would be written without touching any file; bare issue
+    # numbers limit the run to those issues (e.g. `profile_ercot_pgrr.py --dry 123`).
+    dry = "--dry" in sys.argv
+    targets = {int(a) for a in sys.argv[1:] if a.isdigit()}
+
     status_map = load_status_map()
 
     folders = sorted([
         d for d in os.listdir(BASE_DIR)
         if os.path.isdir(os.path.join(BASE_DIR, d)) and re.match(r'PGRR\d+', d)
     ], key=lambda x: int(re.search(r'\d+', x).group()))
+    if targets:
+        folders = [d for d in folders
+                   if int(re.search(r'\d+', d).group()) in targets]
 
-    print(f"Processing {len(folders)} PGRR folders...\n")
-    ok = err = 0
+    print(f"Processing {len(folders)} PGRR folders{' (dry run)' if dry else ''}...\n")
+    ok = err = unchanged = 0
 
     for folder_name in folders:
         n = int(re.search(r'\d+', folder_name).group())
@@ -343,24 +351,40 @@ def main():
             quick = os.path.join(folder, "Quick runs")
             os.makedirs(quick, exist_ok=True)
             out = os.path.join(quick, f"PGRR{n} Profile.json")
-            new_json = json.dumps(profile, indent=2, ensure_ascii=False)
-            # Skip identical rewrites so the summarizers' ONLY_STALE mode
-            # doesn't see every profile as refreshed.
+            # Skip identical rewrites so the summarizers' ONLY_STALE mode doesn't
+            # see every profile as refreshed. Compare the parsed profile, not the
+            # raw text, and set `source_documents` aside first: that key is added
+            # later by gen_mkt_doc_summaries.py (run_routine.py step 25), never by
+            # us, so a text compare never matched and every profile was rewritten
+            # nightly, which in turn made every summary look stale.
             if os.path.exists(out):
-                with open(out, 'r', encoding='utf-8') as f:
-                    if f.read() == new_json:
+                try:
+                    with open(out, 'r', encoding='utf-8') as f:
+                        old = json.load(f)
+                except ValueError:
+                    old = None               # unreadable JSON -> rewrite it
+                if isinstance(old, dict):
+                    carried = old.pop('source_documents', None)
+                    if old == profile:
+                        unchanged += 1
                         continue
-            with open(out, 'w', encoding='utf-8') as f:
-                f.write(new_json)
+                    # Keep step 25's work instead of dropping it on every rewrite.
+                    if carried is not None:
+                        profile['source_documents'] = carried
+            new_json = json.dumps(profile, indent=2, ensure_ascii=False)
+            if not dry:
+                with open(out, 'w', encoding='utf-8') as f:
+                    f.write(new_json)
             title = profile['title'] or '(title not found)'
-            print(f"[OK] PGRR{n:>4}  {status:<10}  {title[:65]}")
+            print(f"[{'DRY' if dry else 'OK'}] PGRR{n:>4}  {status:<10}  {title[:65]}")
             ok += 1
         except Exception as e:
             print(f"[ERR] PGRR{n}: {e}")
             err += 1
 
     quit_word()
-    print(f"\nDone: {ok} profiles created/updated, {err} errors.")
+    print(f"\nDone: {ok} profiles {'to write' if dry else 'written'}, "
+          f"{unchanged} unchanged, {err} errors.")
 
 if __name__ == "__main__":
     main()

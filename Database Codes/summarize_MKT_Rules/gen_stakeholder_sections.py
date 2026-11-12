@@ -43,7 +43,10 @@ DOC_CHAR_CAP = 4000      # per-document text fed to the model
 MAX_DOCS = 12            # cap documents per section
 WORD_OP_TIMEOUT = 120    # max seconds a single legacy .doc open+read may take
 
-_ai = {"input": 0, "output": 0, "calls": 0}
+_ai = {"input": 0, "output": 0, "calls": 0, "fails": 0, "consec_fails": 0}
+# Stop the run after this many AI failures in a row -- the signal that the
+# subscription window is exhausted and the rest of the budget would be wasted.
+STOP_AFTER_CONSEC_FAILS = 3
 _client = None
 _word = None
 _word_pid = None         # PID of the WINWORD.EXE we spawned (for the watchdog)
@@ -236,10 +239,17 @@ def ai_summarize(kind, issue_id, title, blocks):
         _ai["input"] += msg.usage.input_tokens
         _ai["output"] += msg.usage.output_tokens
         _ai["calls"] += 1
+        _ai["consec_fails"] = 0
         return _clean_ai(msg.content[0].text)
     except Exception as e:
+        # Return None, NOT "": a blank is a legitimate result ("no substantive
+        # debate"), and writing one for a FAILED call stamped the signature too,
+        # so the issue looked permanently done and was never retried. None means
+        # "unknown -- write nothing".
+        _ai["fails"] += 1
+        _ai["consec_fails"] += 1
         print(f"    (AI failed: {e})")
-        return ""
+        return None
 
 
 # ── ERCOT / IMM opinions: extracted from the "Opinion" table ─────────────────
@@ -384,6 +394,10 @@ def process_issue(cat, folder, dry=False, force=False):
     title = profile.get('title')
     issue_id = folder
     debates = ai_summarize('stakeholder', issue_id, title, sh)
+    if debates is None:
+        # Leave the file untouched so a later run picks this issue up again.
+        print(f"  {folder}: AI unavailable -- left unchanged for a later retry")
+        return
     # ERCOT / IMM Opinions — opinion-table extraction from the most recent
     # doc/docx (deterministic).
     ercot, imm = extract_opinions(base, sd)
@@ -416,6 +430,23 @@ def has_source(cat, folder):
     return False
 
 
+def needs_refill(cat, folder):
+    """True if the issue HAS participant comment documents but no Key Debates
+    text -- an AI call that never landed. A blank with no comment documents is a
+    legitimate result and is left alone."""
+    base = os.path.join(ROOT, cat, folder)
+    sp = os.path.join(base, "Quick runs", f"{folder} Summary.json")
+    if not os.path.exists(sp):
+        return False
+    if not any(classify(f) == 'stakeholder' for f in folder_docs(base)):
+        return False
+    try:
+        d = json.load(open(sp, encoding='utf-8'))
+    except Exception:
+        return False
+    return not (d.get('stakeholder_key_debates') or '').strip()
+
+
 def _all_folders(cat, base):
     return sorted(
         [d for d in os.listdir(base)
@@ -426,14 +457,26 @@ def _all_folders(cat, base):
 def main():
     args = sys.argv[1:]
     if not args:
-        print("usage: gen_stakeholder_sections.py CAT [nums... | --recent N | --all] [--dry]")
+        print("usage: gen_stakeholder_sections.py CAT "
+              "[nums... | --recent N | --all | --refill] [--budget N] [--dry]")
         return
     cat = args[0].upper()
     dry = '--dry' in args
     force = '--force' in args
+    refill = '--refill' in args
+    budget = None
+    if '--budget' in args:
+        bi = args.index('--budget') + 1
+        budget = int(args[bi])
+        # Drop the value so it is not also read as an issue number below.
+        args = args[:bi] + args[bi + 1:]
     base = os.path.join(ROOT, cat)
 
-    if '--all' in args:
+    if refill:
+        # Only the issues still missing their Key Debates text. They carry a
+        # matching signature from the runs that failed, so force past the skip.
+        picked = [f for f in _all_folders(cat, base) if needs_refill(cat, f)]
+    elif '--all' in args:
         picked = [f for f in _all_folders(cat, base) if has_source(cat, f)]
     elif '--recent' in args:
         n = int(args[args.index('--recent') + 1])
@@ -445,10 +488,19 @@ def main():
     print(f"{cat}: processing {len(picked)} issue(s){' (dry run)' if dry else ''}\n")
     try:
         for folder in picked:
-            process_issue(cat, folder, dry=dry, force=force)
+            if budget is not None and _ai['calls'] >= budget:
+                print(f"[budget] {budget} AI call(s) used -- stopping here; "
+                      f"{len(picked)} issue(s) were in scope.")
+                break
+            process_issue(cat, folder, dry=dry, force=force or refill)
+            if _ai['consec_fails'] >= STOP_AFTER_CONSEC_FAILS:
+                print(f"[stop] {_ai['consec_fails']} AI failures in a row -- backend "
+                      f"unavailable (subscription window used up?). Stopping. Nothing "
+                      f"was written for the failed issues, so a later run retries them.")
+                break
     finally:
         quit_word()
-    print(f"\nAI: {_ai['calls']} calls, {_ai['input']:,} in / {_ai['output']:,} out tokens.")
+    print(f"\nAI: {_ai['calls']} calls, {_ai['input']:,} in / {_ai['output']:,} out tokens, {_ai['fails']} failed.")
 
 
 if __name__ == "__main__":
