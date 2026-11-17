@@ -5,7 +5,7 @@ in the ERCOT (Texas) wholesale electricity market. Distinct from the official te
 `ERCOT_Glossary.md` (verbatim Nodal-Protocol definitions) — this list captures *what the market talks
 about*, organized by theme, with the currently-trending items flagged.
 
-- **Compiled:** 2026-09-23
+- **Compiled:** 2026-11-15
 - **Scope:** wholesale (bulk) market — energy, ancillary services, congestion, resource adequacy, reliability, policy
 - **Sourcing:** ERCOT.com, PUCT, market-research/analyst commentary, and trade press (see **Sources** at end)
 
@@ -74,6 +74,8 @@ The topics dominating ERCOT stakeholder meetings, filings, and analyst research 
 - **Capacity accreditation / ELCC** — effective capacity contribution of resources
 - **Interconnection queue** — generation & large-load connection pipeline
 - **Seasonal / long-term assessments (SARA, CDR, RTBM)** — ERCOT adequacy reports
+- **Long-Term Load Forecast (LTLF)** — multi-year peak and energy forecast feeding the CDR, planning studies, and adequacy assessments
+- **Capacity, Demand and Reserves report (CDR)** — semiannual supply/demand and reserve-margin outlook
 
 ## 5. Congestion & transmission
 
@@ -84,7 +86,7 @@ The topics dominating ERCOT stakeholder meetings, filings, and analyst research 
 - **Load zones / trading hubs / resource nodes** — price aggregation points (~900 of ~17,000 nodes)
 - **Shadow price / binding constraint** — marginal value of a transmission limit
 - **Generic Transmission Constraint (GTC)** — stability-limited interface constraints
-- **4CP (Four Coincident Peak)** — transmission cost allocation to loads
+- **4CP (Four Coincident Peak)** — transmission cost allocation to loads, and the demand-side management that shaves load during the forecast peak intervals to reduce those charges
 - **Transmission planning / RPG / RTP** — regional planning processes
 
 ## 6. Storage / batteries (ESR / BESS)
@@ -111,12 +113,15 @@ The topics dominating ERCOT stakeholder meetings, filings, and analyst research 
 
 - **Large loads / large flexible loads (LFL)** — >75 MW loads under SB6 oversight
 - **Data centers** — dominant driver of load growth and interconnection requests
+- **Load growth** — sustained rise in system demand driven by electrification, industrial expansion, and data centers
+- **Peak demand record** — new all-time, seasonal, monthly, or weekend system-peak highs set as load grows
 - **Co-location** — load sited with dedicated (often behind-the-meter) generation
 - **Controllable Load Resource (CLR)** — dispatchable demand providing AS
 - **Demand Response (DR) / Emergency Response Service (ERS)** — dispatchable/emergency load reduction
 - **Load forecasting / large-load forecasting transparency** — SB6 forecasting reforms
+- **PGRR145 large-load verification** — Planning Guide revision requiring verification of large-load interconnection requests before they count in planning cases
+- **Good Cause Exception** — board-granted flexibility to implement a protocol/guide change ahead of or outside its normal effective timeline
 - **Mandatory curtailment / firm load shed obligation** — SB6 large-load requirements
-- **Four Coincident Peak (4CP) avoidance** — demand-side transmission-charge management
 
 ## 9. Reliability & grid operations
 
@@ -128,6 +133,8 @@ The topics dominating ERCOT stakeholder meetings, filings, and analyst research 
 - **Physical Responsive Capability (PRC)** — real-time responsive reserve indicator
 - **Black start / restoration** — system recovery capability
 - **Real-time telemetry / state estimator** — situational awareness
+- **Resource Planned Outage Limit (RPOL)** — cap on simultaneously approved planned outages used to screen and schedule outage requests, applied separately to non-IRR and IRR/ESR resources
+- **Shoulder season outage scheduling** — spring/fall maintenance windows when planned-outage availability is greatest
 
 ## 10. Legislation, regulation & market governance
 
@@ -154,17 +161,17 @@ The topics dominating ERCOT stakeholder meetings, filings, and analyst research 
 ## Quick-reference acronyms
 
 `AS` Ancillary Services · `ASDC` AS Demand Curve · `BESS` Battery Energy Storage System ·
-`CLR` Controllable Load Resource · `COP` Current Operating Plan · `CRR` Congestion Revenue Right ·
+`CDR` Capacity, Demand and Reserves · `CLR` Controllable Load Resource · `COP` Current Operating Plan · `CRR` Congestion Revenue Right ·
 `DAM` Day-Ahead Market · `DRRS` Dispatchable Reliability Reserve Service · `ECRS` ERCOT Contingency Reserve Service ·
 `EEA` Energy Emergency Alert · `ELCC` Effective Load Carrying Capability · `ESR` Energy Storage Resource ·
 `FFR` Fast Frequency Response · `GTC` Generic Transmission Constraint · `HRUC/DRUC` Hourly/Day-ahead RUC ·
 `IBR` Inverter-Based Resource · `IMM` Independent Market Monitor · `LMP` Locational Marginal Price ·
-`LOLE/EUE` Loss of Load Expectation / Expected Unserved Energy · `LSE` Load Serving Entity ·
+`LOLE/EUE` Loss of Load Expectation / Expected Unserved Energy · `LSE` Load Serving Entity · `LTLF` Long-Term Load Forecast ·
 `MCPC` Market Clearing Price for Capacity · `NPRR` Nodal Protocol Revision Request · `Non-Spin` Non-Spinning Reserve ·
 `ORDC` Operating Reserve Demand Curve · `PCM` Performance Credit Mechanism · `PFR` Primary Frequency Response ·
-`PRC` Physical Responsive Capability · `PUCT` Public Utility Commission of Texas · `PVGR` Photovoltaic Generation Resource ·
+`PGRR` Planning Guide Revision Request · `PRC` Physical Responsive Capability · `PUCT` Public Utility Commission of Texas · `PVGR` Photovoltaic Generation Resource ·
 `QSE` Qualified Scheduling Entity · `RA` Resource Adequacy · `Reg-Up/Down` Regulation Up/Down ·
-`RoCoF` Rate of Change of Frequency · `RRS` Responsive Reserve Service · `RTC(+B)` Real-Time Co-optimization (+ Batteries) ·
+`RoCoF` Rate of Change of Frequency · `RPOL` Resource Planned Outage Limit · `RRS` Responsive Reserve Service · `RTC(+B)` Real-Time Co-optimization (+ Batteries) ·
 `RTM` Real-Time Market · `RUC` Reliability Unit Commitment · `SB6` Senate Bill 6 · `SCED` Security-Constrained Economic Dispatch ·
 `SOC` State of Charge · `SPP` Settlement Point Price · `TAC` Technical Advisory Committee · `VOLL` Value of Lost Load ·
 `WSL` Wholesale Storage Load

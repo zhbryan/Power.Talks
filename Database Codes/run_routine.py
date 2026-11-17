@@ -244,6 +244,36 @@ def build_steps(args):
                        "--quiet"],
                       PROJECT_ROOT))
 
+    # 8e-bis. Reference: mirror the curated market-keyword list into its JSON
+    #     companion. Deterministic .md -> .json parse (no network, no AI quota),
+    #     so the generated file can never drift from the authored one. The .md
+    #     itself is refreshed by hand via the Market Keywords Updater skill.
+    if args.only is None:
+        steps.append(("REFERENCE rebuild market-keyword JSON",
+                      [os.path.join(DB, "reference_info", "build_keywords_json.py"),
+                       "--quiet"],
+                      PROJECT_ROOT))
+
+    # 8e-bis2. Reference -> DB: upsert the keyword list into gallery.keyword_id,
+    #     so the ids emitted in the JSON above have a queryable home. Skipped if
+    #     db_config.json is absent; a down MySQL fails this step alone (the
+    #     driver logs it and carries on). generated_at is preserved per id.
+    if args.only is None and os.path.exists(
+            os.path.join(DB, "ercot_api", "db_config.json")):
+        steps.append(("REFERENCE sync keyword ids -> gallery.keyword_id",
+                      [os.path.join(DB, "sync_keyword_ids.py"), "--quiet"],
+                      PROJECT_ROOT))
+
+    # 8e-ter. Gallery: relink the extracted-chart index to the two reference
+    #     files refreshed just above. Skipped when the curated index does not
+    #     exist yet (Documents Database/ is local-only, so a fresh checkout has
+    #     no gallery). Must run AFTER 8e and 8e-bis.
+    if args.only is None and os.path.exists(
+            os.path.join(PROJECT_ROOT, "Documents Database", "GALLERY", "gallery_index.json")):
+        steps.append(("GALLERY relink chart keyword index",
+                      [os.path.join(DB, "build_gallery_index.py"), "--quiet"],
+                      PROJECT_ROOT))
+
     # 8f. Study index — tiered retrieval (SQLite + FTS5) over the derived layer
     #     written above: issue profiles/summaries, meeting profiles, and the
     #     glossary refreshed in 8e. Must come AFTER the profile/summarize steps,

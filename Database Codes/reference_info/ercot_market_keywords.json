@@ -1,7 +1,7 @@
 {
   "source": "Curated from ERCOT.com, PUCT filings, and analyst/trade research (see Sources in ercot_market_keywords.md)",
-  "compiled_at": "2026-09-23",
-  "count": 86,
+  "compiled_at": "2026-11-15",
+  "count": 93,
   "trending_count": 12,
   "categories": [
     "Market design & structure",
@@ -18,6 +18,7 @@
   ],
   "keywords": [
     {
+      "keyword_id": "7a67aee6bd13",
       "term": "Nodal market",
       "acronym": null,
       "category": "Market design & structure",
@@ -25,6 +26,7 @@
       "trending": false
     },
     {
+      "keyword_id": "67e140b35709",
       "term": "Energy-only market",
       "acronym": null,
       "category": "Market design & structure",
@@ -32,6 +34,7 @@
       "trending": false
     },
     {
+      "keyword_id": "19e686578dfc",
       "term": "Locational Marginal Price (LMP)",
       "acronym": "LMP",
       "category": "Market design & structure",
@@ -39,6 +42,7 @@
       "trending": false
     },
     {
+      "keyword_id": "c7a3e2468c15",
       "term": "Day-Ahead Market (DAM)",
       "acronym": "DAM",
       "category": "Market design & structure",
@@ -46,6 +50,7 @@
       "trending": false
     },
     {
+      "keyword_id": "34d3a97129a8",
       "term": "Real-Time Market (RTM)",
       "acronym": "RTM",
       "category": "Market design & structure",
@@ -53,6 +58,7 @@
       "trending": false
     },
     {
+      "keyword_id": "b08e7dd9fed3",
       "term": "Security-Constrained Economic Dispatch (SCED)",
       "acronym": "SCED",
       "category": "Market design & structure",
@@ -60,6 +66,7 @@
       "trending": false
     },
     {
+      "keyword_id": "5e8a4b9ab02b",
       "term": "Reliability Unit Commitment (RUC)",
       "acronym": "RUC",
       "category": "Market design & structure",
@@ -67,6 +74,7 @@
       "trending": false
     },
     {
+      "keyword_id": "d42efa55640f",
       "term": "Real-Time Co-optimization (RTC / RTC+B)",
       "acronym": "RTC / RTC+B",
       "category": "Market design & structure",
@@ -74,6 +82,7 @@
       "trending": true
     },
     {
+      "keyword_id": "a8e39e96521a",
       "term": "Co-optimization",
       "acronym": null,
       "category": "Market design & structure",
@@ -81,6 +90,7 @@
       "trending": false
     },
     {
+      "keyword_id": "632411d7ef56",
       "term": "Marginal pricing / offer curves / bids",
       "acronym": null,
       "category": "Market design & structure",
@@ -88,6 +98,7 @@
       "trending": false
     },
     {
+      "keyword_id": "231975d428d5",
       "term": "Make-whole / uplift payments",
       "acronym": null,
       "category": "Market design & structure",
@@ -95,6 +106,7 @@
       "trending": false
     },
     {
+      "keyword_id": "a067be2833bf",
       "term": "Regulation Up / Regulation Down (Reg-Up / Reg-Down)",
       "acronym": "Reg-Up / Reg-Down",
       "category": "Ancillary services (AS)",
@@ -102,6 +114,7 @@
       "trending": false
     },
     {
+      "keyword_id": "4a99c3b4b741",
       "term": "Responsive Reserve Service (RRS)",
       "acronym": "RRS",
       "category": "Ancillary services (AS)",
@@ -109,6 +122,7 @@
       "trending": false
     },
     {
+      "keyword_id": "408dd12f8dbc",
       "term": "ERCOT Contingency Reserve Service (ECRS)",
       "acronym": "ECRS",
       "category": "Ancillary services (AS)",
@@ -116,6 +130,7 @@
       "trending": false
     },
     {
+      "keyword_id": "76de036e1ab1",
       "term": "Non-Spinning Reserve (Non-Spin / NSPIN)",
       "acronym": "Non-Spin / NSPIN",
       "category": "Ancillary services (AS)",
@@ -123,6 +138,7 @@
       "trending": false
     },
     {
+      "keyword_id": "07505d5b9e94",
       "term": "Fast Frequency Response (FFR)",
       "acronym": "FFR",
       "category": "Ancillary services (AS)",
@@ -130,6 +146,7 @@
       "trending": false
     },
     {
+      "keyword_id": "2b0559b2f905",
       "term": "Primary Frequency Response (PFR)",
       "acronym": "PFR",
       "category": "Ancillary services (AS)",
@@ -137,6 +154,7 @@
       "trending": false
     },
     {
+      "keyword_id": "b5dea4335216",
       "term": "Dispatchable Reliability Reserve Service (DRRS)",
       "acronym": "DRRS",
       "category": "Ancillary services (AS)",
@@ -144,6 +162,7 @@
       "trending": true
     },
     {
+      "keyword_id": "09e3dfdbdbae",
       "term": "Ancillary Service Demand Curves (ASDCs)",
       "acronym": "ASDCs",
       "category": "Ancillary services (AS)",
@@ -151,6 +170,7 @@
       "trending": true
     },
     {
+      "keyword_id": "2bb2c07beeb5",
       "term": "AS obligation / AS shortfall / MW Short",
       "acronym": null,
       "category": "Ancillary services (AS)",
@@ -158,6 +178,7 @@
       "trending": false
     },
     {
+      "keyword_id": "2f8d6c899b74",
       "term": "Operating Reserve Demand Curve (ORDC)",
       "acronym": "ORDC",
       "category": "Scarcity pricing & reliability economics",
@@ -165,6 +186,7 @@
       "trending": false
     },
     {
+      "keyword_id": "e3134fdb7829",
       "term": "Scarcity pricing / scarcity adder",
       "acronym": null,
       "category": "Scarcity pricing & reliability economics",
@@ -172,6 +194,7 @@
       "trending": false
     },
     {
+      "keyword_id": "1315ca19c34d",
       "term": "Value of Lost Load (VOLL)",
       "acronym": "VOLL",
       "category": "Scarcity pricing & reliability economics",
@@ -179,6 +202,7 @@
       "trending": false
     },
     {
+      "keyword_id": "dfc807774fe4",
       "term": "System-Wide Offer Cap (HCAP / LCAP)",
       "acronym": "HCAP / LCAP",
       "category": "Scarcity pricing & reliability economics",
@@ -186,6 +210,7 @@
       "trending": false
     },
     {
+      "keyword_id": "96737e8b3287",
       "term": "Peaker Net Margin (PNM)",
       "acronym": "PNM",
       "category": "Scarcity pricing & reliability economics",
@@ -193,6 +218,7 @@
       "trending": false
     },
     {
+      "keyword_id": "e51a90c52afa",
       "term": "Reliability Deployment Price Adder (RTORPA / RTOFFPA)",
       "acronym": "RTORPA / RTOFFPA",
       "category": "Scarcity pricing & reliability economics",
@@ -200,6 +226,7 @@
       "trending": false
     },
     {
+      "keyword_id": "553694f69a5f",
       "term": "Resource adequacy (RA)",
       "acronym": "RA",
       "category": "Resource adequacy & capacity",
@@ -207,6 +234,7 @@
       "trending": true
     },
     {
+      "keyword_id": "0a6631720d20",
       "term": "Reserve margin / target reserve margin",
       "acronym": null,
       "category": "Resource adequacy & capacity",
@@ -214,6 +242,7 @@
       "trending": false
     },
     {
+      "keyword_id": "1c6508e8ce65",
       "term": "Loss of Load Expectation / Expected Unserved Energy (LOLE / EUE)",
       "acronym": "LOLE / EUE",
       "category": "Resource adequacy & capacity",
@@ -221,6 +250,7 @@
       "trending": false
     },
     {
+      "keyword_id": "a9e7a15ecd1a",
       "term": "Performance Credit Mechanism (PCM)",
       "acronym": "PCM",
       "category": "Resource adequacy & capacity",
@@ -228,6 +258,7 @@
       "trending": true
     },
     {
+      "keyword_id": "45873f32d7b5",
       "term": "Capacity accreditation / ELCC",
       "acronym": null,
       "category": "Resource adequacy & capacity",
@@ -235,6 +266,7 @@
       "trending": false
     },
     {
+      "keyword_id": "42232f8d1e57",
       "term": "Interconnection queue",
       "acronym": null,
       "category": "Resource adequacy & capacity",
@@ -242,6 +274,7 @@
       "trending": false
     },
     {
+      "keyword_id": "502070b1d2f4",
       "term": "Seasonal / long-term assessments (SARA, CDR, RTBM)",
       "acronym": "SARA, CDR, RTBM",
       "category": "Resource adequacy & capacity",
@@ -249,6 +282,23 @@
       "trending": false
     },
     {
+      "keyword_id": "3609715053ea",
+      "term": "Long-Term Load Forecast (LTLF)",
+      "acronym": "LTLF",
+      "category": "Resource adequacy & capacity",
+      "description": "multi-year peak and energy forecast feeding the CDR, planning studies, and adequacy assessments",
+      "trending": false
+    },
+    {
+      "keyword_id": "f6d6d8a5586c",
+      "term": "Capacity, Demand and Reserves report (CDR)",
+      "acronym": "CDR",
+      "category": "Resource adequacy & capacity",
+      "description": "semiannual supply/demand and reserve-margin outlook",
+      "trending": false
+    },
+    {
+      "keyword_id": "9460f0f4dd6d",
       "term": "Congestion Revenue Rights (CRR)",
       "acronym": "CRR",
       "category": "Congestion & transmission",
@@ -256,6 +306,7 @@
       "trending": false
     },
     {
+      "keyword_id": "c9e7ccab2367",
       "term": "Congestion / transmission congestion",
       "acronym": null,
       "category": "Congestion & transmission",
@@ -263,6 +314,7 @@
       "trending": false
     },
     {
+      "keyword_id": "e8c74f19c396",
       "term": "Basis / basis risk",
       "acronym": null,
       "category": "Congestion & transmission",
@@ -270,6 +322,7 @@
       "trending": false
     },
     {
+      "keyword_id": "5237e4439b99",
       "term": "Settlement Point Prices (SPP)",
       "acronym": "SPP",
       "category": "Congestion & transmission",
@@ -277,6 +330,7 @@
       "trending": false
     },
     {
+      "keyword_id": "d9b478ebde04",
       "term": "Load zones / trading hubs / resource nodes",
       "acronym": null,
       "category": "Congestion & transmission",
@@ -284,6 +338,7 @@
       "trending": false
     },
     {
+      "keyword_id": "9fe38cd99bf2",
       "term": "Shadow price / binding constraint",
       "acronym": null,
       "category": "Congestion & transmission",
@@ -291,6 +346,7 @@
       "trending": false
     },
     {
+      "keyword_id": "ebfb296778d5",
       "term": "Generic Transmission Constraint (GTC)",
       "acronym": "GTC",
       "category": "Congestion & transmission",
@@ -298,13 +354,15 @@
       "trending": false
     },
     {
+      "keyword_id": "18013ea14ac7",
       "term": "4CP (Four Coincident Peak)",
       "acronym": "Four Coincident Peak",
       "category": "Congestion & transmission",
-      "description": "transmission cost allocation to loads",
+      "description": "transmission cost allocation to loads, and the demand-side management that shaves load during the forecast peak intervals to reduce those charges",
       "trending": false
     },
     {
+      "keyword_id": "a72b09cc1d18",
       "term": "Transmission planning / RPG / RTP",
       "acronym": null,
       "category": "Congestion & transmission",
@@ -312,6 +370,7 @@
       "trending": false
     },
     {
+      "keyword_id": "b20232b732a5",
       "term": "Energy Storage Resource (ESR)",
       "acronym": "ESR",
       "category": "Storage / batteries (ESR / BESS)",
@@ -319,6 +378,7 @@
       "trending": true
     },
     {
+      "keyword_id": "c761094500ae",
       "term": "Battery Energy Storage System (BESS)",
       "acronym": "BESS",
       "category": "Storage / batteries (ESR / BESS)",
@@ -326,6 +386,7 @@
       "trending": true
     },
     {
+      "keyword_id": "b3fc7f661b57",
       "term": "State of Charge (SOC)",
       "acronym": "SOC",
       "category": "Storage / batteries (ESR / BESS)",
@@ -333,6 +394,7 @@
       "trending": true
     },
     {
+      "keyword_id": "b6b735a4b475",
       "term": "Single Model ESR",
       "acronym": null,
       "category": "Storage / batteries (ESR / BESS)",
@@ -340,6 +402,7 @@
       "trending": false
     },
     {
+      "keyword_id": "3e99494d512a",
       "term": "Wholesale Storage Load (WSL)",
       "acronym": "WSL",
       "category": "Storage / batteries (ESR / BESS)",
@@ -347,6 +410,7 @@
       "trending": false
     },
     {
+      "keyword_id": "d628b554bba5",
       "term": "State-of-charge limits in SCED",
       "acronym": null,
       "category": "Storage / batteries (ESR / BESS)",
@@ -354,6 +418,7 @@
       "trending": false
     },
     {
+      "keyword_id": "d6dbb5f616a1",
       "term": "Inverter-Based Resources (IBR)",
       "acronym": "IBR",
       "category": "Renewables & inverter-based resources (IBR)",
@@ -361,6 +426,7 @@
       "trending": false
     },
     {
+      "keyword_id": "e8cd07f75a8f",
       "term": "System inertia / synchronous inertia",
       "acronym": null,
       "category": "Renewables & inverter-based resources (IBR)",
@@ -368,6 +434,7 @@
       "trending": false
     },
     {
+      "keyword_id": "aea33ccc1029",
       "term": "Rate of Change of Frequency (RoCoF)",
       "acronym": "RoCoF",
       "category": "Renewables & inverter-based resources (IBR)",
@@ -375,6 +442,7 @@
       "trending": false
     },
     {
+      "keyword_id": "5442f7daf2d9",
       "term": "Duck curve / net load",
       "acronym": null,
       "category": "Renewables & inverter-based resources (IBR)",
@@ -382,6 +450,7 @@
       "trending": false
     },
     {
+      "keyword_id": "1e1d6effea9a",
       "term": "Curtailment",
       "acronym": null,
       "category": "Renewables & inverter-based resources (IBR)",
@@ -389,6 +458,7 @@
       "trending": false
     },
     {
+      "keyword_id": "9e5165291ac1",
       "term": "Photovoltaic Generation Resource (PVGR) / Wind-powered Generation Resource (WGR)",
       "acronym": "WGR",
       "category": "Renewables & inverter-based resources (IBR)",
@@ -396,6 +466,7 @@
       "trending": false
     },
     {
+      "keyword_id": "1badbce83616",
       "term": "Generation Resource Energy Deployment Performance (GREDP / CLREDP)",
       "acronym": "GREDP / CLREDP",
       "category": "Renewables & inverter-based resources (IBR)",
@@ -403,6 +474,7 @@
       "trending": false
     },
     {
+      "keyword_id": "b97e52122a07",
       "term": "Advanced grid support / grid-forming inverters",
       "acronym": null,
       "category": "Renewables & inverter-based resources (IBR)",
@@ -410,6 +482,7 @@
       "trending": false
     },
     {
+      "keyword_id": "0679809c2f4f",
       "term": "Large loads / large flexible loads (LFL)",
       "acronym": "LFL",
       "category": "Large loads & demand",
@@ -417,6 +490,7 @@
       "trending": true
     },
     {
+      "keyword_id": "d1b018f28176",
       "term": "Data centers",
       "acronym": null,
       "category": "Large loads & demand",
@@ -424,6 +498,23 @@
       "trending": true
     },
     {
+      "keyword_id": "7eb96235afd2",
+      "term": "Load growth",
+      "acronym": null,
+      "category": "Large loads & demand",
+      "description": "sustained rise in system demand driven by electrification, industrial expansion, and data centers",
+      "trending": false
+    },
+    {
+      "keyword_id": "8576d9284051",
+      "term": "Peak demand record",
+      "acronym": null,
+      "category": "Large loads & demand",
+      "description": "new all-time, seasonal, monthly, or weekend system-peak highs set as load grows",
+      "trending": false
+    },
+    {
+      "keyword_id": "7d7bca4869ba",
       "term": "Co-location",
       "acronym": null,
       "category": "Large loads & demand",
@@ -431,6 +522,7 @@
       "trending": true
     },
     {
+      "keyword_id": "49c3455460b7",
       "term": "Controllable Load Resource (CLR)",
       "acronym": "CLR",
       "category": "Large loads & demand",
@@ -438,6 +530,7 @@
       "trending": false
     },
     {
+      "keyword_id": "16a073a212ca",
       "term": "Demand Response (DR) / Emergency Response Service (ERS)",
       "acronym": "ERS",
       "category": "Large loads & demand",
@@ -445,6 +538,7 @@
       "trending": false
     },
     {
+      "keyword_id": "9267de33b9a6",
       "term": "Load forecasting / large-load forecasting transparency",
       "acronym": null,
       "category": "Large loads & demand",
@@ -452,6 +546,23 @@
       "trending": false
     },
     {
+      "keyword_id": "3e5298a9f1c7",
+      "term": "PGRR145 large-load verification",
+      "acronym": null,
+      "category": "Large loads & demand",
+      "description": "Planning Guide revision requiring verification of large-load interconnection requests before they count in planning cases",
+      "trending": false
+    },
+    {
+      "keyword_id": "3097af526be3",
+      "term": "Good Cause Exception",
+      "acronym": null,
+      "category": "Large loads & demand",
+      "description": "board-granted flexibility to implement a protocol/guide change ahead of or outside its normal effective timeline",
+      "trending": false
+    },
+    {
+      "keyword_id": "95018ad2dde0",
       "term": "Mandatory curtailment / firm load shed obligation",
       "acronym": null,
       "category": "Large loads & demand",
@@ -459,13 +570,7 @@
       "trending": false
     },
     {
-      "term": "Four Coincident Peak (4CP) avoidance",
-      "acronym": null,
-      "category": "Large loads & demand",
-      "description": "demand-side transmission-charge management",
-      "trending": false
-    },
-    {
+      "keyword_id": "46d912da7658",
       "term": "Frequency response / frequency control",
       "acronym": null,
       "category": "Reliability & grid operations",
@@ -473,6 +578,7 @@
       "trending": false
     },
     {
+      "keyword_id": "f31e0498280c",
       "term": "Energy Emergency Alert (EEA 1/2/3)",
       "acronym": "EEA 1/2/3",
       "category": "Reliability & grid operations",
@@ -480,6 +586,7 @@
       "trending": false
     },
     {
+      "keyword_id": "dd2ae5ebe36f",
       "term": "Load shed / rotating outages",
       "acronym": null,
       "category": "Reliability & grid operations",
@@ -487,6 +594,7 @@
       "trending": false
     },
     {
+      "keyword_id": "77bc04b28967",
       "term": "Weatherization / winterization",
       "acronym": null,
       "category": "Reliability & grid operations",
@@ -494,6 +602,7 @@
       "trending": false
     },
     {
+      "keyword_id": "19ff7eec7bb5",
       "term": "Reliability standards (NERC / FERC Order 901)",
       "acronym": "NERC / FERC Order 901",
       "category": "Reliability & grid operations",
@@ -501,6 +610,7 @@
       "trending": false
     },
     {
+      "keyword_id": "f9f2361291af",
       "term": "Physical Responsive Capability (PRC)",
       "acronym": "PRC",
       "category": "Reliability & grid operations",
@@ -508,6 +618,7 @@
       "trending": false
     },
     {
+      "keyword_id": "0451e6f334f3",
       "term": "Black start / restoration",
       "acronym": null,
       "category": "Reliability & grid operations",
@@ -515,6 +626,7 @@
       "trending": false
     },
     {
+      "keyword_id": "9c138c1f52b9",
       "term": "Real-time telemetry / state estimator",
       "acronym": null,
       "category": "Reliability & grid operations",
@@ -522,6 +634,23 @@
       "trending": false
     },
     {
+      "keyword_id": "9952d7a3d6ee",
+      "term": "Resource Planned Outage Limit (RPOL)",
+      "acronym": "RPOL",
+      "category": "Reliability & grid operations",
+      "description": "cap on simultaneously approved planned outages used to screen and schedule outage requests, applied separately to non-IRR and IRR/ESR resources",
+      "trending": false
+    },
+    {
+      "keyword_id": "7381cdffd68c",
+      "term": "Shoulder season outage scheduling",
+      "acronym": null,
+      "category": "Reliability & grid operations",
+      "description": "spring/fall maintenance windows when planned-outage availability is greatest",
+      "trending": false
+    },
+    {
+      "keyword_id": "4e3feb3c10ee",
       "term": "Senate Bill 6 (SB6, 2025)",
       "acronym": "SB6, 2025",
       "category": "Legislation, regulation & market governance",
@@ -529,6 +658,7 @@
       "trending": true
     },
     {
+      "keyword_id": "2a26f0b6aa35",
       "term": "House Bill 1500 (HB1500)",
       "acronym": "HB1500",
       "category": "Legislation, regulation & market governance",
@@ -536,6 +666,7 @@
       "trending": false
     },
     {
+      "keyword_id": "910b0561598b",
       "term": "Public Utility Commission of Texas (PUCT)",
       "acronym": "PUCT",
       "category": "Legislation, regulation & market governance",
@@ -543,6 +674,7 @@
       "trending": false
     },
     {
+      "keyword_id": "34c6c5970563",
       "term": "Nodal Protocols",
       "acronym": null,
       "category": "Legislation, regulation & market governance",
@@ -550,6 +682,7 @@
       "trending": false
     },
     {
+      "keyword_id": "8d4652aa3424",
       "term": "Revision requests: NPRR / NOGRR / NPRR1186 / NPRR1309 / SCR / RRGRR / PGRR / COPMGRR",
       "acronym": null,
       "category": "Legislation, regulation & market governance",
@@ -557,6 +690,7 @@
       "trending": false
     },
     {
+      "keyword_id": "004b50457e85",
       "term": "Technical Advisory Committee (TAC) / PRS / ROS / WMS / RMS / COPS",
       "acronym": null,
       "category": "Legislation, regulation & market governance",
@@ -564,6 +698,7 @@
       "trending": false
     },
     {
+      "keyword_id": "675e5905caec",
       "term": "Batch Zero study process",
       "acronym": null,
       "category": "Legislation, regulation & market governance",
@@ -571,6 +706,7 @@
       "trending": false
     },
     {
+      "keyword_id": "9ac8e1750cdb",
       "term": "Independent Market Monitor (IMM)",
       "acronym": "IMM",
       "category": "Legislation, regulation & market governance",
@@ -578,6 +714,7 @@
       "trending": false
     },
     {
+      "keyword_id": "aee3f8d03efa",
       "term": "Qualified Scheduling Entity (QSE)",
       "acronym": "QSE",
       "category": "Settlement, metering & participants",
@@ -585,6 +722,7 @@
       "trending": false
     },
     {
+      "keyword_id": "5ac20687621b",
       "term": "Load Serving Entity (LSE)",
       "acronym": "LSE",
       "category": "Settlement, metering & participants",
@@ -592,6 +730,7 @@
       "trending": false
     },
     {
+      "keyword_id": "46014f3a66e2",
       "term": "Market Clearing Price for Capacity (MCPC)",
       "acronym": "MCPC",
       "category": "Settlement, metering & participants",
@@ -599,6 +738,7 @@
       "trending": false
     },
     {
+      "keyword_id": "79be3fe598a5",
       "term": "Real-time / day-ahead settlement",
       "acronym": null,
       "category": "Settlement, metering & participants",
@@ -606,6 +746,7 @@
       "trending": false
     },
     {
+      "keyword_id": "fa591939e183",
       "term": "Current Operating Plan (COP)",
       "acronym": "COP",
       "category": "Settlement, metering & participants",
@@ -613,6 +754,7 @@
       "trending": false
     },
     {
+      "keyword_id": "d512a11f3d3e",
       "term": "Load Ratio Share (LRS)",
       "acronym": "LRS",
       "category": "Settlement, metering & participants",

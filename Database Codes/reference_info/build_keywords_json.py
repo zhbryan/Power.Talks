@@ -12,16 +12,22 @@ mirrors it into JSON. Run it after every edit to the .md:
     py -3 "Database Codes/reference_info/build_keywords_json.py"          # build + report
     py -3 "Database Codes/reference_info/build_keywords_json.py" --quiet  # nightly / headless
 
+`keyword_id` is a stable 12-hex-char digest of the normalized term (see
+keyword_id()); it is the primary key of the `keyword_id` table in the local
+`gallery` schema, loaded by `Database Codes/sync_keyword_ids.py`.
+
 Schema:
     {
       "source": "...", "compiled_at": "YYYY-MM-DD",
       "count": N, "trending_count": T,
       "categories": ["Market design & structure", ...],
       "keywords": [
-        {"term","acronym"|null,"category","description","trending"}, ...
+        {"keyword_id","term","acronym"|null,"category","description",
+         "trending"}, ...
       ]
     }
 """
+import hashlib
 import json
 import os
 import re
@@ -41,6 +47,20 @@ _ACRONYM_TAIL = re.compile(r"\(([^()]+)\)\s*$")    # trailing (...) on the term
 
 def _clean(s):
     return re.sub(r"\s+", " ", _LINK.sub(r"\1", s)).strip()
+
+
+def keyword_id(term):
+    """Stable 12-hex-char id derived from the term itself.
+
+    Deterministic on purpose: the same term always yields the same id, on every
+    machine, with no database round-trip and no counter to keep. That is what
+    lets rows in the `keyword_id` table of the local `gallery` schema survive a
+    nightly rebuild of this file -- a sequential id would renumber every term
+    whenever a bullet is inserted higher up the list. Derived from the case- and
+    whitespace-normalized term, so "Batch Zero" and "batch  zero" share one id.
+    """
+    norm = re.sub(r"\s+", " ", term).strip().lower()
+    return hashlib.sha1(norm.encode("utf-8")).hexdigest()[:12]
 
 
 def parse():
@@ -125,6 +145,7 @@ def parse():
         if am and len(am.group(1)) <= 40:
             acronym = am.group(1).strip()
         keywords.append({
+            "keyword_id": keyword_id(term_raw),
             "term": term_raw,
             "acronym": acronym,
             "category": category,
