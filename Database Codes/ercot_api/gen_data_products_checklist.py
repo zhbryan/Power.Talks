@@ -39,14 +39,31 @@ OUT_DIR = os.path.join(PROJECT_ROOT, "Documents Database", "ERCOT.PUBAPI")
 LATEST_JSON = os.path.join(OUT_DIR, "emil_products_latest.json")
 
 
-def _db_config():
-    return {
+def _db_config(database=None):
+    """Local MySQL settings for every process in this project.
+
+    `Database Codes/ercot_api/db_config.json` is the single source of truth; the
+    STATS_DB_* environment variables are only fallbacks for a missing file or
+    key. Pass `database` to target another schema listed under "databases"
+    (e.g. "gallery") instead of the default one."""
+    cfg = {
         "host": os.environ.get("STATS_DB_HOST", "127.0.0.1"),
         "user": os.environ.get("STATS_DB_USER", "root"),
         "password": os.environ.get("STATS_DB_PASSWORD", ""),
         "database": os.environ.get("STATS_DB_NAME", "stats_illustrator"),
         "port": int(os.environ.get("STATS_DB_PORT", "3306")),
     }
+    path = os.path.join(HERE, "db_config.json")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            cfg.update(json.load(fh))
+    cfg["port"] = int(cfg["port"])
+    if database:
+        known = cfg.get("databases") or [cfg["database"]]
+        if database not in known:
+            raise ValueError(f"unknown database {database!r}; db_config.json lists {known}")
+        cfg["database"] = database
+    return cfg
 
 
 CHECKLIST_TABLE = "data_products_table_checklist"
