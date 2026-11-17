@@ -281,7 +281,20 @@ JOIN_BOX_SELECTORS = (
     'input[type="search"]',
 )
 PASSWORD_GATE_SELECTORS = ("#meetingInfoPassword", 'input[type="password"]')
+# Roughly 35 seconds after the join page loads, Webex covers it with a modal
+# -- "Let's make sure you're on time for your meeting" -- carrying its own
+# "Join from browser" button, and the page does not proceed until that button
+# is pressed. #broadcom-center-right stays visible underneath, so a list led
+# by it clicks at an element the modal intercepts until the click times out.
+#
+# The modal's button cannot be reached by text either: Webex ships two of them
+# with the same label, #joinFromWebapp and #fallBkJoinByBrowser, only one
+# rendered at a time, and text="Join from browser" resolves .first to the
+# hidden twin. get_by_role finds neither -- they carry no accessible name.
+# Hence the ids, modal first.
 BROWSER_JOIN_SELECTORS = (
+    "#fallBkJoinByBrowser",
+    "#joinFromWebapp",
     "#broadcom-center-right",
     'text="Join from this browser"',
     'text="Join from your browser"',
@@ -364,12 +377,32 @@ def set_av_off(scope) -> None:
             logging.warning("Could not %s: %s", want, e)
 
 
+def join_form_ready(frame) -> bool:
+    """Whether this frame is actually showing the name-and-join form.
+
+    The frame exists well before the form does: Webex preloads it, then routes
+    it through web.webex.com/guest-join-meeting, and only then renders the
+    name box. Treating "the frame is here" as "the form is here" caught it
+    mid-transition and spent twenty seconds filling a box nothing had drawn.
+    """
+    try:
+        return bool(frame.get_by_role("textbox").count()
+                    or frame.locator("#join-button").count())
+    except Exception:
+        return False
+
+
 def webex_app_frame(page):
-    """The join screen is served in an iframe from web.webex.com."""
-    for frame in page.frames:
-        if "web.webex.com" in (frame.url or ""):
+    """The join screen's iframe from web.webex.com -- preferring one that has
+    the form, since the preloaded frame sits alongside it -- or None while no
+    such frame exists. It must not fall back to the page: doing so turned "the
+    web app never opened" into a timeout hunting for a name box in the wrong
+    document."""
+    frames = [f for f in page.frames if "web.webex.com" in (f.url or "")]
+    for frame in frames:
+        if join_form_ready(frame):
             return frame
-    return page
+    return frames[0] if frames else None
 
 
 def describe_page(page) -> str:
@@ -484,18 +517,42 @@ def record(meeting: dict, out_dir: Path, base: str, display_name: str,
             dismiss_cookies(page)
             shot(page, "join-page")
 
-            # 4. The browser client, not the desktop app.
-            webapp = first_visible(page, BROWSER_JOIN_SELECTORS, timeout=25_000)
-            if webapp is None:
-                logging.error("No browser-client choice. Page: %s", describe_page(page))
-                raise RuntimeError("Webex did not offer to join from this browser")
-            webapp.click(timeout=15_000)
-            page.wait_for_timeout(20_000)
+            # 4. The browser client, not the desktop app. Webex asks more than
+            #    once: having taken "Join from this browser", a modal follows
+            #    -- "Let's make sure you're on time for your meeting" -- with
+            #    its own "Join from browser" button. That modal only appears
+            #    once the meeting is under way, so a rehearsal hours ahead of
+            #    one never sees it, and the first live run walked straight
+            #    past it into a 20-second hunt for a name box behind it. Keep
+            #    taking the offer until the web app's own frame appears.
+            app = None
+            offers = 0
+            deadline = time.time() + 180
+            while time.time() < deadline:
+                choice = first_visible(page, BROWSER_JOIN_SELECTORS, timeout=4000)
+                if choice is not None:
+                    offers += 1
+                    try:
+                        choice.click(timeout=10_000)
+                    except Exception as e:
+                        logging.warning("Browser-client click did not land: %s", e)
+                page.wait_for_timeout(5000)
+                frame = webex_app_frame(page)
+                # Only once we have taken the offer at least once: the frame
+                # is preloaded behind the prompt, so it is there before the
+                # prompt has been answered.
+                if offers and frame is not None and join_form_ready(frame):
+                    app = frame
+                    break
+            if app is None:
+                logging.error("Join form never appeared after %d prompt(s). Page: %s",
+                              offers, describe_page(page))
+                raise RuntimeError("Webex never opened its browser client")
+            logging.info("Join form ready after %d browser-client prompt(s)", offers)
             shot(page, "browser-client")
 
             # 5. Name, mute, join -- inside the web.webex.com iframe, whose
             #    fields are web components with generated ids, so go by role.
-            app = webex_app_frame(page)
             try:
                 app.get_by_role("textbox").first.fill(display_name, timeout=20_000)
             except Exception as e:
@@ -529,7 +586,7 @@ def record(meeting: dict, out_dir: Path, base: str, display_name: str,
             shot(page, "joined")
 
             # Once inside, confirm we are muted and dark.
-            set_av_off(webex_app_frame(page))
+            set_av_off(webex_app_frame(page) or page)
 
             page.evaluate("window.__ptStart && window.__ptStart()")
             logging.info("Recording started -> %s", webm.name)
@@ -719,8 +776,14 @@ def main() -> int:
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
 
-    logging.basicConfig(level=logging.WARNING if args.quiet else logging.INFO,
+    # --quiet belongs to the console, not to the file. The scheduled tasks all
+    # pass it, so the SB6 run's log kept only two warnings and an exception --
+    # no join link, no mute, no byte counts. The file always gets INFO.
+    logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s %(message)s")
+    if args.quiet:
+        for handler in logging.getLogger().handlers:
+            handler.setLevel(logging.WARNING)
 
     if args.self_test:
         return self_test(Path(args.out) if args.out
@@ -752,6 +815,7 @@ def main() -> int:
 
     fileh = logging.FileHandler(log_path, encoding="utf-8")
     fileh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    fileh.setLevel(logging.INFO)
     logging.getLogger().addHandler(fileh)
 
     logging.info("Meeting : %s (%s %s)", meeting.get("title"), args.date,

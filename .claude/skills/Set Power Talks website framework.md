@@ -115,7 +115,8 @@ illustration:
 | `market-home` | `<ERCOTHome>` (the default landing view) |
 | `paper-trails` | `<PaperTrailsIllustration>` |
 | `meeting-tracks` | `<MeetingTracksOrgChart>` |
-| anything else (`hot-topics`, `stats-illustrated`, `gallery`) | `<TalkIllustration>` (placeholder) |
+| `stats-illustrated` | `<StatsIllustratorHome>` |
+| anything else (`gallery`) | `<TalkIllustration>` (placeholder) |
 
 Selection state is per-domain: `activeMarket`, `activePaperCode`,
 `activeMeetingNode`, and one `active<Cat>` (NPRR/COPMGRR/PGRR/SCR/NOGRR/RMGRR)

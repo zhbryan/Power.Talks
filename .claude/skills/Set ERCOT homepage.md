@@ -47,8 +47,8 @@ All in `ERCOTHome` (`illustration.jsx`):
   between blocks.
 - **Quick Access tiles** — the `LINKS` array: `{ id, icon, label, desc }`.
   `id` must be a real section id (`paper-trails`, `meeting-tracks`,
-  `hot-topics`, `stats-illustrated`, `gallery`) — clicking a
-  tile calls `onSectionChange(id)`. `icon` must exist on `window.I` (see
+  `stats-illustrated`, `gallery`) — clicking a tile calls
+  `onSectionChange(id)`. `icon` must exist on `window.I` (see
   `icons.jsx`).
 
 `ERCOTHome` does **not** render the artifacts inline — they live only in the
