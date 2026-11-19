@@ -1593,6 +1593,7 @@ const NOGRR_PENDING = [
   { n: 288, title: "Related to NPRR1340, Dispatchable Reliability Reserve Service Ancillary Service with Energy Storage Resource Participation" },
   { n: 289, title: "Extension for LCL Cooling Load Ride-Through Compliance" },
   { n: 290, title: "Update to Section 1.5.4, ERCOT Severe Weather Drill" },
+  { n: 291, title: "Alignment of Criteria for Exemptions from LCL Ride-Through Requirements with Batch Zero" },
 ];
 
 const NOGRR_APPROVED = [
