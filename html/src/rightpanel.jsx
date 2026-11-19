@@ -542,6 +542,88 @@ const CATEGORY_HIDDEN_ARTIFACT_IDS = ["a2", "a5", "a7", "a8"];
 // Stats Illustrator keeps only these two artifacts (order follows DATA).
 const STATS_HOME_ARTIFACT_IDS = ["a3", "a7"];
 
+// Shown under "Chart details" when a Gallery chart is open in the content
+// window. The source record is read live from html/api/gallery.php (MySQL
+// `gallery`), the same endpoint the Gallery page itself uses — the panel never
+// caches, so a nightly re-extraction is reflected on the next click.
+// Formatting mirrors RuleProfileCard (shared NP_CARD_CSS): mono id, serif
+// title, mono field labels, em-dash fallbacks for anything missing.
+function GalleryChartCard({ chartId }) {
+  const [chart, setChart] = React.useState(null);
+  const [state, setState] = React.useState("loading");
+
+  React.useEffect(() => {
+    if (!chartId) { setChart(null); setState("idle"); return; }
+    let live = true;
+    setState("loading");
+    fetch(`/Power.Talks/html/api/gallery.php?action=chart&chart_id=${encodeURIComponent(chartId)}`, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
+      .then(d => {
+        if (!live) return;
+        if (d && d.error) { setChart(null); setState("error"); return; }
+        setChart(d.chart || null); setState("ready");
+      })
+      .catch(() => { if (live) setState("error"); });
+    return () => { live = false; };
+  }, [chartId]);
+
+  const Field = ({ label, value }) => (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.4, wordBreak: "break-word" }}>{value || "—"}</div>
+    </div>
+  );
+
+  if (!chartId) return null;
+  if (state === "loading") return <p className="pt-runs-note">Loading chart details…</p>;
+  if (state === "error" || !chart) {
+    return <p className="pt-runs-note">Couldn't read the record for {chartId}. Is WAMP serving html/api/gallery.php?</p>;
+  }
+
+  const meeting = chart.group_name
+    && (chart.group_name !== chart.doc_group
+        ? `${chart.group_name} (${chart.doc_group})`
+        : chart.doc_group);
+
+  return (
+    <div>
+      <style>{NP_CARD_CSS}</style>
+      <div className="np-status-row">
+        <span className="np-num">{chart.chart_id}</span>
+        <span className="np-badge" style={{ background: "var(--accent-soft)", color: "var(--accent-2)" }}>
+          {(chart.doc_type || "doc").toUpperCase()}
+        </span>
+      </div>
+      <div className="np-title">{chart.chart_title || "(untitled chart)"}</div>
+
+      <Field label="Document" value={chart.doc_name} />
+      <Field label="Page Number" value={chart.page_num} />
+      <Field label="Chart # in Document" value={chart.sequence_id} />
+      <Field label="Meeting" value={meeting} />
+      <Field label="Meeting Date" value={chart.doc_time} />
+      <Field label="Image File" value={chart.image_exists
+        ? <a href={chart.image_url} target="_blank" rel="noreferrer"
+             style={{ color: "var(--accent-2)", fontFamily: "var(--mono)", fontSize: "11.5px" }}>
+            {chart.chart_id}.png
+          </a>
+        : <span style={{ color: "var(--muted)" }}>missing from Documents Database/GALLERY</span>} />
+      <Field label="Indexed" value={chart.record_timestamp} />
+
+      <hr className="np-divider" />
+      <div className="np-sec-lbl">Keywords</div>
+      {(chart.keywords || []).length > 0
+        ? <div>{chart.keywords.map(k => (
+            <span key={k.keyword_id} className="np-reason-chip"
+                  title={[k.category, k.source === "ai"
+                            ? "assigned by the model from the page text"
+                            : k.matched_in && `matched in: ${k.matched_in}`]
+                           .filter(Boolean).join(" · ")}>{k.keyword}</span>
+          ))}</div>
+        : <div className="np-body">—</div>}
+    </div>
+  );
+}
+
 function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const { SUGGESTED_RUNS, ARTIFACTS } = window.DATA;
   const [tab, setTab] = React.useState("runs"); // runs | artifacts | profile
@@ -555,6 +637,10 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const hasRmgrr = Boolean(ctx.rmgrr);
   const isErcotHome = ctx.section === "market-home";
   const isStatsHome = ctx.section === "stats-illustrated";
+  // Gallery: a chart is open (its source record fills the panel) vs. the
+  // keyword-search landing (nothing selected yet — artifacts only).
+  const hasGalleryChart = ctx.section === "gallery" && Boolean(ctx.galleryChart);
+  const isGalleryLanding = ctx.section === "gallery" && !hasGalleryChart;
   const isMeetingTracks = ctx.section === "meeting-tracks";
   // A Meeting Tracks group/item homepage is open (vs the tree landing view).
   const isMeetingGroup = isMeetingTracks && Boolean(ctx.meetingGroup || ctx.meetingDoc);
@@ -586,8 +672,13 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   // opens on its own "Meeting Timeline" tab. A group/item opens to "For the talk".
   React.useEffect(() => {
     if (onMeetingTree) setTab("timeline");
-    else if (isErcotHome || isStatsHome) setTab("artifacts");
-  }, [isErcotHome, onMeetingTree, isStatsHome]);
+    else if (isErcotHome || isStatsHome || isGalleryLanding) setTab("artifacts");
+  }, [isErcotHome, onMeetingTree, isStatsHome, isGalleryLanding]);
+
+  // Opening a Gallery chart brings its source record to the front.
+  React.useEffect(() => {
+    if (hasGalleryChart) setTab("runs");
+  }, [hasGalleryChart, ctx.galleryChart]);
 
   // "Meeting Timeline" exists only on the Meeting Tracks tree landing — leaving
   // it (to a group, or another section) must not strand the panel on an empty tab.
@@ -742,11 +833,11 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
       </div>
 
       <div className="pt-right-tabs">
-        {!isErcotHome && !onMeetingTree && !isStatsHome && (
+        {!isErcotHome && !onMeetingTree && !isStatsHome && !isGalleryLanding && (
           <button
             className={`pt-right-tab ${tab === "runs" ? "is-on" : ""}`}
             onClick={() => setTab("runs")}
-          >For the talk</button>
+          >{hasGalleryChart ? "Chart details" : "For the talk"}</button>
         )}
         {onMeetingTree && (
           <button
@@ -765,8 +856,10 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
             from the Artifacts list. */}
         {tab === "timeline" && onMeetingTree && <MeetingTimelinesCard />}
 
-        {tab === "runs" && !isErcotHome && !onMeetingTree && !isStatsHome && (
-          isMeetingGroup
+        {tab === "runs" && !isErcotHome && !onMeetingTree && !isStatsHome && !isGalleryLanding && (
+          hasGalleryChart
+            ? <GalleryChartCard chartId={ctx.galleryChart} />
+            : isMeetingGroup
             ? <MeetingProfileCard committee={ctx.meetingGroup || (ctx.meetingDoc && ctx.meetingDoc.committee)} date={ctx.meetingDate} />
             : ctx.ruleDoc
             ? <DocumentProfileCard doc={ctx.ruleDoc} />

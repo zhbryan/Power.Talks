@@ -1613,3 +1613,383 @@ function StatsIllustratorHome() {
   );
 }
 window.StatsIllustratorHome = StatsIllustratorHome;
+
+// ─── Gallery ─────────────────────────────────────────────────────────────────
+// Keyword-first browser over the chart PNGs in Documents Database/GALLERY.
+// Three stacked sections, each one opened by the section above it:
+//   1) keyword search — hint words filter the ERCOT market vocabulary
+//      (MySQL gallery.keyword_id) and surface the matches as clickable buttons
+//   2) chart list     — the charts linked to the chosen keyword (gallery_keywords),
+//      chart_id and chart title both clickable
+//   3) chart view     — that chart's PNG, full width in the content window
+// The chart's source record (document, page, meeting, meeting date) renders in
+// the Quick runs panel — see GalleryChartCard in rightpanel.jsx. Everything reads
+// live from html/api/gallery.php → MySQL `gallery`; nothing here is a snapshot.
+const GAL_ENDPOINT = "/Power.Talks/html/api/gallery.php";
+
+// Keyword buttons shown at once. The vocabulary is ~93 terms, so this only
+// bites on a very loose hint — the count line says how many were held back.
+const GAL_MAX_SUGGESTIONS = 36;
+
+// "p. 4" — the gallery is sourced from stakeholder PDFs only.
+function galPageLabel(c) {
+  if (!c || !c.page_num) return "";
+  return "p. " + c.page_num;
+}
+
+// Rank one vocabulary entry against the typed hint — lower sorts first,
+// null means "no match". Every hint word has to appear in the term, its
+// acronym, or its category, so "reserve service" narrows rather than widens.
+function galRank(k, q) {
+  const term = (k.term || "").toLowerCase();
+  const acr = (k.acronym || "").toLowerCase();
+  const cat = (k.category || "").toLowerCase();
+  // With no hint typed, the landing offers only the keywords that actually have
+  // charts to open — the rest of the vocabulary appears as soon as you type.
+  if (!q) return k.chart_count > 0 ? 0 : null;
+  const hay = term + " \u0001 " + acr + " \u0001 " + cat;
+  const words = q.split(/\s+/).filter(Boolean);
+  if (!words.every(w => hay.indexOf(w) !== -1)) return null;
+  if (term === q) return 0;
+  if (term.indexOf(q) === 0) return 1;
+  if (acr && acr === q) return 2;
+  if (new RegExp("\\b" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).test(term)) return 3;
+  if (term.indexOf(q) !== -1) return 4;
+  if (acr && acr.indexOf(q) !== -1) return 5;
+  return 6;
+}
+
+const GAL_CSS = `
+  .gal-wrap { padding: 4px 2px 24px; }
+  .gal-hdr { display: flex; align-items: center; gap: 12px; margin: 4px 0 18px; }
+  .gal-logo { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft);
+    color: var(--accent-2); display: grid; place-items: center; flex: 0 0 auto; }
+  .gal-h1 { font-family: var(--serif); font-size: 26px; color: var(--ink); margin: 0; line-height: 1.1; }
+  .gal-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .gal-count { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--accent-2);
+    background: var(--accent-soft); border: 1px solid var(--rule-2); padding: 5px 10px; border-radius: 8px;
+    white-space: nowrap; }
+  .gal-stack { display: flex; flex-direction: column; gap: 14px; }
+  .gal-card { border: 1px solid var(--rule); border-radius: 14px; background: var(--panel); padding: 14px; }
+  .gal-step { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 7px; }
+  .gal-ct { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .gal-cs { font-size: 11.5px; color: var(--muted); margin: 1px 0 10px; line-height: 1.45; }
+
+  .gal-search { display: flex; align-items: center; gap: 9px; border: 1px solid var(--rule-2);
+    border-radius: 10px; background: var(--bg); padding: 9px 12px; transition: border-color .15s; }
+  .gal-search:focus-within { border-color: var(--accent); }
+  .gal-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+    color: var(--ink); font-size: 13.5px; font-family: inherit; }
+  .gal-search input::placeholder { color: var(--muted); }
+  .gal-xbtn { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 2px;
+    display: grid; place-items: center; border-radius: 5px; }
+  .gal-xbtn:hover { color: var(--ink); background: var(--rule-2); }
+  .gal-hint { font-size: 11px; color: var(--muted); margin: 9px 0 8px; }
+  .gal-hint b { color: var(--ink-2); font-weight: 600; }
+
+  .gal-kws { display: flex; flex-wrap: wrap; gap: 7px; }
+  .gal-kw { display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    border: 1px solid var(--rule-2); background: var(--bg); color: var(--ink);
+    border-radius: 99px; padding: 5px 7px 5px 11px; font-size: 12px; font-family: inherit;
+    text-align: left; transition: border-color .15s, background .15s, transform .1s; }
+  .gal-kw:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .gal-kw.is-on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-2); font-weight: 600; }
+  .gal-kw.is-empty { color: var(--muted); }
+  .gal-kwn { font-family: var(--mono); font-size: 10px; min-width: 20px; text-align: center;
+    padding: 1px 5px; border-radius: 99px; background: var(--rule-2); color: var(--ink-2); }
+  .gal-kw.is-on .gal-kwn { background: var(--accent); color: #fff; }
+  .gal-kw.is-empty .gal-kwn { background: transparent; border: 1px dashed var(--rule-2); color: var(--muted); }
+
+  .gal-rows { display: flex; flex-direction: column; }
+  .gal-row { display: grid; grid-template-columns: 178px 1fr auto; align-items: baseline; gap: 10px;
+    padding: 8px 8px; border-radius: 8px; border-bottom: 1px solid var(--rule-2); }
+  .gal-row:last-child { border-bottom: none; }
+  .gal-row:hover { background: var(--bg); }
+  .gal-row.is-on { background: var(--accent-soft); }
+  @media (max-width: 720px) {
+    .gal-row { grid-template-columns: 1fr; gap: 2px; }
+  }
+  .gal-cid, .gal-ctitle { border: none; background: transparent; padding: 0; cursor: pointer;
+    text-align: left; font-family: inherit; text-decoration: underline;
+    text-decoration-color: var(--rule-2); text-underline-offset: 2px; }
+  .gal-cid { font-family: var(--mono); font-size: 11px; color: var(--accent-2); white-space: nowrap; }
+  .gal-ctitle { font-size: 13px; color: var(--ink); line-height: 1.4; }
+  .gal-cid:hover, .gal-ctitle:hover { text-decoration-color: var(--accent); color: var(--accent); }
+  .gal-row.is-on .gal-cid, .gal-row.is-on .gal-ctitle { color: var(--accent-2); font-weight: 600; }
+  .gal-cmeta { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .gal-scroll { max-height: 440px; overflow: auto; margin: 0 -4px; padding: 0 4px; }
+
+  .gal-figtitle { font-family: var(--serif); font-size: 17px; color: var(--ink); line-height: 1.3; }
+  .gal-figsub { font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin: 4px 0 11px; line-height: 1.6; }
+  .gal-imgwrap { display: block; border: 1px solid var(--rule-2); border-radius: 10px; overflow: hidden;
+    background: #fff; padding: 8px; }
+  .gal-img { width: 100%; height: auto; display: block; }
+  .gal-figfoot { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 11px; }
+  .gal-figfoot .lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+
+  .gal-empty { color: var(--muted); font-size: 12px; padding: 20px 0; text-align: center; }
+  .gal-status { color: var(--muted); font-size: 13px; padding: 36px 0; text-align: center; line-height: 1.6; }
+  .gal-status code { font-family: var(--mono); font-size: 12px; color: var(--accent-2); }
+`;
+
+function GalleryHome({ keyword, onKeywordClick, chartId, onChartClick }) {
+  // (1) the vocabulary — fetched once, then filtered in the browser so the
+  // suggestions appear as fast as the user types.
+  const [vocab, setVocab] = React.useState([]);
+  const [totalCharts, setTotalCharts] = React.useState(null);
+  const [vState, setVState] = React.useState("loading");
+  const [vErr, setVErr] = React.useState("");
+  const [query, setQuery] = React.useState("");
+
+  // (2) charts carrying the selected keyword
+  const [charts, setCharts] = React.useState([]);
+  const [cState, setCState] = React.useState("idle");
+
+  // (3) the selected chart's own record
+  const [chart, setChart] = React.useState(null);
+  const [iState, setIState] = React.useState("idle");
+
+  const listRef = React.useRef(null);
+  const figRef = React.useRef(null);
+
+  const kid = keyword ? keyword.keyword_id : null;
+
+  React.useEffect(() => {
+    setVState("loading");
+    fetch(GAL_ENDPOINT + "?action=keywords", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
+      .then(d => {
+        if (d && d.error) { setVErr(d.error); setVState("error"); return; }
+        setVocab(d.keywords || []);
+        setTotalCharts(d.total_charts);
+        setVState("ready");
+      })
+      .catch(e => { setVErr(String(e)); setVState("error"); });
+  }, []);
+
+  React.useEffect(() => {
+    if (!kid) { setCharts([]); setCState("idle"); return; }
+    let live = true;
+    setCState("loading");
+    fetch(GAL_ENDPOINT + "?action=charts&keyword_id=" + encodeURIComponent(kid), { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
+      .then(d => {
+        if (!live) return;
+        if (d && d.error) { setCharts([]); setCState("error"); return; }
+        setCharts(d.charts || []);
+        setCState("ready");
+      })
+      .catch(() => { if (live) setCState("error"); });
+    return () => { live = false; };
+  }, [kid]);
+
+  React.useEffect(() => {
+    if (!chartId) { setChart(null); setIState("idle"); return; }
+    let live = true;
+    setIState("loading");
+    fetch(GAL_ENDPOINT + "?action=chart&chart_id=" + encodeURIComponent(chartId), { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
+      .then(d => {
+        if (!live) return;
+        if (d && d.error) { setChart(null); setIState("error"); return; }
+        setChart(d.chart || null);
+        setIState("ready");
+      })
+      .catch(() => { if (live) setIState("error"); });
+    return () => { live = false; };
+  }, [chartId]);
+
+  // Bring each newly opened section into view without yanking the page.
+  React.useEffect(() => {
+    if (cState === "ready" && listRef.current) {
+      listRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [cState, kid]);
+  React.useEffect(() => {
+    if (iState === "ready" && figRef.current) {
+      figRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [iState, chartId]);
+
+  const q = query.trim().toLowerCase();
+  const matches = React.useMemo(() => {
+    const scored = [];
+    (vocab || []).forEach(k => {
+      const r = galRank(k, q);
+      if (r !== null) scored.push({ k: k, r: r });
+    });
+    scored.sort((a, b) => (a.r - b.r)
+      || (b.k.chart_count - a.k.chart_count)
+      || a.k.term.localeCompare(b.k.term));
+    return scored.map(s => s.k);
+  }, [vocab, q]);
+
+  const shown = matches.slice(0, GAL_MAX_SUGGESTIONS);
+  const held = matches.length - shown.length;
+  const charted = (vocab || []).filter(k => k.chart_count > 0).length;
+
+  return (
+    <div className="gal-wrap">
+      <style>{GAL_CSS}</style>
+
+      <div className="gal-hdr">
+        <div className="gal-logo"><I.Folder size={20} /></div>
+        <div>
+          <h1 className="gal-h1">Gallery</h1>
+          <div className="gal-sub">Charts pulled out of ERCOT meeting documents, indexed by market keyword</div>
+        </div>
+        {vState === "ready" && totalCharts != null && (
+          <div className="gal-count">{totalCharts.toLocaleString()} charts · {charted} keywords</div>
+        )}
+      </div>
+
+      {vState === "loading" && <div className="gal-status">Loading the keyword index…</div>}
+      {vState === "error" && (
+        <div className="gal-status">
+          Couldn't load the gallery index.<br />
+          Is WAMP (Apache + MySQL) serving <code>html/api/gallery.php</code>?
+          {vErr ? <><br /><span style={{ fontSize: 11 }}>{vErr}</span></> : null}
+        </div>
+      )}
+
+      {vState === "ready" && (
+        <div className="gal-stack">
+
+          {/* ── 1. keyword search ─────────────────────────────────────────── */}
+          <div className="gal-card">
+            <div className="gal-step">Step 1</div>
+            <div className="gal-ct">Keyword search</div>
+            <div className="gal-cs">
+              Type a hint word — matching ERCOT market keywords appear below as buttons. The count on each
+              button is how many gallery charts carry that keyword.
+            </div>
+            <div className="gal-search">
+              <I.Search size={15} stroke="var(--muted)" />
+              <input
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="reserve, forecast, congestion, storage, load…"
+                aria-label="Keyword hint words"
+                autoComplete="off"
+              />
+              {query && (
+                <button className="gal-xbtn" onClick={() => setQuery("")} aria-label="Clear search">
+                  <I.Close size={13} />
+                </button>
+              )}
+            </div>
+
+            <div className="gal-hint">
+              {q
+                ? <><b>{matches.length}</b> keyword{matches.length === 1 ? "" : "s"} match “{query.trim()}”
+                    {held > 0 ? <> — showing the first {shown.length}, keep typing to narrow</> : null}</>
+                : <>Showing the <b>{matches.length}</b> keywords that have charts
+                    {held > 0 ? <> (first {shown.length})</> : null}.
+                    Type to search all <b>{vocab.length}</b> terms in the market vocabulary.</>}
+            </div>
+
+            {shown.length === 0
+              ? <div className="gal-empty">No keyword matches those hint words.</div>
+              : <div className="gal-kws">
+                  {shown.map(k => (
+                    <button
+                      key={k.keyword_id}
+                      className={`gal-kw ${kid === k.keyword_id ? "is-on" : ""} ${k.chart_count === 0 ? "is-empty" : ""}`}
+                      title={k.description || k.term}
+                      onClick={() => onKeywordClick && onKeywordClick({ keyword_id: k.keyword_id, term: k.term })}
+                    >
+                      <span>{k.term}</span>
+                      <span className="gal-kwn">{k.chart_count}</span>
+                    </button>
+                  ))}
+                </div>}
+          </div>
+
+          {/* ── 2. charts carrying the keyword ────────────────────────────── */}
+          {keyword && (
+            <div className="gal-card" ref={listRef}>
+              <div className="gal-step">Step 2</div>
+              <div className="gal-ct">
+                Charts tagged “{keyword.term}”
+                {cState === "ready" ? ` — ${charts.length}` : ""}
+              </div>
+              <div className="gal-cs">Click a chart ID or its title to open the image.</div>
+
+              {cState === "loading" && <div className="gal-empty">Loading charts…</div>}
+              {cState === "error" && <div className="gal-empty">Couldn't load the chart list for this keyword.</div>}
+              {cState === "ready" && charts.length === 0 && (
+                <div className="gal-empty">No gallery chart carries this keyword yet.</div>
+              )}
+              {cState === "ready" && charts.length > 0 && (
+                <div className="gal-scroll">
+                  <div className="gal-rows">
+                    {charts.map(c => (
+                      <div key={c.chart_id} className={`gal-row ${chartId === c.chart_id ? "is-on" : ""}`}>
+                        <button className="gal-cid" onClick={() => onChartClick && onChartClick(c.chart_id)}>
+                          {c.chart_id}
+                        </button>
+                        <button className="gal-ctitle" onClick={() => onChartClick && onChartClick(c.chart_id)}>
+                          {c.chart_title || "(untitled chart)"}
+                        </button>
+                        <div className="gal-cmeta">
+                          {[c.doc_group, c.doc_time, galPageLabel(c)].filter(Boolean).join(" · ")}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── 3. the chart itself ───────────────────────────────────────── */}
+          {chartId && (
+            <div className="gal-card" ref={figRef}>
+              <div className="gal-step">Step 3</div>
+              {iState === "loading" && <div className="gal-empty">Loading chart…</div>}
+              {iState === "error" && <div className="gal-empty">Couldn't load this chart record.</div>}
+              {iState === "ready" && chart && (
+                <>
+                  <div className="gal-figtitle">{chart.chart_title || chart.chart_id}</div>
+                  <div className="gal-figsub">
+                    {[chart.chart_id, chart.doc_name, galPageLabel(chart),
+                      chart.group_name, chart.doc_time].filter(Boolean).join("  ·  ")}
+                  </div>
+                  {chart.image_exists
+                    ? <a className="gal-imgwrap" href={chart.image_url} target="_blank" rel="noreferrer"
+                         title="Open the full-size PNG in a new tab">
+                        <img className="gal-img" src={chart.image_url}
+                             alt={chart.chart_title || chart.chart_id} />
+                      </a>
+                    : <div className="gal-empty">
+                        This record has no PNG on disk — <code>{chart.chart_id}.png</code> is missing from
+                        Documents Database/GALLERY.
+                      </div>}
+                  {(chart.keywords || []).length > 0 && (
+                    <div className="gal-figfoot">
+                      <span className="lbl">Keywords</span>
+                      {chart.keywords.map(k => (
+                        <button
+                          key={k.keyword_id}
+                          className={`gal-kw ${kid === k.keyword_id ? "is-on" : ""}`}
+                          onClick={() => onKeywordClick && onKeywordClick({ keyword_id: k.keyword_id, term: k.keyword })}
+                        >
+                          <span>{k.keyword}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+window.GalleryHome = GalleryHome;
+window.galPageLabel = galPageLabel;

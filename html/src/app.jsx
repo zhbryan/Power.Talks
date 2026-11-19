@@ -53,6 +53,9 @@ function App() {
   const [activeScr, setActiveScr] = React.useState(null);
   const [activeNogrr, setActiveNogrr] = React.useState(null);
   const [activeRmgrr, setActiveRmgrr] = React.useState(null);
+  // Gallery navigation: keyword search → chart list → chart image.
+  const [activeGalleryKeyword, setActiveGalleryKeyword] = React.useState(null); // { keyword_id, term }
+  const [activeGalleryChart, setActiveGalleryChart] = React.useState(null);     // chart_id
   // A submitted document selected from an issue's "Documents Submitted" list —
   // its summary renders in the content window. { ...docEntry, issueId, cat }.
   const [activeRuleDoc, setActiveRuleDoc] = React.useState(null);
@@ -75,6 +78,22 @@ function App() {
     setActiveMeetingGroup(null); setActiveMeetingGroupName("");
     setActiveMeetingDate(null); setActiveMeetingDoc(null);
   }, [activeSection]);
+
+  // Leaving the Gallery resets it to the keyword search.
+  React.useEffect(() => {
+    setActiveGalleryKeyword(null); setActiveGalleryChart(null);
+  }, [activeSection]);
+
+  // A new keyword replaces the chart list, so the chart on screen (which may not
+  // carry the new keyword) is cleared with it.
+  const onGalleryKeywordClick = (kw) => {
+    setActiveGalleryKeyword(kw);
+    setActiveGalleryChart(null);
+  };
+  const onGalleryChartClick = (chartId) => {
+    setActiveGalleryChart(chartId);
+    if (chartId) setRightOpen(true);
+  };
 
   const onMeetingGroupClick = (committee, name) => {
     setActiveMeetingGroup(committee); setActiveMeetingGroupName(name || committee);
@@ -105,6 +124,8 @@ function App() {
   } else if (activeSection === "meeting-tracks") {
     detailLabel = activeMeetingDoc ? activeMeetingDoc.file
       : activeMeetingGroupName || "";
+  } else if (activeSection === "gallery") {
+    detailLabel = activeGalleryChart || (activeGalleryKeyword ? activeGalleryKeyword.term : "");
   }
 
   const onPaperCodeClick = (code) => {
@@ -269,6 +290,12 @@ function App() {
                     : <MeetingTracksOrgChart onGroupClick={onMeetingGroupClick}/>)
                 : activeSection === "stats-illustrated"
                 ? <StatsIllustratorHome/>
+                : activeSection === "gallery"
+                ? <GalleryHome
+                    keyword={activeGalleryKeyword}
+                    onKeywordClick={onGalleryKeywordClick}
+                    chartId={activeGalleryChart}
+                    onChartClick={onGalleryChartClick}/>
                 : <TalkIllustration title={CURRENT_TALK_TITLE} meta={CURRENT_TALK_META}/>
             }
           />
@@ -315,7 +342,8 @@ function App() {
         onClose={() => setRightOpen(false)}
         onRunPrompt={onRunPrompt}
         onArtifactClick={onArtifactClick}
-        context={{ section: activeSection, code: activePaperCode, meetingGroup: activeMeetingGroup, meetingGroupName: activeMeetingGroupName, meetingDate: activeMeetingDate, meetingDoc: activeMeetingDoc, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr, ruleDoc: activeRuleDoc }}
+        context={{ section: activeSection, code: activePaperCode, meetingGroup: activeMeetingGroup, meetingGroupName: activeMeetingGroupName, meetingDate: activeMeetingDate, meetingDoc: activeMeetingDoc, nprr: activeNprr, copmgrr: activeCopmgrr, pgrr: activePgrr, scr: activeScr, nogrr: activeNogrr, rmgrr: activeRmgrr, ruleDoc: activeRuleDoc,
+                   galleryKeyword: activeGalleryKeyword, galleryChart: activeGalleryChart }}
       />
 
       <TweaksPanel
