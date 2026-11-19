@@ -1,0 +1,22 @@
+Create a skill to set up a routine separated from other daily routines run by the scheduler. The main jobs are as follows:
+1) go through the excel or pdf documents searching for any pages with chart (timeline, flow chart, etc.)  and save the page as a PNG format file under the directory \GALLERY, naming convention for the PNG file is like this: GC_[timestamp at the moment of opening the file]_[sequence number of the chart in this file].png, the program file could be named as "gallery_charts_extractions_generations.py", embedding mechanism of recognizing already generated files from the past and only update/generate new found charts from new found files.
+2) at the same time, create the following tables at the local database in schema "gallery", based on the content of the extraction source files,
+  - Table "gallery_charts", containing the following columns:
+    * chart_id: unique ID of record and index variable, in the format of GC_[timestamp at the moment of opening the file]_[sequence number of the chart in this file]
+    * chart_title: get it from the slide page title or the chart title on the page
+    * doc_name: the file name
+    * doc_type: file type, excel or pdf
+    * doc_group: the short name of the stakeholder meeting (from the source directory path)
+    * doc_time: the stakeholder meeting date (from the source directory path)
+    * page_num: the page number from pdf file or tab name from excel file of the chart
+    * sequence_id:sequence order number of the chart in this document
+    * keywords: list of keywords relevant to this chart
+    * record_timestamp: timestamp at generation of the chart
+  - Table "gallery_keywords", containing the following columns:
+    * keyword_id: unique id for unique keyword from the column "term" in a table "keyword_id" of schema "gallery"
+    * keyword: ERCOT market keyword from the column "term" in a table "keyword_id" of schema "gallery"
+    * chart_id: the chart ID where this keyword show up
+    * record_timestamp: timestamp at generation of the keyword
+3) make sure the list of keywords in table "gallery_charts" only contains the values of "keyword" from table "gallery_keywords"
+4) keep log files under \GALLERY\routine_log\
+5) save the skill MD files and py files to \Database Codes\download_GALLERY_charts\
