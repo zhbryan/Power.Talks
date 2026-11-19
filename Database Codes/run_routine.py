@@ -244,10 +244,21 @@ def build_steps(args):
                        "--quiet"],
                       PROJECT_ROOT))
 
-    # 8e-bis. Reference: mirror the curated market-keyword list into its JSON
-    #     companion. Deterministic .md -> .json parse (no network, no AI quota),
-    #     so the generated file can never drift from the authored one. The .md
-    #     itself is refreshed by hand via the Market Keywords Updater skill.
+    # 8e-bis0. Reference: enforce the three laws of the keyword vocabulary --
+    #     generic terms only, one concept per term, no overlapping coverage.
+    #     Runs before the build so a bad hand-edit is reported on its own line
+    #     rather than as a confusing failure further down; build_keywords_json
+    #     re-checks and refuses to write regardless.
+    if args.only is None:
+        steps.append(("REFERENCE validate keyword vocabulary",
+                      [os.path.join(DB, "reference_info", "validate_vocabulary.py"),
+                       "--quiet"],
+                      PROJECT_ROOT))
+
+    # 8e-bis. Reference: mirror the curated vocabulary into its JSON companion.
+    #     Deterministic YAML -> JSON (no network, no AI quota), so the generated
+    #     file can never drift from the authored one. The YAML is hand-edited;
+    #     "REFERENCE propose keywords" below says what it is missing.
     if args.only is None:
         steps.append(("REFERENCE rebuild market-keyword JSON",
                       [os.path.join(DB, "reference_info", "build_keywords_json.py"),
@@ -262,6 +273,30 @@ def build_steps(args):
             os.path.join(DB, "ercot_api", "db_config.json")):
         steps.append(("REFERENCE sync keyword ids -> gallery.keyword_id",
                       [os.path.join(DB, "sync_keyword_ids.py"), "--quiet"],
+                      PROJECT_ROOT))
+
+    # 8e-bis3. Gallery: re-apply the vocabulary to every chart already in the
+    #     gallery. Each chart's matchable text is stored, so a term added,
+    #     split, renamed or rejected in the YAML reaches the whole corpus here
+    #     in seconds -- no workbook is reopened and no AI call is spent. Links
+    #     the model assigned while reading a PDF page are left untouched.
+    #     Must run AFTER the sync above, so the ids it writes all exist.
+    if args.only is None and os.path.exists(
+            os.path.join(DB, "ercot_api", "db_config.json")):
+        steps.append(("GALLERY retag charts from vocabulary",
+                      [os.path.join(DB, "download_GALLERY_charts", "retag_charts.py"),
+                       "--quiet"],
+                      PROJECT_ROOT))
+
+    # 8e-bis4. Reference: report what the untagged charts are about that no
+    #     concept can name. Read-only -- promoting a proposal is a deliberate
+    #     hand edit of the YAML, because a vocabulary that grows itself grows
+    #     redundant.
+    if args.only is None and os.path.exists(
+            os.path.join(DB, "ercot_api", "db_config.json")):
+        steps.append(("REFERENCE propose keywords from untagged charts",
+                      [os.path.join(DB, "reference_info", "propose_keywords.py"),
+                       "--quiet"],
                       PROJECT_ROOT))
 
     # 8e-ter. Gallery: relink the extracted-chart index to the two reference
