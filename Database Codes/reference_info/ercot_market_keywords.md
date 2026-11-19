@@ -1,5 +1,12 @@
 # ERCOT Wholesale Market — Key Words & Topics
 
+> **Narrative only since 2026-11-19.** This file is no longer machine-read.
+> The keyword vocabulary that drives the Gallery, `gallery.keyword_id` and the
+> chart extractor now lives in `ercot_keyword_vocabulary.yaml`, which carries
+> the aliases, glossary citations, scope notes and hierarchy a bullet list
+> cannot express, and is enforced by `validate_vocabulary.py`. Editing the
+> bullets below changes nothing downstream.
+
 A curated reference of terms, concepts, and topics popularly **discussed, debated, and studied**
 in the ERCOT (Texas) wholesale electricity market. Distinct from the official term dictionary in
 `ERCOT_Glossary.md` (verbatim Nodal-Protocol definitions) — this list captures *what the market talks

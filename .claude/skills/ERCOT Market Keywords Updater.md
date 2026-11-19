@@ -1,7 +1,7 @@
 ---
 name: ERCOT-Market-Keywords-Updater
-description: Refresh the curated list of key words / topics popularly discussed and studied in the ERCOT (Texas) wholesale electricity market. Unlike the ERCOT Glossary (a verbatim scrape of ercot.com/glossary definitions), this list is judgment-curated from live research — ERCOT stakeholder-meeting agendas, recent revision requests, PUCT actions, and analyst/trade commentary — capturing what the market is actually talking about, with the currently-trending items flagged. Maintains a Markdown source plus a JSON companion under Database Codes/reference_info/.
-trigger: When the user asks to update/refresh/rebuild the ERCOT market keyword or hot-topic list, add new market terms/topics, refresh what's "trending" in the ERCOT wholesale market, or regenerate ercot_market_keywords.md / .json.
+description: Refresh the curated list of key words / topics popularly discussed and studied in the ERCOT (Texas) wholesale electricity market. Unlike the ERCOT Glossary (a verbatim scrape of ercot.com/glossary definitions), this list is judgment-curated from live research — ERCOT stakeholder-meeting agendas, recent revision requests, PUCT actions, and analyst/trade commentary — capturing what the market is actually talking about, with the currently-trending items flagged. Maintains a validated YAML vocabulary plus a JSON companion under Database Codes/reference_info/.
+trigger: When the user asks to update/refresh/rebuild the ERCOT market keyword or hot-topic list, add new market terms/topics, refresh what's "trending" in the ERCOT wholesale market, or regenerate the ERCOT keyword vocabulary (ercot_keyword_vocabulary.yaml / .json).
 ---
 
 # ERCOT Market Keywords Updater
@@ -14,13 +14,56 @@ opposed to the formal definitions in `ERCOT_Glossary.md`.
 
 ```
 Database Codes/reference_info/
-    ercot_market_keywords.md      ← AUTHORED source of truth (human-readable, categorized)
+    ercot_keyword_vocabulary.yaml ← AUTHORED source of truth (concepts + aliases)
+    validate_vocabulary.py        ← enforces the three laws; run before anything else
+    build_keywords_json.py        ← deterministic .yaml → .json build
     ercot_market_keywords.json    ← generated companion (machine-readable)
-    build_keywords_json.py        ← deterministic .md → .json converter
+    ercot_market_keywords.md      ← narrative only; NOT machine-read since 2026-11-19
+    propose_keywords.py           ← what the gallery needs that the vocabulary lacks
 ```
 
-The **`.md` is the source of truth** — you edit it. The `.json` is *always*
-regenerated from it by the script; never hand-edit the JSON.
+The **`.yaml` is the source of truth** — you edit it. The `.json` is *always*
+regenerated from it; never hand-edit the JSON. The `.md` is now a human-facing
+essay about the market conversation: keep it readable if you like, but editing
+it changes nothing downstream.
+
+## The three laws (enforced — `validate_vocabulary.py` fails the build)
+
+1. **Generic only.** A concept names a recurring idea, never one instance of it:
+   no bill numbers, revision-request numbers, years, months, MW thresholds or
+   named projects. Rejected terms go in the YAML's `rejected:` block *with a
+   reason*, so nobody re-adds them by accident.
+2. **One concept, one term.** No term joins two ideas with `/` or `,`. Every
+   alias must mean the same thing as its concept.
+3. **No overlap.** No term's words contain another's (declare `broader:` if the
+   relation is real hierarchy), no surface form is claimed twice, and no two
+   concepts may tag substantially the same charts.
+
+Every concept carries `glossary_ref` citing ERCOT's own glossary, **or** an
+`extension_reason` saying why the glossary has no entry — it lags the market by
+years and has nothing for ECRS, co-optimization or curtailment.
+
+## After any edit, run the chain
+
+```
+py -3 "Database Codes/reference_info/validate_vocabulary.py"
+py -3 "Database Codes/reference_info/build_keywords_json.py"
+py -3 "Database Codes/sync_keyword_ids.py"
+py -3 "Database Codes/download_GALLERY_charts/retag_charts.py" --dry-run   # review
+py -3 "Database Codes/download_GALLERY_charts/retag_charts.py"
+```
+
+`retag_charts.py` re-applies the vocabulary to every chart already in the
+gallery from stored text — no workbook is reopened, no AI call is spent — and
+prints a per-concept diff. Always read the `--dry-run` diff before applying.
+The nightly routine runs this whole chain as steps 38–42.
+
+## Growing the vocabulary
+
+Do not invent terms to fill gaps. `propose_keywords.py` ranks the phrases that
+recur across untagged charts and that no concept matches; promote one by hand
+with a scope note, a glossary citation (or a stated reason) and aliases. A
+vocabulary that grows itself grows redundant.
 
 ## This is a curation task, not a scrape
 
@@ -29,8 +72,9 @@ single source — it reflects editorial judgment about what is *prominent*. So t
 refresh is a research-and-merge workflow you (Claude) perform:
 
 ### 1. Read the current list
-Open `ercot_market_keywords.md` (categories, bullets, and the 🔥 Trending table)
-and note the existing `Compiled:` date so you know how stale it is.
+Open `ercot_keyword_vocabulary.yaml` (concepts, aliases, `rejected:`) and note
+the `compiled:` date so you know how stale it is. Check `propose_keywords.py`
+output for gaps the corpus has already proven.
 
 ### 2. Research what's current
 Use `WebSearch` / `WebFetch`, prioritizing recent (last ~6–12 months) signals:

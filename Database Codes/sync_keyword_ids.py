@@ -46,20 +46,29 @@ CREATE TABLE IF NOT EXISTS `{TABLE}` (
   `category`     VARCHAR(128)     NULL,
   `description`  TEXT             NULL,
   `trending`     TINYINT(1)   NOT NULL DEFAULT 0,
+  `facet`        VARCHAR(64)      NULL,
+  `broader`      VARCHAR(255)     NULL
+      COMMENT 'The parent concept, where one was declared. Hierarchy, not overlap.',
+  `glossary_ref` VARCHAR(255)     NULL
+      COMMENT 'Exact term_s in ERCOT''s own glossary; NULL means a declared extension.',
+  `status`       VARCHAR(12)  NOT NULL DEFAULT 'active'
+      COMMENT 'active = offered in the Gallery picker; candidate = matchable but hidden until it has a chart.',
   `generated_at` DATETIME     NOT NULL,
   `updated_at`   DATETIME     NOT NULL,
   PRIMARY KEY (`keyword_id`),
   UNIQUE KEY `uq_term` (`term`),
   KEY `ix_category` (`category`),
-  KEY `ix_trending` (`trending`)
+  KEY `ix_trending` (`trending`),
+  KEY `ix_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='ERCOT market keywords; source: Database Codes/reference_info/ercot_market_keywords.md'
+  COMMENT='ERCOT keyword concepts; source: Database Codes/reference_info/ercot_keyword_vocabulary.yaml'
 """
 
 UPSERT = f"""
 INSERT INTO `{TABLE}`
-  (keyword_id, term, acronym, category, description, trending, generated_at, updated_at)
-VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+  (keyword_id, term, acronym, category, description, trending,
+   facet, broader, glossary_ref, status, generated_at, updated_at)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   -- updated_at MUST come first: MySQL evaluates these assignments in order, so
   -- any column listed above it would already hold its NEW value here and the
@@ -68,14 +77,48 @@ ON DUPLICATE KEY UPDATE
                    AND acronym <=> VALUES(acronym)
                    AND category <=> VALUES(category)
                    AND description <=> VALUES(description)
-                   AND trending <=> VALUES(trending),
+                   AND trending <=> VALUES(trending)
+                   AND facet <=> VALUES(facet)
+                   AND broader <=> VALUES(broader)
+                   AND glossary_ref <=> VALUES(glossary_ref)
+                   AND status <=> VALUES(status),
                    updated_at, NOW()),
   term        = VALUES(term),
   acronym     = VALUES(acronym),
   category    = VALUES(category),
   description = VALUES(description),
-  trending    = VALUES(trending)
+  trending    = VALUES(trending),
+  facet        = VALUES(facet),
+  broader      = VALUES(broader),
+  glossary_ref = VALUES(glossary_ref),
+  status       = VALUES(status)
 """
+
+# Columns added 2026-11-19 with the controlled vocabulary; added in place so an
+# existing gallery upgrades without a reload.
+ADD_COLUMNS = [
+    ("facet",        f"ALTER TABLE `{TABLE}` ADD COLUMN `facet` VARCHAR(64) NULL"),
+    ("broader",      f"ALTER TABLE `{TABLE}` ADD COLUMN `broader` VARCHAR(255) NULL"),
+    ("glossary_ref", f"ALTER TABLE `{TABLE}` ADD COLUMN `glossary_ref` VARCHAR(255) NULL"),
+    ("status",       f"ALTER TABLE `{TABLE}` ADD COLUMN `status` VARCHAR(12) NOT NULL DEFAULT 'active'"),
+]
+
+
+def ensure_columns(conn, verbose=True):
+    """Add any column missing from an older `keyword_id` table."""
+    added = []
+    with conn.cursor() as cur:
+        for column, ddl in ADD_COLUMNS:
+            cur.execute("""SELECT COUNT(*) FROM information_schema.columns
+                            WHERE table_schema = %s AND table_name = %s
+                              AND column_name = %s""", (SCHEMA, TABLE, column))
+            if cur.fetchone()[0] == 0:
+                cur.execute(ddl)
+                added.append(column)
+    conn.commit()
+    if added and verbose:
+        print(f"  schema: added {', '.join(added)}")
+    return added
 
 
 def db_config():
@@ -104,7 +147,9 @@ def load_keywords():
             continue
         seen[kid] = k["term"]
         rows.append((kid, k["term"], k.get("acronym"), k.get("category"),
-                     k.get("description"), 1 if k.get("trending") else 0))
+                     k.get("description"), 1 if k.get("trending") else 0,
+                     k.get("facet"), k.get("broader"), k.get("glossary_ref"),
+                     k.get("status") or "active"))
     return data, rows
 
 
@@ -127,6 +172,8 @@ def main():
     try:
         with conn.cursor() as cur:
             cur.execute(DDL)
+        ensure_columns(conn, verbose=not quiet)
+        with conn.cursor() as cur:
             cur.execute(f"SELECT COUNT(*) FROM `{TABLE}`")
             before = cur.fetchone()[0]
             cur.executemany(UPSERT, rows)
@@ -137,6 +184,13 @@ def main():
             cur.execute(f"SELECT keyword_id, term FROM `{TABLE}` "
                         f"WHERE keyword_id NOT IN ({ph})", ids)
             retired = cur.fetchall()
+            # A term dropped from the vocabulary is marked retired, never
+            # deleted: its id stays reserved so it can never be minted again
+            # for a different meaning, and anything still pointing at it keeps
+            # resolving. The Gallery hides retired terms from the picker.
+            if retired:
+                cur.execute(f"UPDATE `{TABLE}` SET status = 'retired' "
+                            f"WHERE keyword_id NOT IN ({ph}) AND status <> 'retired'", ids)
         conn.commit()
     finally:
         conn.close()
@@ -146,13 +200,13 @@ def main():
         line = (f"Keyword ids: {len(rows)} synced to {SCHEMA}.{TABLE} "
                 f"({inserted} new, {after} total)")
         if retired:
-            line += f" | {len(retired)} no longer in the .md"
+            line += f" | {len(retired)} retired"
         print(line)
     else:
         print(f"Synced {len(rows)} keyword(s) -> {SCHEMA}.{TABLE}")
         print(f"  {inserted} inserted, {len(rows) - inserted} already present, {after} rows total.")
         if retired:
-            print(f"  {len(retired)} row(s) no longer in the keyword list (kept, not deleted):")
+            print(f"  {len(retired)} row(s) no longer in the vocabulary (marked retired, not deleted):")
             for kid, term in retired[:10]:
                 print(f"    {kid} | {term}")
     return 0

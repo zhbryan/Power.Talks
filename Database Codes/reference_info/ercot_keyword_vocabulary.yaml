@@ -1,0 +1,1043 @@
+# ERCOT Gallery Keyword Vocabulary — controlled concept list
+# =============================================================================
+# Source of truth for `gallery.keyword_id` and for the keywords the GALLERY
+# chart extractor may assign. Hand-edited; `build_keywords_json.py` mirrors it
+# into ercot_market_keywords.json, `validate_vocabulary.py` enforces the rules
+# below, and `sync_keyword_ids.py` loads it into MySQL.
+#
+# Three laws, enforced by the validator — a change that breaks one fails loudly:
+#
+#   1. GENERIC ONLY.  A concept names a recurring idea, never one instance of
+#      it. No bill numbers, revision-request numbers, years, months, MW
+#      thresholds or named projects. Those live in `rejected:` with a reason.
+#   2. ONE CONCEPT, ONE TERM.  No term joins two ideas with "/" or ",". Every
+#      alias of a concept must mean the same thing as the concept.
+#   3. NO OVERLAP.  No term's words are a subset of another's, and no two
+#      concepts may end up tagging substantially the same charts (the validator
+#      reports Jaccard >= 0.60 or containment >= 0.90 for merge).
+#
+# `term` is also the identity: keyword_id = sha1(normalized term)[:12]. Editing
+# a term mints a new id, so `replaces:` records the old spelling and the link
+# migration follows it. Never recycle a term string for a different meaning.
+#
+# `status`:
+#   active    — in the Gallery keyword picker and in the matcher.
+#   candidate — in the matcher but hidden from the picker until it has a chart.
+#               Vocabulary we expect to need; costs nothing while unmatched.
+#   retired   — out of both. Kept only so its id is never reused.
+#
+# `glossary_ref` cites ERCOT's own glossary (ercot_glossary.json, refreshed
+# nightly from ercot.com/glossary) and is the preferred naming authority. It is
+# null only where the glossary genuinely has no entry — it lags the market by
+# years and has nothing for ECRS, co-optimization or curtailment — and then
+# `extension_reason` must say so.
+version: 2
+compiled: 2026-11-19
+glossary_source: ercot_glossary.json
+
+rules:
+  # A surface form shorter than this never matches. "COP" (3 chars) matched a
+  # series named "COP HSL" on 522 wind-forecast charts and tagged a third of
+  # the gallery with a keyword none of those charts is about.
+  min_alias_length: 4
+  # An all-caps acronym may be shorter: "RRS" is as distinctive as "Responsive
+  # Reserve". What protects a short form is not its length but where it is
+  # allowed to match (see weak_fields), which is what the COP incident proved.
+  min_acronym_length: 3
+  # Where a form has to appear for the match to count. The chart's own title,
+  # the text of the PDF page it sits on, and the source document's name each
+  # describe the chart as a whole. A series name describes one line on it: a
+  # chart plotting a "COP HSL" series mentions COP without being about COP.
+  # That alias put a keyword on 522 charts before this rule existed.
+  # Listed strongest first: a deliberate label outranks incidental prose
+  # when max_keywords_per_chart has to choose.
+  qualifying_fields: [title, doc, page]
+  weak_fields: [series]
+  max_keywords_per_chart: 6
+  # Reported for merge, never merged automatically.
+  redundancy_jaccard: 0.60
+  redundancy_containment: 0.90
+  # Containment only means redundancy across a real sample. All 4 PFR charts
+  # sit inside RRS's 134; that is hierarchy, not a duplicate concept.
+  redundancy_min_charts: 10
+
+# Surface forms too broad to ever be a match, whatever concept claims them.
+# Every one of these occurs in hundreds of ERCOT chart titles as a common noun.
+blocklist:
+  - load
+  - demand
+  - resource
+  - resources
+  - energy
+  - capacity
+  - price
+  - prices
+  - pricing
+  - market
+  - markets
+  - service
+  - services
+  - reserve
+  - reserves
+  - requirement
+  - requirements
+  - generation
+  - profile
+  - type
+  - types
+  - zone
+  - zones
+  - system
+  - ercot
+  - texas
+  - report
+  - chart
+  - data
+  - total
+  - average
+  - monthly
+  - annual
+  - summer
+  - winter
+
+facets:
+  market-design: Market design & structure
+  ancillary-services: Ancillary services (AS)
+  scarcity-pricing: Scarcity pricing & reliability economics
+  resource-adequacy: Resource adequacy & capacity
+  congestion: Congestion & transmission
+  storage: Storage / batteries (ESR / BESS)
+  renewables: Renewables & inverter-based resources (IBR)
+  large-loads: Large loads & demand
+  reliability-ops: Reliability & grid operations
+  governance: Legislation, regulation & market governance
+  settlement: Settlement, metering & participants
+  forecasting: Forecasting & forecast performance
+  retail: Retail market & load profiling
+
+concepts:
+
+# ─── Market design & structure ───────────────────────────────────────────────
+- term: Day-Ahead Market (DAM)
+  acronym: DAM
+  facet: market-design
+  glossary_ref: Day-Ahead Market (DAM)
+  scope_note: The day-ahead financial market and its clearing — not day-ahead settlement charges.
+  aliases: [Day-Ahead Market, Day Ahead Market]
+  status: active
+
+- term: Real-Time Market (RTM)
+  acronym: RTM
+  facet: market-design
+  glossary_ref: RTM
+  scope_note: The real-time balancing market and its clearing.
+  aliases: [Real-Time Market, Real Time Market]
+  status: active
+
+- term: Security-Constrained Economic Dispatch (SCED)
+  acronym: SCED
+  facet: market-design
+  glossary_ref: Security-Constrained Economic Dispatch (SCED)
+  scope_note: The five-minute dispatch engine itself and its outputs.
+  aliases: [SCED, Security-Constrained Economic Dispatch]
+  status: candidate
+
+- term: Reliability Unit Commitment (RUC)
+  acronym: RUC
+  facet: market-design
+  glossary_ref: Reliability Unit Commitment (RUC)
+  aliases: [RUC, Reliability Unit Commitment, DRUC, HRUC]
+  status: candidate
+
+- term: Locational Marginal Price (LMP)
+  acronym: LMP
+  facet: market-design
+  glossary_ref: Locational Marginal Price (LMP)
+  scope_note: Nodal energy price and its components.
+  aliases: [LMP, Locational Marginal Price]
+  status: candidate
+
+- term: Real-Time Co-optimization (RTC+B)
+  acronym: RTC / RTC+B
+  facet: market-design
+  glossary_ref: null
+  extension_reason: >
+    Went live 2025-12-05; the largest market redesign since nodal. ERCOT's
+    glossary has no entry for co-optimization as of 2026-11-18.
+  scope_note: >
+    Simultaneous clearing of energy and ancillary services, including the
+    battery participation model that shipped with it.
+  aliases: [Real-Time Co-optimization, Co-optimization, Cooptimization, RTC+B, RTCB]
+  replaces: [Real-Time Co-optimization (RTC / RTC+B), Co-optimization]
+  trending: true
+  status: active
+
+- term: Nodal market design
+  facet: market-design
+  glossary_ref: null
+  extension_reason: Describes ERCOT's market structure as a whole; not a defined protocol term.
+  scope_note: The locational market design in the abstract, and energy-only market structure.
+  aliases: [Nodal market, Energy-only market, Energy only market]
+  replaces: [Nodal market, Energy-only market]
+  status: candidate
+
+- term: Energy Offer Curve
+  facet: market-design
+  glossary_ref: Energy Offer Curve
+  scope_note: Offer and bid curves submitted into the market.
+  aliases: [Energy Offer Curve, Offer Curve, Offer Curves]
+  replaces: [Marginal pricing / offer curves / bids]
+  status: candidate
+
+# ─── Ancillary services ──────────────────────────────────────────────────────
+- term: Ancillary Service
+  acronym: AS
+  facet: ancillary-services
+  glossary_ref: Ancillary Service
+  scope_note: >
+    Ancillary services as a class — total AS quantity, AS methodology, AS plan.
+    A chart about one product takes that product's concept instead.
+  aliases: [Ancillary Service, Ancillary Services, AS Quantity, AS Plan, AS Methodology]
+  status: active
+
+- term: Responsive Reserve Service (RRS)
+  acronym: RRS
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: Responsive Reserve (RRS)
+  scope_note: The RRS product — its requirement, procurement and deployment.
+  aliases: [Responsive Reserve, Responsive Reserve Service, RRS]
+  status: active
+
+- term: Non-Spinning Reserve (Non-Spin / NSPIN)
+  acronym: Non-Spin / NSPIN
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: Non-Spinning Reserve (Non-Spin) Service
+  scope_note: The Non-Spin product — its requirement, procurement and deployment.
+  aliases: [Non-Spinning Reserve, Non-Spin, NSPIN, NSRS]
+  status: active
+
+- term: ERCOT Contingency Reserve Service (ECRS)
+  acronym: ECRS
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: null
+  extension_reason: >
+    Launched 2023-06 under NPRR1092; absent from ercot.com/glossary as of
+    2026-11-18 despite being one of the five procured AS products.
+  scope_note: The ECRS product — its requirement, procurement and deployment.
+  aliases: [ERCOT Contingency Reserve Service, Contingency Reserve Service, ECRS]
+  status: active
+
+- term: Regulation Up Service (Reg-Up)
+  acronym: Reg-Up / REGUP
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: Regulation Service
+  scope_note: Upward regulation only. Charts covering both directions take each concept.
+  aliases: [Regulation Up, Reg-Up, RegUp, REGUP]
+  replaces: [Regulation Up / Regulation Down (Reg-Up / Reg-Down)]
+  status: active
+
+- term: Regulation Down Service (Reg-Down)
+  acronym: Reg-Down / REGDN
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: Regulation Service
+  scope_note: Downward regulation only. Charts covering both directions take each concept.
+  aliases: [Regulation Down, Reg-Down, RegDown, REGDN, REGDOWN]
+  replaces: [Regulation Up / Regulation Down (Reg-Up / Reg-Down)]
+  status: active
+
+- term: Dispatchable Reliability Reserve Service (DRRS)
+  acronym: DRRS
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: null
+  extension_reason: New product mandated by 2025 legislation (NPRR1309); not yet in the glossary.
+  aliases: [Dispatchable Reliability Reserve Service, DRRS]
+  trending: true
+  status: candidate
+
+- term: Ancillary Service Demand Curve (ASDC)
+  acronym: ASDC
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: null
+  extension_reason: Introduced with RTC+B to replace the ORDC adder; not yet in the glossary.
+  aliases: [Ancillary Service Demand Curve, Ancillary Service Demand Curves, ASDC, ASDCs]
+  replaces: [Ancillary Service Demand Curves (ASDCs)]
+  trending: true
+  status: candidate
+
+- term: Primary Frequency Response (PFR)
+  acronym: PFR
+  facet: ancillary-services
+  broader: Frequency response
+  glossary_ref: Primary Frequency Response
+  aliases: [Primary Frequency Response, PFR]
+  status: active
+
+- term: Fast Frequency Response (FFR)
+  acronym: FFR
+  facet: ancillary-services
+  broader: Frequency response
+  glossary_ref: null
+  extension_reason: Procured as part of RRS since 2020; the glossary defines no standalone entry.
+  aliases: [Fast Frequency Response, FFR]
+  status: candidate
+
+- term: Ancillary Service shortfall
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: null
+  extension_reason: Operational condition discussed in ERCOT analyses; not a defined protocol term.
+  scope_note: Failure to procure or supply an AS quantity, including MW-short accounting.
+  aliases: [Ancillary Service shortfall, AS shortfall, MW Short]
+  replaces: [AS obligation / AS shortfall / MW Short]
+  status: candidate
+
+- term: Ancillary Service obligation
+  facet: ancillary-services
+  broader: Ancillary Service
+  glossary_ref: Ancillary Service Obligation
+  aliases: [Ancillary Service obligation, AS obligation]
+  replaces: [AS obligation / AS shortfall / MW Short]
+  status: candidate
+
+# ─── Scarcity pricing & reliability economics ────────────────────────────────
+- term: Operating Reserve Demand Curve (ORDC)
+  acronym: ORDC
+  facet: scarcity-pricing
+  glossary_ref: Operating Reserve Demand Curve (ORDC)
+  scope_note: The ORDC itself and the reserve price adder it produces.
+  aliases: [Operating Reserve Demand Curve, ORDC]
+  status: active
+
+- term: Scarcity pricing
+  facet: scarcity-pricing
+  glossary_ref: null
+  extension_reason: Market-economics concept discussed across ERCOT studies; not a protocol term.
+  aliases: [Scarcity pricing, Scarcity adder]
+  replaces: [Scarcity pricing / scarcity adder]
+  status: candidate
+
+- term: Reliability Deployment Price Adder (RTORPA / RTOFFPA)
+  acronym: RTORPA / RTOFFPA
+  facet: scarcity-pricing
+  glossary_ref: null
+  extension_reason: Settlement adders named in the protocols by acronym; no glossary entry.
+  aliases: [Reliability Deployment Price Adder, RTORPA, RTOFFPA]
+  status: active
+
+- term: System-Wide Offer Cap (SWCAP)
+  acronym: SWCAP / HCAP / LCAP
+  facet: scarcity-pricing
+  glossary_ref: SWCAP
+  aliases: [System-Wide Offer Cap, SWCAP, HCAP, LCAP]
+  replaces: [System-Wide Offer Cap (HCAP / LCAP)]
+  status: candidate
+
+- term: Value of Lost Load (VOLL)
+  acronym: VOLL
+  facet: scarcity-pricing
+  glossary_ref: null
+  extension_reason: Used throughout ERCOT economic analysis; not defined in the glossary.
+  aliases: [Value of Lost Load, VOLL]
+  status: candidate
+
+- term: Peaker Net Margin (PNM)
+  acronym: PNM
+  facet: scarcity-pricing
+  glossary_ref: PNM
+  aliases: [Peaker Net Margin, PNM]
+  status: candidate
+
+# ─── Resource adequacy & capacity ────────────────────────────────────────────
+- term: Resource adequacy (RA)
+  acronym: RA
+  facet: resource-adequacy
+  glossary_ref: null
+  extension_reason: >
+    The central policy debate in ERCOT; the glossary defines no general entry
+    for it, only specific reports.
+  scope_note: Whether supply suffices to meet demand at acceptable risk.
+  aliases: [Resource adequacy]
+  status: active
+
+- term: Planning Reserve Margin (PRM)
+  acronym: PRM
+  facet: resource-adequacy
+  glossary_ref: Planning Reserve Margin (PRM)
+  scope_note: Reserve margin as a planning metric, including target margins.
+  aliases: [Planning Reserve Margin, Reserve margin, Target reserve margin, PRM]
+  replaces: [Reserve margin / target reserve margin]
+  status: active
+
+- term: Capacity, Demand and Reserves report (CDR)
+  acronym: CDR
+  facet: resource-adequacy
+  glossary_ref: null
+  extension_reason: ERCOT's biannual adequacy report; named in the protocols, absent from the glossary.
+  aliases: ["Capacity, Demand and Reserves", Capacity Demand and Reserves]
+  status: active
+
+- term: Seasonal Assessment of Resource Adequacy (SARA)
+  acronym: SARA
+  facet: resource-adequacy
+  broader: Resource adequacy (RA)
+  glossary_ref: null
+  extension_reason: ERCOT's seasonal adequacy report; no glossary entry.
+  aliases: [Seasonal Assessment of Resource Adequacy, SARA]
+  replaces: [Seasonal / long-term assessments (SARA, CDR, RTBM)]
+  status: candidate
+
+- term: Long-Term Reliability Assessment (LTRA)
+  acronym: LTRA
+  facet: resource-adequacy
+  glossary_ref: null
+  extension_reason: >
+    NERC's annual assessment, which ERCOT and Texas RE file data forms for.
+    Not an ERCOT glossary term.
+  aliases: [Long-Term Reliability Assessment, LTRA]
+  status: active
+
+- term: Loss of Load Expectation (LOLE)
+  acronym: LOLE
+  facet: resource-adequacy
+  glossary_ref: null
+  extension_reason: Standard adequacy risk metric; not in the glossary.
+  aliases: [Loss of Load Expectation, LOLE]
+  replaces: [Loss of Load Expectation / Expected Unserved Energy (LOLE / EUE)]
+  status: candidate
+
+- term: Expected Unserved Energy (EUE)
+  acronym: EUE
+  facet: resource-adequacy
+  glossary_ref: null
+  extension_reason: Standard adequacy risk metric; not in the glossary.
+  aliases: [Expected Unserved Energy, EUE]
+  replaces: [Loss of Load Expectation / Expected Unserved Energy (LOLE / EUE)]
+  status: candidate
+
+- term: Capacity accreditation
+  facet: resource-adequacy
+  glossary_ref: null
+  extension_reason: Methodology debate (ELCC and successors); no glossary entry.
+  aliases: [Capacity accreditation, Effective Load Carrying Capability, ELCC]
+  replaces: [Capacity accreditation / ELCC]
+  status: candidate
+
+- term: Performance Credit Mechanism (PCM)
+  acronym: PCM
+  facet: resource-adequacy
+  glossary_ref: null
+  extension_reason: Proposed adequacy mechanism, shelved but recurrent; no glossary entry.
+  aliases: [Performance Credit Mechanism, PCM]
+  status: candidate
+
+- term: Interconnection queue
+  facet: resource-adequacy
+  glossary_ref: null
+  extension_reason: Process concept discussed constantly; the glossary defines only its sub-steps.
+  scope_note: The generation and large-load interconnection pipeline and its study process.
+  aliases: [Interconnection queue, Generation interconnection]
+  status: candidate
+
+# ─── Congestion & transmission ───────────────────────────────────────────────
+- term: Transmission congestion
+  facet: congestion
+  glossary_ref: null
+  extension_reason: >
+    The glossary defines congestion's instruments (CRR, shadow price) but not
+    congestion itself.
+  scope_note: Physical congestion and its cost impact on prices.
+  aliases: [Transmission congestion, Congestion cost, Congestion]
+  replaces: [Congestion / transmission congestion]
+  status: active
+
+- term: Congestion Revenue Right (CRR)
+  acronym: CRR
+  facet: congestion
+  glossary_ref: Congestion Revenue Right (CRR)
+  aliases: [Congestion Revenue Right, Congestion Revenue Rights, CRR]
+  replaces: [Congestion Revenue Rights (CRR)]
+  status: active
+
+- term: Shadow price
+  facet: congestion
+  glossary_ref: Shadow Price
+  scope_note: The price of a binding constraint, and the binding itself.
+  aliases: [Shadow price, Binding constraint]
+  replaces: [Shadow price / binding constraint]
+  status: candidate
+
+- term: Generic Transmission Constraint (GTC)
+  acronym: GTC
+  facet: congestion
+  glossary_ref: Generic Transmission Constraint (GTC)
+  aliases: [Generic Transmission Constraint, GTC]
+  status: candidate
+
+- term: Load Zone
+  facet: congestion
+  glossary_ref: Load Zone
+  scope_note: Load zone as a settlement location, including load-zone prices.
+  aliases: [Load Zone, Load Zones, Load Zone LMP]
+  replaces: [Load zones / trading hubs / resource nodes]
+  status: active
+
+- term: Resource Node
+  facet: congestion
+  glossary_ref: Resource Node
+  aliases: [Resource Node, Resource Nodes]
+  replaces: [Load zones / trading hubs / resource nodes]
+  status: candidate
+
+- term: Trading Hub
+  facet: congestion
+  glossary_ref: null
+  extension_reason: Settlement location type used in every price report; no glossary entry.
+  aliases: [Trading Hub, Trading Hubs, Hub Average, HB_BUSAVG]
+  replaces: [Load zones / trading hubs / resource nodes]
+  status: candidate
+
+- term: Regional Transmission Plan (RTP)
+  acronym: RTP
+  facet: congestion
+  glossary_ref: null
+  extension_reason: ERCOT's annual transmission plan; the glossary defines the planning group, not the plan.
+  aliases: [Regional Transmission Plan]
+  replaces: [Transmission planning / RPG / RTP]
+  status: candidate
+
+- term: Regional Planning Group (RPG) project review
+  acronym: RPG
+  facet: congestion
+  glossary_ref: Regional Planning Group (RPG) Project Review
+  aliases: [Regional Planning Group, RPG Project Review]
+  replaces: [Transmission planning / RPG / RTP]
+  status: candidate
+
+- term: Basis risk
+  facet: congestion
+  glossary_ref: null
+  extension_reason: Commercial hedging concept; not a protocol term.
+  aliases: [Basis risk]
+  replaces: [Basis / basis risk]
+  status: candidate
+
+- term: Four Coincident Peak (4CP)
+  acronym: 4CP
+  facet: congestion
+  glossary_ref: null
+  extension_reason: >
+    Transmission cost allocation method named in the protocols by acronym; no
+    glossary entry.
+  scope_note: >
+    4CP transmission cost allocation and the peak-shaving behaviour it drives.
+  aliases: [Four Coincident Peak, Four Coincident Peaks]
+  replaces: [4CP (Four Coincident Peak)]
+  status: candidate
+
+# ─── Storage / batteries ─────────────────────────────────────────────────────
+- term: Energy Storage Resource (ESR)
+  acronym: ESR
+  facet: storage
+  glossary_ref: Energy Storage Resource (ESR)
+  scope_note: >
+    Storage as a market resource, including the single-model ESR participation
+    design.
+  aliases: [Energy Storage Resource, Single Model ESR]
+  replaces: [Single Model ESR]
+  status: candidate
+
+- term: Battery Energy Storage System (BESS)
+  acronym: BESS
+  facet: storage
+  glossary_ref: null
+  extension_reason: >
+    The physical asset class; ERCOT's glossary covers only the market-facing
+    ESR construct.
+  aliases: [Battery Energy Storage System, BESS]
+  trending: true
+  status: candidate
+
+- term: State of Charge (SOC)
+  acronym: SOC
+  facet: storage
+  broader: Energy Storage Resource (ESR)
+  glossary_ref: null
+  extension_reason: >
+    SOC awareness and accounting (NPRR1186) plus its treatment in SCED; no
+    glossary entry.
+  scope_note: State-of-charge accounting, monitoring and dispatch limits.
+  aliases: [State of Charge, State-of-charge]
+  replaces: [State of Charge (SOC), State-of-charge limits in SCED]
+  trending: true
+  status: candidate
+
+- term: Wholesale Storage Load (WSL)
+  acronym: WSL
+  facet: storage
+  glossary_ref: Wholesale Storage Load (WSL)
+  aliases: [Wholesale Storage Load, WSL]
+  status: candidate
+
+# ─── Renewables & inverter-based resources ───────────────────────────────────
+- term: Curtailment
+  facet: renewables
+  glossary_ref: null
+  extension_reason: >
+    Central to renewable and large-load debate; ERCOT's glossary has no entry
+    for curtailment.
+  scope_note: Output reduction by instruction or economics, for generation or load.
+  aliases: [Curtailment, Curtailed]
+  status: active
+
+- term: Inverter-Based Resource (IBR)
+  acronym: IBR
+  facet: renewables
+  glossary_ref: null
+  extension_reason: Post-2020 reliability topic (FERC Order 901 era); no glossary entry.
+  aliases: [Inverter-Based Resource, Inverter-Based Resources, IBR]
+  replaces: [Inverter-Based Resources (IBR)]
+  status: candidate
+
+- term: Generation Resource Energy Deployment Performance (GREDP)
+  acronym: GREDP / CLREDP
+  facet: renewables
+  glossary_ref: GREDP
+  scope_note: Base-point deviation performance measurement for generation and controllable load.
+  aliases: [Generation Resource Energy Deployment Performance, GREDP, CLREDP]
+  replaces: [Generation Resource Energy Deployment Performance (GREDP / CLREDP)]
+  status: active
+
+- term: Distributed Generation (DG)
+  acronym: DG
+  facet: renewables
+  glossary_ref: Distributed Generation (DG)
+  aliases: [Distributed Generation]
+  status: candidate
+
+- term: Net load
+  facet: renewables
+  glossary_ref: null
+  extension_reason: Load net of renewable output; the duck-curve shape. No glossary entry.
+  aliases: [Net load, Duck curve]
+  replaces: [Duck curve / net load]
+  status: candidate
+
+- term: System inertia
+  facet: renewables
+  glossary_ref: null
+  extension_reason: Frequency-stability concept central to IBR penetration; no glossary entry.
+  aliases: [System inertia, Synchronous inertia]
+  replaces: [System inertia / synchronous inertia]
+  status: candidate
+
+- term: Rate of Change of Frequency (RoCoF)
+  acronym: RoCoF
+  facet: renewables
+  glossary_ref: null
+  extension_reason: Stability metric used in ERCOT dynamics studies; no glossary entry.
+  aliases: [Rate of Change of Frequency, RoCoF]
+  status: candidate
+
+- term: Grid-forming inverter
+  facet: renewables
+  glossary_ref: null
+  extension_reason: Emerging technology requirement; no glossary entry.
+  aliases: [Grid-forming inverter, Grid forming inverter, Advanced grid support]
+  replaces: [Advanced grid support / grid-forming inverters]
+  status: candidate
+
+# ─── Forecasting & forecast performance ──────────────────────────────────────
+- term: Wind power forecast
+  facet: forecasting
+  glossary_ref: Short-Term Wind Power Forecast (STWPF)
+  scope_note: >
+    Wind production forecasts and their accuracy — the WMWG wind forecast
+    performance reporting and the STWPF/WGRPP products it measures. Covers
+    forecast error metrics for wind; solar has its own concept.
+  aliases: [Wind power forecast, Wind forecast, STWPF, WGRPP]
+  status: active
+
+- term: Solar power forecast
+  facet: forecasting
+  glossary_ref: null
+  extension_reason: >
+    ERCOT publishes STPPF/PVGRPP alongside the wind products; the glossary
+    defines only the wind forecast.
+  aliases: [Solar power forecast, Solar forecast, STPPF, PVGRPP]
+  status: candidate
+
+- term: Load forecast
+  facet: forecasting
+  glossary_ref: null
+  extension_reason: >
+    The glossary defines no general load-forecast entry, only the mid-term
+    load forecast's inputs.
+  scope_note: >
+    Demand forecasting and its accuracy, including large-load forecast
+    transparency. The long-term forecast has its own concept.
+  aliases: [Load forecast, Load forecasting, Demand forecast]
+  replaces: [Load forecasting / large-load forecasting transparency]
+  status: candidate
+
+- term: Long-Term Load Forecast (LTLF)
+  acronym: LTLF
+  facet: forecasting
+  broader: Load forecast
+  glossary_ref: null
+  extension_reason: ERCOT's multi-year demand forecast, reshaped by large-load growth; no glossary entry.
+  aliases: [Long-Term Load Forecast, LTLF]
+  trending: true
+  status: active
+
+# ─── Large loads & demand ────────────────────────────────────────────────────
+- term: Large flexible load (LFL)
+  acronym: LFL
+  facet: large-loads
+  glossary_ref: null
+  extension_reason: >
+    The defining ERCOT growth story (crypto, then data centres); the glossary
+    has no entry.
+  scope_note: Large interconnecting loads and their flexibility obligations.
+  aliases: [Large flexible load, Large flexible loads, Large load, Large loads, LFL]
+  replaces: [Large loads / large flexible loads (LFL)]
+  trending: true
+  status: active
+
+- term: Data centre load
+  facet: large-loads
+  broader: Large flexible load (LFL)
+  glossary_ref: null
+  extension_reason: The dominant large-load category; no glossary entry.
+  aliases: [Data center, Data centers, Data centre, Data centres]
+  replaces: [Data centers]
+  trending: true
+  status: active
+
+- term: Load growth
+  facet: large-loads
+  glossary_ref: null
+  extension_reason: >
+    Demand growth as a trend; the glossary defines load, not its growth.
+  scope_note: Growth in energy and demand over time, and the records it sets.
+  aliases: [Load growth, Demand growth, Energy consumption growth]
+  status: active
+
+- term: Peak demand
+  facet: large-loads
+  glossary_ref: null
+  extension_reason: >
+    Peak demand and its records are reported constantly; the glossary defines
+    only peak-related settlement constructs.
+  aliases: [Peak demand, Peak load, Peak demand record]
+  replaces: [Peak demand record]
+  status: active
+
+- term: Co-location
+  facet: large-loads
+  glossary_ref: null
+  extension_reason: Behind-the-meter siting of load with generation; no glossary entry.
+  aliases: [Co-location, Colocation, Co-located]
+  trending: true
+  status: candidate
+
+- term: Demand Response (DR)
+  acronym: DR
+  facet: large-loads
+  glossary_ref: null
+  extension_reason: >
+    The glossary defines ERCOT's specific DR programmes (ERS, LR) but not
+    demand response as a category.
+  aliases: [Demand Response]
+  replaces: [Demand Response (DR) / Emergency Response Service (ERS)]
+  status: candidate
+
+- term: Emergency Response Service (ERS)
+  acronym: ERS
+  facet: large-loads
+  broader: Demand Response (DR)
+  glossary_ref: Emergency Response Service (ERS)
+  aliases: [Emergency Response Service, ERS]
+  replaces: [Demand Response (DR) / Emergency Response Service (ERS)]
+  status: candidate
+
+- term: Controllable Load Resource (CLR)
+  acronym: CLR
+  facet: large-loads
+  glossary_ref: Controllable Load Resource
+  aliases: [Controllable Load Resource]
+  status: candidate
+
+# ─── Reliability & grid operations ───────────────────────────────────────────
+- term: Frequency response
+  facet: reliability-ops
+  glossary_ref: null
+  extension_reason: >
+    The glossary defines the specific products (PFR, FFR) but not frequency
+    response and control as a subject.
+  aliases: [Frequency response, Frequency control]
+  replaces: [Frequency response / frequency control]
+  status: active
+
+- term: Load shed
+  facet: reliability-ops
+  glossary_ref: null
+  extension_reason: >
+    Firm load shed and rotating outages; the glossary defines the alert levels,
+    not the action.
+  scope_note: >
+    Involuntary interruption of firm load, including rotating outages and
+    mandatory curtailment obligations.
+  aliases: [Load shed, Load shedding, Rotating outage, Rotating outages, Firm load shed]
+  replaces: [Load shed / rotating outages, Mandatory curtailment / firm load shed obligation]
+  status: active
+
+- term: Energy Emergency Alert (EEA)
+  acronym: EEA
+  facet: reliability-ops
+  glossary_ref: EEA
+  scope_note: EEA conditions and their levels.
+  aliases: [Energy Emergency Alert, EEA]
+  replaces: [Energy Emergency Alert (EEA 1/2/3)]
+  status: active
+
+- term: Planned outage scheduling
+  facet: reliability-ops
+  glossary_ref: null
+  extension_reason: >
+    Outage coordination as a subject; the glossary defines outage types, not
+    the scheduling process.
+  scope_note: >
+    Scheduling and approval of resource and transmission outages, including
+    seasonal and shoulder-season coordination.
+  aliases: [Planned outage, Outage scheduling, Shoulder season, Outage coordination]
+  replaces: [Shoulder season outage scheduling]
+  status: active
+
+- term: Resource Planned Outage Limit (RPOL)
+  acronym: RPOL
+  facet: reliability-ops
+  broader: Planned outage scheduling
+  glossary_ref: null
+  extension_reason: >
+    The MW ceiling ERCOT publishes for planned outages; no glossary entry.
+  aliases: [Resource Planned Outage Limit, RPOL]
+  status: active
+
+- term: Physical Responsive Capability (PRC)
+  acronym: PRC
+  facet: reliability-ops
+  glossary_ref: Physical Responsive Capability (PRC)
+  aliases: [Physical Responsive Capability]
+  status: candidate
+
+- term: Weatherization
+  facet: reliability-ops
+  glossary_ref: null
+  extension_reason: >
+    Post-Uri requirement regime; the glossary has no entry for weatherization.
+  aliases: [Weatherization, Winterization, Weatherisation]
+  replaces: [Weatherization / winterization]
+  status: candidate
+
+- term: Black Start Service (BSS)
+  acronym: BSS
+  facet: reliability-ops
+  glossary_ref: Black Start Service (BSS)
+  scope_note: Black start capability and system restoration.
+  aliases: [Black Start Service, Black Start Resource, Black start, Restoration]
+  replaces: [Black start / restoration]
+  status: candidate
+
+- term: State Estimator (SE)
+  acronym: SE
+  facet: reliability-ops
+  glossary_ref: State Estimator (SE)
+  aliases: [State Estimator]
+  replaces: [Real-time telemetry / state estimator]
+  status: candidate
+
+- term: Telemetry
+  facet: reliability-ops
+  glossary_ref: null
+  extension_reason: >
+    Real-time data from resources; the glossary defines telemetered values,
+    not telemetry as a subject.
+  aliases: [Telemetry, Telemetered]
+  replaces: [Real-time telemetry / state estimator]
+  status: candidate
+
+- term: Reliability standards
+  facet: reliability-ops
+  glossary_ref: null
+  extension_reason: >
+    NERC and FERC reliability obligations as a subject; not an ERCOT glossary
+    term.
+  aliases: [Reliability standard, Reliability standards, NERC standard]
+  replaces: [Reliability standards (NERC / FERC Order 901)]
+  status: candidate
+
+# ─── Governance ──────────────────────────────────────────────────────────────
+- term: Public Utility Commission of Texas (PUCT)
+  acronym: PUCT
+  facet: governance
+  glossary_ref: PUCT
+  scope_note: The regulator and its directives, as the subject of a chart.
+  aliases: [Public Utility Commission of Texas, PUCT]
+  status: candidate
+
+- term: Nodal Protocols
+  facet: governance
+  glossary_ref: null
+  extension_reason: The rulebook itself; the glossary defines terms within it, not the document.
+  aliases: [Nodal Protocols, Nodal Protocol]
+  status: candidate
+
+- term: Independent Market Monitor (IMM)
+  acronym: IMM
+  facet: governance
+  glossary_ref: Independent Market Monitor (IMM)
+  aliases: [Independent Market Monitor, IMM]
+  status: candidate
+
+- term: Good Cause Exception
+  facet: governance
+  glossary_ref: null
+  extension_reason: >
+    A recurring protocol relief mechanism; the glossary has no entry despite
+    its use throughout the revision-request process.
+  aliases: [Good Cause Exception]
+  status: active
+
+# ─── Settlement, metering & participants ─────────────────────────────────────
+- term: Current Operating Plan (COP)
+  acronym: COP
+  facet: settlement
+  glossary_ref: Current Operating Plan (COP)
+  scope_note: >
+    The QSE's resource operating plan as a chart's subject. NOT every chart
+    that plots a COP-derived series: a "COP HSL" line on a wind-forecast chart
+    does not make that chart about the COP.
+  aliases: [Current Operating Plan]
+  status: active
+
+- term: Market Clearing Price for Capacity (MCPC)
+  acronym: MCPC
+  facet: settlement
+  glossary_ref: Market Clearing Price for Capacity (MCPC)
+  aliases: [Market Clearing Price for Capacity, MCPC]
+  status: active
+
+- term: Settlement Point Price (SPP)
+  acronym: SPP
+  facet: settlement
+  glossary_ref: Settlement Point Price
+  aliases: [Settlement Point Price, Settlement Point Prices]
+  replaces: [Settlement Point Prices (SPP)]
+  status: active
+
+- term: Qualified Scheduling Entity (QSE)
+  acronym: QSE
+  facet: settlement
+  glossary_ref: Qualified Scheduling Entity (QSE)
+  aliases: [Qualified Scheduling Entity]
+  status: candidate
+
+- term: Load Serving Entity (LSE)
+  acronym: LSE
+  facet: settlement
+  glossary_ref: Load Serving Entity (LSE)
+  aliases: [Load Serving Entity]
+  status: candidate
+
+- term: Load Ratio Share (LRS)
+  acronym: LRS
+  facet: settlement
+  glossary_ref: Load Ratio Share
+  aliases: [Load Ratio Share]
+  status: candidate
+
+- term: Make-Whole Payment
+  facet: settlement
+  glossary_ref: Make-Whole Payment
+  scope_note: Make-whole payments and charges, i.e. uplift.
+  aliases: [Make-Whole Payment, Make-Whole Charge, Make-whole, Uplift]
+  replaces: [Make-whole / uplift payments]
+  status: candidate
+
+# ─── Retail market & load profiling ──────────────────────────────────────────
+- term: Load Profile
+  facet: retail
+  glossary_ref: Load Profile
+  scope_note: >
+    Profile-based settlement of non-interval load: profile types, profile IDs,
+    profile segments and the models behind them.
+  aliases: [Load Profile, Load Profile ID, Load Profile Segment, Profile Type, Profile Types]
+  status: active
+
+- term: Mass Transition
+  facet: retail
+  glossary_ref: Mass Transition
+  scope_note: Bulk transfer of customers from an exiting REP.
+  aliases: [Mass Transition]
+  status: active
+
+- term: Generation by fuel type
+  facet: renewables
+  glossary_ref: null
+  extension_reason: >
+    The generation mix by fuel; the glossary defines fuel-related settlement
+    terms, not the mix as a subject.
+  aliases: [Fuel type, Fuel types, Fuel mix, Generation mix, Generation by fuel]
+  status: active
+
+# =============================================================================
+# Rejected — terms removed from the vocabulary, with the law each one breaks.
+# Kept here so the decision is auditable and nobody re-adds them by accident.
+# The charts stay in the gallery; they are simply not reachable by these names.
+# =============================================================================
+rejected:
+- term: Senate Bill 6 (SB6, 2025)
+  reason: law 1 — names one bill and one year. Its 4 links were series-name matches.
+- term: House Bill 1500 (HB1500)
+  reason: law 1 — names one bill. Never matched a chart.
+- term: PGRR145 large-load verification
+  reason: law 1 — names one revision request. Covered generically by Large flexible load (LFL).
+- term: Batch Zero study process
+  reason: law 1 — names one interconnection study batch.
+- term: "Revision requests: NPRR / NOGRR / NPRR1186 / NPRR1309 / SCR / RRGRR / PGRR / COPMGRR"
+  reason: >
+    laws 1 and 2 — eight document classes and two specific revision requests in
+    one label. Revision requests are already first-class elsewhere in
+    Power.Talks (Paper Trails).
+- term: Technical Advisory Committee (TAC) / PRS / ROS / WMS / RMS / COPS
+  reason: >
+    law 2 — six committees in one label. The owning committee is already
+    structured metadata on every chart (gallery_charts.doc_group), so it must
+    not also be a keyword.
+- term: Real-time / day-ahead settlement
+  reason: >
+    laws 2 and 3 — joins two concepts and duplicates Day-Ahead Market (DAM)
+    and Real-Time Market (RTM).
+- term: Seasonal / long-term assessments (SARA, CDR, RTBM)
+  reason: >
+    law 2 — three reports in one label. Split into SARA, the CDR report and
+    the Long-Term Reliability Assessment (LTRA).
+- term: Marginal pricing / offer curves / bids
+  reason: law 2 — split; the matchable part is Energy Offer Curve.
+- term: Co-optimization
+  reason: >
+    law 3 — a subset of Real-Time Co-optimization (RTC+B), which now carries it
+    as an alias.
+- term: State-of-charge limits in SCED
+  reason: law 3 — a subset of State of Charge (SOC), which now carries it.
+- term: Mandatory curtailment / firm load shed obligation
+  reason: laws 2 and 3 — joins two concepts and duplicates Load shed.
+- term: Energy consumption
+  reason: law 3 — duplicates Load growth, which carries it as an alias.
