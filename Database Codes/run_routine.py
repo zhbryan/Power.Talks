@@ -355,10 +355,12 @@ def run(logf):
     parser.add_argument("--no-ai", action="store_true",
                         help="skip paid-Anthropic-API steps (summarize + "
                              "stakeholder sections) to suspend API cost")
-    parser.add_argument("--backfill-budget", type=int, default=1500,
+    parser.add_argument("--backfill-budget", type=int, default=80,
                         help="AI calls the nightly gap backfill may spend "
                              "(0 disables it). Paces the per-document report "
-                             "backfill inside the subscription window.")
+                             "backfill inside the subscription window. 80 is "
+                             "sized for Opus in lean mode (~15x Haiku per "
+                             "call); on Haiku this was 1500.")
     parser.add_argument("--no-study-index", action="store_true",
                         help="skip the study-index rebuild")
     args = parser.parse_args()

@@ -37,7 +37,7 @@ except Exception:
     pass
 
 ROOT = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.MKT.RULES"
-AI_MODEL = "claude-haiku-4-5-20251001"
+AI_MODEL = "claude-opus-5-5"
 AI_MAX_TOKENS = 700
 DOC_CHAR_CAP = 4000      # per-document text fed to the model
 MAX_DOCS = 12            # cap documents per section

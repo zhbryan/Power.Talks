@@ -28,8 +28,19 @@ CLI notes:
     text and `.usage` for token counts (0 if the CLI omits them).
   * `--max-turns 1` keeps it a single text turn (no tool loops / no hangs).
 
+Lean mode (CLI backend, on by default):
+  `claude -p` ships its own system prompt and the whole built-in tool schema
+  on every call -- measured at ~27,000 of the ~33,000 input tokens per call,
+  for prompts that use no tools at all. Passing `--tools ""` and a one-line
+  `--system-prompt` cuts input ~81% and per-call cost ~61%, which is what
+  makes a bigger model affordable inside the subscription window. The
+  caller's own `system` text (the 130k-char glossary) still goes over
+  stdin, never argv. Set POWERTALKS_CLI_LEAN=0 to restore the fat calls.
+
 Env overrides:
   POWERTALKS_AI_BACKEND   api | cli            (default: cli)
+  POWERTALKS_AI_MODEL     haiku|sonnet|opus    (overrides the per-script model)
+  POWERTALKS_CLI_LEAN     1 | 0                (default: 1 -- strip harness overhead)
   POWERTALKS_CLAUDE_EXE   path to claude.exe   (default: %USERPROFILE%\\.local\\bin\\claude.exe)
   POWERTALKS_CLI_TIMEOUT  per-call seconds     (default: 180)
 """
@@ -51,11 +62,12 @@ DEFAULT_CLAUDE_EXE = os.path.join(
 
 # ─── response shims (mimic the anthropic SDK objects the scripts read) ────────
 class _Usage:
-    __slots__ = ("input_tokens", "output_tokens")
+    __slots__ = ("input_tokens", "output_tokens", "cost_usd")
 
-    def __init__(self, i, o):
+    def __init__(self, i, o, cost=0.0):
         self.input_tokens = i
         self.output_tokens = o
+        self.cost_usd = cost
 
 
 class _Block:
@@ -66,9 +78,9 @@ class _Block:
 
 
 class _Msg:
-    def __init__(self, text, in_tok, out_tok):
+    def __init__(self, text, in_tok, out_tok, cost=0.0):
         self.content = [_Block(text)]
-        self.usage = _Usage(in_tok, out_tok)
+        self.usage = _Usage(in_tok, out_tok, cost)
 
 
 # ─── prompt flattening (system + messages -> one stdin string, CLI backend) ───
@@ -97,7 +109,19 @@ def _flatten_messages(messages):
     return "\n\n".join(parts)
 
 
+# One short line in place of Claude Code's own system prompt. Every task
+# prompt here is self-contained, so this only has to set the posture.
+LEAN_SYSTEM = (
+    "You extract and summarize text for a data pipeline. Follow the "
+    "instructions in the message exactly and reply with only the requested "
+    "output: no preamble, no commentary, no questions."
+)
+
+
 def _model_alias(model):
+    # An explicit env model wins over whatever the calling script hardcodes,
+    # so the routine can move between tiers without editing six files.
+    model = os.environ.get("POWERTALKS_AI_MODEL", "").strip() or model
     m = (model or "").lower()
     if "haiku" in m:
         return "haiku"
@@ -144,6 +168,10 @@ class _CliMessages:
             "--output-format", "json",
             "--max-turns", "1",
         ]
+        if self._p.lean:
+            # No tools, and our own one-line system prompt in place of the
+            # harness's -- see "Lean mode" in the module docstring.
+            cmd += ["--tools", "", "--system-prompt", LEAN_SYSTEM]
         proc = subprocess.run(
             cmd, input=prompt, capture_output=True, text=True,
             encoding="utf-8", errors="replace", timeout=self._p.timeout,
@@ -171,9 +199,17 @@ class _CliMessages:
             raise RuntimeError(f"claude CLI error result: {str(data)[:300]}")
         text = (data.get("result") or "").strip()
         usage = data.get("usage") or {}
-        in_tok = int(usage.get("input_tokens", 0) or 0)
+        # `input_tokens` alone is 2-4 on this path: the CLI books the real
+        # prompt under the cache fields, so a log reading only input_tokens
+        # under-reported every call by ~4 orders of magnitude.
+        in_tok = (int(usage.get("input_tokens", 0) or 0)
+                  + int(usage.get("cache_creation_input_tokens", 0) or 0)
+                  + int(usage.get("cache_read_input_tokens", 0) or 0))
         out_tok = int(usage.get("output_tokens", 0) or 0)
-        return _Msg(text, in_tok, out_tok)
+        # The CLI prices each call itself (list basis). Nothing is billed on
+        # the subscription; this is the yardstick for how fast a night burns.
+        cost = float(data.get("total_cost_usd") or 0.0)
+        return _Msg(text, in_tok, out_tok, cost)
 
 
 class Client:
@@ -181,6 +217,8 @@ class Client:
         self.mode = os.environ.get("POWERTALKS_AI_BACKEND", "cli").strip().lower()
         self.exe = os.environ.get("POWERTALKS_CLAUDE_EXE", DEFAULT_CLAUDE_EXE)
         self.timeout = int(os.environ.get("POWERTALKS_CLI_TIMEOUT", "180"))
+        self.lean = (os.environ.get("POWERTALKS_CLI_LEAN", "1").strip().lower()
+                     not in ("0", "false", "no", "off"))
         self._api_client = None
         if self.mode == "api":
             self.messages = _ApiMessages(self)

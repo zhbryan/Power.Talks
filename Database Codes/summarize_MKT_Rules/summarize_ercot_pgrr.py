@@ -24,7 +24,7 @@ import anthropic
 
 # ─── SETTINGS ────────────────────────────────────────────────────────────────
 BASE_DIR = r"E:\wamp64\www\Power.Talks\Documents Database\ERCOT.MKT.RULES\PGRR"
-AI_MODEL = "claude-haiku-4-5-20251001"
+AI_MODEL = "claude-opus-5-5"
 AI_MAX_TOKENS = 600
 
 # Haiku 4.5 pricing (USD per million tokens) — used only for the cost report.

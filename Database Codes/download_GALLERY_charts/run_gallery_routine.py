@@ -173,9 +173,10 @@ def main():
                    help="do not refresh gallery.keyword_id first")
     p.add_argument("--no-ai", action="store_true",
                    help="prefilter only; spends no AI quota")
-    p.add_argument("--ai-budget", type=int, default=400,
+    p.add_argument("--ai-budget", type=int, default=30,
                    help="AI calls (one per document) this run may spend "
-                        "(default 400)")
+                        "(default 30, sized for Opus in lean mode; on "
+                        "Haiku this was 400)")
     p.add_argument("--max-docs", type=int, default=0,
                    help="stop after this many documents (0 = no cap)")
     p.add_argument("--dry-run", action="store_true",

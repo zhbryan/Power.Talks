@@ -542,6 +542,10 @@ const CATEGORY_HIDDEN_ARTIFACT_IDS = ["a2", "a5", "a7", "a8"];
 // Stats Illustrator keeps only these two artifacts (order follows DATA).
 const STATS_HOME_ARTIFACT_IDS = ["a3", "a7"];
 
+// Gallery (landing and with a chart open) keeps only these three artifacts
+// (order follows DATA): briefing note, slide outline, tweet thread.
+const GALLERY_ARTIFACT_IDS = ["a3", "a6", "a7"];
+
 // Shown under "Chart details" when a Gallery chart is open in the content
 // window. The source record is read live from html/api/gallery.php (MySQL
 // `gallery`), the same endpoint the Gallery page itself uses — the panel never
@@ -659,6 +663,8 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
     ? ERCOT_HOME_ARTIFACTS
     : isStatsHome
     ? allArtifacts.filter(a => STATS_HOME_ARTIFACT_IDS.includes(a.id))
+    : ctx.section === "gallery"
+    ? allArtifacts.filter(a => GALLERY_ARTIFACT_IDS.includes(a.id))
     : (isCategoryHome || onMeetingTree)
     ? allArtifacts.filter(a => !CATEGORY_HIDDEN_ARTIFACT_IDS.includes(a.id))
     : allArtifacts;

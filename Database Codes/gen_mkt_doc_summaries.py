@@ -144,7 +144,9 @@ def seq_key(fname):
 
 
 # ── AI per-document report (--ai): read the document, ask Claude ─────────────
-AI_MODEL = "claude-haiku-5-5"      # $0.10/$0.50 per MTok vs haiku-4-5's $1/$5
+AI_MODEL = "claude-opus-5-5"      # $4/$20 per MTok; ~15x haiku-5-5 per call in lean
+                                   # mode, which is why the nightly budget
+                                   # below is paced down to match.
 AI_MAX_TOKENS = 1200
 # Stop the run after this many AI failures in a row -- the subscription window is
 # used up, and the rest of the budget would be spent on failures.

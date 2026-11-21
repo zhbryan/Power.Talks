@@ -98,7 +98,7 @@ PDF_EXT = {".pdf"}
 # Gallery at roughly the size of the PNGs already in GALLERY (~150-450 KB).
 RENDER_DPI = 150
 
-AI_MODEL = os.environ.get("POWERTALKS_GALLERY_MODEL", "haiku")
+AI_MODEL = os.environ.get("POWERTALKS_GALLERY_MODEL", "opus")
 AI_MAX_TOKENS = 4000
 
 # ─── prefilter thresholds ────────────────────────────────────────────────────
@@ -481,39 +481,104 @@ def build_ai_prompt(doc_label, pages, vocab_terms):
     )
 
 
-def parse_ai_json(text):
-    """Pull the JSON array out of the model's reply.
+def iter_json_values(t):
+    """Yield every top-level JSON value in `t`, ignoring prose between them.
 
-    Tolerates a fenced block or a stray sentence around it; anything that is
-    still not a list of objects raises, and the caller treats the document as
-    failed rather than writing guesses."""
+    `json.loads` demands that the whole string be one value, so a reply that
+    carries two arrays, one object per line, or a trailing sentence after a
+    complete array used to raise "Extra data" and cost the whole document.
+    Scanning with `raw_decode` instead takes each value as it comes and steps
+    over whatever sits between them. A reply truncated mid-array (max_tokens)
+    also degrades usefully here: the unterminated array fails to decode, and
+    the complete objects inside it are then picked up one by one."""
+    dec = json.JSONDecoder()
+    i, n = 0, len(t)
+    while i < n:
+        if t[i] not in "[{":
+            i += 1
+            continue
+        try:
+            val, end = dec.raw_decode(t, i)
+        except ValueError:
+            i += 1
+            continue
+        yield val
+        i = end
+
+
+def parse_ai_json(text, log=None):
+    """Pull the chart verdicts out of the model's reply.
+
+    Tolerates fenced blocks, stray prose, several JSON values in one reply, and
+    a reply cut off mid-array. A reply with no readable verdict object at all
+    still raises, and the caller treats the document as failed rather than
+    writing guesses. Repeated pages are merged (first title/type wins, keywords
+    union) so a page restated across two arrays cannot become two chart rows."""
     t = (text or "").strip()
-    if t.startswith("```"):
-        t = re.sub(r"^```[a-zA-Z]*\s*", "", t)
-        t = re.sub(r"\s*```$", "", t).strip()
-    if not t.startswith("["):
-        m = re.search(r"\[.*\]", t, re.S)
-        if not m:
-            raise ValueError(f"no JSON array in reply: {t[:200]!r}")
-        t = m.group(0)
-    data = json.loads(t)
-    if not isinstance(data, list):
-        raise ValueError("reply JSON is not an array")
-    out = []
-    for item in data:
+    # Fence markers are noise once values are scanned out individually; drop
+    # every one rather than only a single wrapping pair.
+    if "```" in t:
+        t = re.sub(r"```[a-zA-Z]*", " ", t)
+
+    items, n_values = [], 0
+    for val in iter_json_values(t):
+        n_values += 1
+        if isinstance(val, list):
+            items.extend(val)
+        elif isinstance(val, dict):
+            items.append(val)
+    # No JSON at all is a failed document. An empty array is not: it is how the
+    # model says none of the candidate pages are charts, and that verdict must
+    # be recorded so the document is not rescanned every night.
+    if n_values == 0:
+        raise ValueError(f"no JSON in reply: {t[:200]!r}")
+
+    out, at = [], {}
+    dropped = 0
+    for item in items:
         if not isinstance(item, dict) or "page" not in item:
+            dropped += 1
             continue
         try:
             page = int(item["page"])
         except (TypeError, ValueError):
+            dropped += 1
             continue
-        kws = item.get("keywords") or []
+        kws = [str(k).strip() for k in (item.get("keywords") or []) if str(k).strip()]
+        title = clean_title(item.get("chart_title"))
+        ctype = (item.get("chart_type") or "").strip()[:200] or None
+        if page in at:
+            rec = out[at[page]]
+            rec["chart_title"] = rec["chart_title"] or title
+            rec["chart_type"] = rec["chart_type"] or ctype
+            for k in kws:
+                if k not in rec["keywords"]:
+                    rec["keywords"].append(k)
+            continue
+        at[page] = len(out)
         out.append({
             "page": page,
-            "chart_title": clean_title(item.get("chart_title")),
-            "chart_type": (item.get("chart_type") or "").strip()[:200] or None,
-            "keywords": [str(k).strip() for k in kws if str(k).strip()],
+            "chart_title": title,
+            "chart_type": ctype,
+            "keywords": kws,
         })
+
+    # Values came back, but not one of them was a verdict object — an answer in
+    # some shape this code does not know. Fail the document rather than banking
+    # a "no charts" result that was never given.
+    if items and not out:
+        raise ValueError(
+            f"no readable verdict object among {len(items)} JSON item(s): {t[:200]!r}")
+
+    if log and (n_values > 1 or dropped or len(out) < len(items)):
+        bits = []
+        if n_values > 1:
+            bits.append(f"{n_values} JSON values merged")
+        if len(out) < len(items) - dropped:
+            bits.append(f"{len(items) - dropped - len(out)} repeated page(s) merged")
+        if dropped:
+            bits.append(f"{dropped} unreadable item(s) skipped")
+        log("      AI: salvaged a malformed reply - " + ", ".join(bits))
     return out
 
 
@@ -528,7 +593,7 @@ def adjudicate(doc_label, candidates, vocab, log):
         model=AI_MODEL, max_tokens=AI_MAX_TOKENS,
         system=AI_SYSTEM, messages=[{"role": "user", "content": prompt}],
     )
-    verdicts = parse_ai_json(msg.content[0].text)
+    verdicts = parse_ai_json(msg.content[0].text, log)
     allowed = {p["page"] for p in candidates}
     verdicts = [v for v in verdicts if v["page"] in allowed]
     log(f"      AI: {len(verdicts)}/{len(candidates)} candidate page(s) "

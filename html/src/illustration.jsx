@@ -1886,12 +1886,13 @@ function GalleryHome({ keyword, onKeywordClick, chartId, onChartClick }) {
               {q
                 ? <><b>{matches.length}</b> keyword{matches.length === 1 ? "" : "s"} match “{query.trim()}”
                     {held > 0 ? <> — showing the first {shown.length}, keep typing to narrow</> : null}</>
-                : <>Showing the <b>{matches.length}</b> keywords that have charts
-                    {held > 0 ? <> (first {shown.length})</> : null}.
-                    Type to search all <b>{vocab.length}</b> terms in the market vocabulary.</>}
+                : <>Type a hint word to search all <b>{vocab.length}</b> terms in the market
+                    vocabulary — <b>{charted}</b> of them have charts to open.</>}
             </div>
 
-            {shown.length === 0
+            {!q
+              ? null
+              : shown.length === 0
               ? <div className="gal-empty">No keyword matches those hint words.</div>
               : <div className="gal-kws">
                   {shown.map(k => (
