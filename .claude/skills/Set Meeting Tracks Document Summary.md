@@ -161,7 +161,20 @@ python ... gen_stkhdr_doc_summaries.py BOARD                   # one committee
 python ... gen_stkhdr_doc_summaries.py BOARD 2026-09-14 --ai   # one meeting, read the docs
 python ... gen_stkhdr_doc_summaries.py --ai --budget 500       # paced backfill
 python ... gen_stkhdr_doc_summaries.py BOARD 2026-09-14 --ai --force  # re-read
+
+# what the nightly routine runs:
+python ... gen_stkhdr_doc_summaries.py --ai --model haiku --until 2025-12-31 --budget 1000
+python ... gen_stkhdr_doc_summaries.py --ai --model opus  --since 2026-01-01 --budget 40
 ```
+
+| Flag | Effect |
+|---|---|
+| `--ai` | read the documents; without it only the free filename fields are written |
+| `--budget N` | stop after N AI calls (exit 2, resume next run) |
+| `--model haiku\|sonnet\|opus` | sets `POWERTALKS_AI_MODEL` for the process, so one run can be Haiku and the next Opus with no file edited |
+| `--since` / `--until` | bound the meeting dates (`YYYY-MM-DD`) — how the routine splits eras |
+| `--force` | re-read documents that already have a summary |
+| *positional* | committee abbreviations and/or exact meeting dates |
 
 Meetings are visited **newest first**, so a budgeted run fills the end anyone
 is most likely to open. Resume is **per document**: a meeting is skipped only
@@ -175,20 +188,50 @@ AI runs on the Claude subscription through `summarize_MKT_Rules/ai_backend.py`
 
 ## Measured cost (2026-11-21, Opus in lean mode)
 
-| | |
-|---|---|
-| Readable documents in the tree | **32,887** across 2,386 meetings, 42 committees |
-| AI cost per document | **$0.0501** list-equivalent (31-call sample) |
-| Wall clock per document | ~5.4 s (≈5.0 s model + 0.36 s extraction) |
-| Extraction alone, whole tree | 3.3 h — never the bottleneck |
-| Whole tree on Opus-lean | ~$1,650 of quota weight, ~49 h of run time |
-| Whole tree on Haiku-lean | ~$45 of quota weight (Haiku-lean is 1/36th of Opus-lean per call) |
+Readable documents in the tree: **32,887**, across 2,386 meetings and 42
+committees — 1,638 of them in the current year, 31,249 in the archive.
 
-The binding constraint is subscription quota, not time: at the nightly footprint
-the routine runs today (~139 Opus-lean calls ≈ $7), the whole tree on Opus is a
-multi-year job, while on Haiku-lean it is roughly a month at 1,000 calls/night.
-Pick the model for this task deliberately — an executive summary is a bulk
-extraction job, not a reasoning job.
+| | Opus-lean | Haiku-lean |
+|---|---|---|
+| Measured $/document | **$0.0501** (31 calls) | **$0.00093** (12 calls) |
+| Measured s/document | 5.2 s | 3.3 s |
+| Whole tree | ~$1,650 · 47 h | ~$31 · 30 h |
+
+Haiku is **54× cheaper per call here**, and the gap is larger than list price
+alone implies because Haiku also writes tighter summaries (median 75 words
+against Opus's 109) for the same prompt.
+
+Extraction is never the bottleneck: 0.36 s per document averaged over all eight
+formats, 3.3 h for the whole tree, zero empty reads in a 48-file sample spanning
+`.doc`, `.ppt`, `.xls` and the modern formats.
+
+**The binding constraint is subscription quota, not time.** An executive summary
+is a bulk extraction job, not a reasoning job, so the archive runs on Haiku and
+the current year — the part anyone actually opens — on Opus. Quality was checked
+before committing to that split: on a 2014 WMS meeting Haiku correctly pulled
+the $0.01/MWh PTP option bid price, the NPRR numbers endorsed and tabled, and
+what each document asked the committee to do.
+
+## Nightly routine
+
+`run_routine.py` runs three steps, in the stakeholder block:
+
+| Step | Command | Cost/night |
+|---|---|---|
+| `STKHDR meeting document index` | no AI, whole tree | free, ~41 s |
+| `BACKFILL meeting documents, archive` | `--model haiku --until <last year>-12-31 --budget` `--meeting-doc-budget` (1000) | ~$0.93, ~55 min |
+| `BACKFILL meeting documents, current year` | `--model opus --since <this year>-01-01 --budget` `--meeting-doc-live-budget` (40) | ~$2.00, ~3.5 min |
+
+At those budgets the 31,249-document archive clears in about **31 nights** and
+the current year in about **41**. The era boundary is computed from the clock, so
+it rolls forward every January on its own.
+
+**The archive pass runs before the current-year pass on purpose.** If an earlier
+Opus step has eaten the subscription window, what is left should go to the cheap
+pass that clears a thousand documents rather than the expensive one that clears
+forty. Both resume per document and neither writes anything for a failed call,
+so a spent window costs a night and nothing else — turn
+`--meeting-doc-live-budget` down first if that keeps happening.
 
 ## How it surfaces (cross-skill)
 

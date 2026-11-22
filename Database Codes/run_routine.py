@@ -166,6 +166,15 @@ def build_steps(args):
         steps.append(("STKHDR meeting profiles",
                       [os.path.join(stk, "gen_stkhdr_profiles.py")],
                       PROJECT_ROOT))
+        # 6b. Per-document titles, agenda items and download links for every
+        #     meeting document. No AI, no quota, ~1 minute for the whole tree,
+        #     and it is what makes a document page show a readable title and a
+        #     working download button instead of a raw filename. Must run after
+        #     step 6, which creates the Profile.json it writes into.
+        steps.append(("STKHDR meeting document index (titles + downloads)",
+                      [os.path.join(stk, "gen_stkhdr_doc_summaries.py")],
+                      PROJECT_ROOT))
+
         # 7. Group manifests
         steps.append(("STKHDR group manifests",
                       [os.path.join(stk, "gen_stkhdr_manifest.py")],
@@ -201,6 +210,36 @@ def build_steps(args):
                       [os.path.join(stk, "committee_registry.py"),
                        "--create", "--quiet"],
                       stk))
+
+        # 6c/6d. Executive summaries for meeting documents, split by era and by
+        #     model. 32,887 readable documents is too many for one tier: Opus in
+        #     lean mode costs $0.0501 a call, Haiku $0.00093 -- 54x less -- so
+        #     the archive runs on Haiku (the whole of it in roughly a month at
+        #     1,000 calls a night) and the current year, the part anyone
+        #     actually opens, runs on Opus.
+        #
+        #     The archive pass goes FIRST on purpose. If an earlier Opus step
+        #     has eaten the subscription window, whatever is left should go to
+        #     the cheap pass that clears thousands of documents, not to the
+        #     expensive one that clears forty. Both resume per document and both
+        #     exit 2 without writing anything on a spent window, so a bad night
+        #     costs a night and nothing else.
+        if not args.no_ai and args.meeting_doc_budget > 0:
+            steps.append((f"BACKFILL meeting documents, archive (haiku, "
+                          f"{args.meeting_doc_budget})",
+                          [os.path.join(stk, "gen_stkhdr_doc_summaries.py"),
+                           "--ai", "--model", "haiku",
+                           "--until", f"{datetime.now().year - 1}-12-31",
+                           "--budget", str(args.meeting_doc_budget)],
+                          PROJECT_ROOT))
+        if not args.no_ai and args.meeting_doc_live_budget > 0:
+            steps.append((f"BACKFILL meeting documents, current year (opus, "
+                          f"{args.meeting_doc_live_budget})",
+                          [os.path.join(stk, "gen_stkhdr_doc_summaries.py"),
+                           "--ai", "--model", "opus",
+                           "--since", f"{datetime.now().year}-01-01",
+                           "--budget", str(args.meeting_doc_live_budget)],
+                          PROJECT_ROOT))
 
     # 8b. ERCOT Public API: refresh the EMIL product catalog (independent of the
     #     market/stkhdr tracks, so only on a full run). Re-auths on its own and
@@ -361,6 +400,19 @@ def run(logf):
                              "backfill inside the subscription window. 80 is "
                              "sized for Opus in lean mode (~15x Haiku per "
                              "call); on Haiku this was 1500.")
+    parser.add_argument("--meeting-doc-budget", type=int, default=1000,
+                        help="Haiku-lean AI calls the meeting-document "
+                             "backfill may spend on the ARCHIVE (meetings "
+                             "before this year) each night; 0 disables it. "
+                             "1,000 is ~$0.93 of quota weight and ~55 min of "
+                             "run time, and clears the 31,000-document archive "
+                             "in about a month.")
+    parser.add_argument("--meeting-doc-live-budget", type=int, default=40,
+                        help="Opus-lean AI calls the same backfill may spend on "
+                             "THIS YEAR's meetings each night; 0 disables it. "
+                             "40 is ~$2.00 of quota weight. This is the "
+                             "expensive knob -- turn it down first if a night "
+                             "ends on a spent window.")
     parser.add_argument("--no-study-index", action="store_true",
                         help="skip the study-index rebuild")
     args = parser.parse_args()

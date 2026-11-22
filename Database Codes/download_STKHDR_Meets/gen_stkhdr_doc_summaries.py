@@ -25,6 +25,14 @@ quota and is therefore paced:
     ...  BOARD                      # one committee
     ...  BOARD 2026-09-14 --ai      # one meeting, read the documents
     ...  --ai --budget 60           # paced backfill: at most 60 AI calls
+    ...  --ai --since 2026-01-01 --budget 20 --model opus     # the live record
+    ...  --ai --until 2025-12-31 --budget 1000 --model haiku  # the archive
+
+`--model` picks the tier for this run (haiku|sonnet|opus) by setting
+POWERTALKS_AI_MODEL for the process. The nightly routine uses it to split the
+work by era: the current year is read on Opus, the archive on Haiku, which is
+1/36th of the Opus cost per call and is what makes 30,000+ documents finishable
+in weeks rather than years. `--since`/`--until` bound the meeting dates.
 
 Without `--ai` the three AI fields stay null and the UI shows "-". A document
 that already has an executive summary is never re-read, so a budgeted run
@@ -466,11 +474,31 @@ def meeting_complete(prev, folder):
 
 def main():
     argv = sys.argv[1:]
+    # Flags that take a value: their value must not also be read as a
+    # positional committee/date filter, so drop it by position.
     opt_values = set()
-    if "--budget" in argv:
-        i = argv.index("--budget") + 1
-        _run_state["left"] = int(argv[i])
+
+    def val(flag, cast=str, default=None):
+        if flag not in argv:
+            return default
+        i = argv.index(flag) + 1
+        if i >= len(argv):
+            raise SystemExit(f"{flag} needs a value")
         opt_values.add(i)
+        return cast(argv[i])
+
+    _run_state["left"] = val("--budget", int)
+    model = val("--model")
+    since = val("--since")
+    until = val("--until")
+    for label, v in (("--since", since), ("--until", until)):
+        if v and not DATE_RE.match(v):
+            raise SystemExit(f"{label} must be YYYY-MM-DD, got {v!r}")
+    if model:
+        # ai_backend reads this on every call and lets it win over whatever a
+        # script hardcodes, so one run can be Haiku while the next is Opus
+        # without editing any file.
+        os.environ["POWERTALKS_AI_MODEL"] = model
     ai = "--ai" in argv
     force = "--force" in argv
     args = [a for i, a in enumerate(argv)
@@ -494,6 +522,8 @@ def main():
             for date in sorted((d for d in os.listdir(cdir) if DATE_RE.match(d)),
                                reverse=True):
                 if want_dates and date not in want_dates:
+                    continue
+                if (since and date < since) or (until and date > until):
                     continue
                 folder = os.path.join(cdir, date)
                 prof_path = os.path.join(folder, "Quick runs",
@@ -546,7 +576,8 @@ def main():
     if _ai_usage["calls"]:
         print(f"AI: {_ai_usage['calls']} call(s), in={_ai_usage['in']} "
               f"out={_ai_usage['out']} tokens, "
-              f"${_ai_usage['cost']:.4f} list-equivalent ({AI_MODEL}), "
+              f"${_ai_usage['cost']:.4f} list-equivalent "
+              f"({os.environ.get('POWERTALKS_AI_MODEL') or AI_MODEL}), "
               f"{_ai_usage['fails']} failure(s)")
     return 2 if _run_state["stop"] else 0
 
