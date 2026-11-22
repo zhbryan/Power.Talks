@@ -22,6 +22,9 @@ const NP_CARD_CSS = `
   .np-tl-date { font-family:var(--mono); font-size:9.5px; color:var(--muted); white-space:nowrap; min-width:68px; margin-top:2px; }
   .np-tl-ev { font-size:11.5px; color:var(--ink-2); }
   .np-tl-ev b { color:var(--ink); font-weight:600; }
+  .np-dl { color:var(--accent-2); text-decoration:none; border-bottom:1px solid var(--rule-2); word-break:break-all; }
+  .np-dl:hover { color:var(--accent); border-bottom-color:var(--accent); }
+  .np-dl-arrow { font-family:var(--mono); font-size:10px; opacity:.7; white-space:nowrap; }
 `;
 
 // One Quick runs card for all market rules categories. Fetches the issue's
@@ -600,7 +603,19 @@ function GalleryChartCard({ chartId }) {
       </div>
       <div className="np-title">{chart.chart_title || "(untitled chart)"}</div>
 
-      <Field label="Document" value={chart.doc_name} />
+      {/* The document name downloads the source PDF rather than opening it:
+          `download` makes the browser save it to the local download folder,
+          which is what a chart is usually wanted for — the slide behind it.
+          When the file is no longer on disk the name stays plain text. */}
+      <Field label="Document" value={!chart.doc_name ? null
+        : chart.doc_exists && chart.doc_url
+        ? <a className="np-dl" href={chart.doc_url} download={chart.doc_name}
+             title={`Download ${chart.doc_name}`}>
+            {chart.doc_name}<span className="np-dl-arrow"> &#8595;</span>
+          </a>
+        : <span title="no longer under Documents Database/ERCOT.STKHDR.MEETS">
+            {chart.doc_name}
+          </span>} />
       <Field label="Page Number" value={chart.page_num} />
       <Field label="Chart # in Document" value={chart.sequence_id} />
       <Field label="Meeting" value={meeting} />

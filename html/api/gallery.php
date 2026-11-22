@@ -110,6 +110,45 @@ function png_path(string $chartId): string {
     return __DIR__ . '/../../Documents Database/GALLERY/' . $chartId . '.png';
 }
 
+/**
+ * Where the chart's source document sits, relative to the stakeholder tree.
+ *
+ * The extractor walks  ERCOT.STKHDR.MEETS/<GROUP>/<YYYY-MM-DD>/<file>  and
+ * stores those three components as doc_group / doc_time / doc_name
+ * (parse_source_path in gallery_charts_extractions_generations.py), so the
+ * download path is derived rather than stored — one less column to keep in
+ * step when a document is re-filed. Every PDF in the tree is exactly that
+ * deep, so there is no deeper case to handle.
+ */
+function doc_rel(array $c): string {
+    $g = (string)($c['doc_group'] ?? '');
+    $d = substr((string)($c['doc_time'] ?? ''), 0, 10);   // DATE or DATETIME
+    $n = (string)($c['doc_name'] ?? '');
+    if ($g === '' || $d === '' || $n === '') { return ''; }
+    if (strpos($g . $d . $n, '..') !== false) { return ''; }
+    return $g . '/' . $d . '/' . $n;
+}
+
+/**
+ * Web path of the source document. Each segment is encoded on its own: real
+ * file names in this tree carry spaces, '#', '&' and parentheses, and
+ * encoding the joined path would swallow the slashes too.
+ */
+function doc_url(array $c): string {
+    $rel = doc_rel($c);
+    if ($rel === '') { return ''; }
+    $enc = implode('/', array_map('rawurlencode', explode('/', $rel)));
+    return '/Power.Talks/Documents%20Database/ERCOT.STKHDR.MEETS/' . $enc;
+}
+
+/** Absolute path of the same document, for an existence check. */
+function doc_path(array $c): string {
+    $rel = doc_rel($c);
+    return $rel === ''
+        ? ''
+        : __DIR__ . '/../../Documents Database/ERCOT.STKHDR.MEETS/' . $rel;
+}
+
 try {
     $cfgPath = __DIR__ . '/../../Database Codes/ercot_api/db_config.json';
     $cfg = json_decode(file_get_contents($cfgPath), true);
@@ -222,10 +261,17 @@ try {
                LEFT JOIN keyword_id k ON k.keyword_id = g.keyword_id
               WHERE g.chart_id = ? ORDER BY g.keyword ASC", [$cid]);
 
+        // A document can be re-filed or pruned after extraction, so the panel
+        // is told whether the file is actually there instead of offering a
+        // download link that 404s.
+        $docPath = doc_path($c);
+
         $out['chart'] = [
             'chart_id'         => $c['chart_id'],
             'chart_title'      => $c['chart_title'],
             'doc_name'         => $c['doc_name'],
+            'doc_url'          => doc_url($c),
+            'doc_exists'       => $docPath !== '' && is_file($docPath),
             'doc_type'         => $c['doc_type'],
             'doc_group'        => $c['doc_group'],
             'group_name'       => group_name($c['doc_group']),
