@@ -722,6 +722,20 @@ def main():
                     skipped += 1; continue
                 try:
                     prof = build_profile(abbr, date, folder)
+                    # `document_reports` / `meeting_time` are written by
+                    # gen_stkhdr_doc_summaries.py and cost AI quota to earn, so
+                    # an --overwrite pass must carry them across instead of
+                    # dropping them. (The market-rules side lost its
+                    # source_documents to exactly this for weeks.)
+                    if os.path.exists(out):
+                        try:
+                            with open(out, encoding="utf-8") as fh:
+                                old = json.load(fh)
+                            for k in ("document_reports", "meeting_time"):
+                                if old.get(k) is not None:
+                                    prof[k] = old[k]
+                        except Exception:
+                            pass          # unreadable old profile: just rewrite
                     os.makedirs(qr, exist_ok=True)
                     with open(out, "w", encoding="utf-8") as fh:
                         json.dump(prof, fh, indent=2, ensure_ascii=False)

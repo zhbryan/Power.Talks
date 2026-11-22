@@ -136,9 +136,10 @@ section, not the meeting document list. So:
    - **Kept:** numbered agenda items (`10.-…`), date-prefixed meeting files
      (`2026-TAC-…Ballot…`), and presentation decks (`.ppt`/`.pptx`, even when
      titled after an RR like `NPRR1325_Overview.pptx` or `NOGRR282 Update.pptx`).
-3. **Regenerate the file lists** afterwards (`gen_stkhdr_manifest.py` and, for
-   the meeting summaries, `gen_stkhdr_profiles.py`) so the meeting-date document
-   lists reflect the removals.
+3. **Regenerate the file lists** afterwards (`gen_stkhdr_manifest.py`; for the
+   meeting summaries `gen_stkhdr_profiles.py`; and for the per-document titles
+   and download links `gen_stkhdr_doc_summaries.py`, which is free without
+   `--ai`) so the meeting-date document lists reflect the removals.
 
 > **One-time cleanup of already-extracted RR files** (e.g. after a zip backfill):
 > ```python

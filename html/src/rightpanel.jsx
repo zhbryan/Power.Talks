@@ -643,6 +643,97 @@ function GalleryChartCard({ chartId }) {
   );
 }
 
+// Shown under "For the talk" when a Meeting Tracks document is open. The
+// Meeting Tracks counterpart of DocumentProfileCard: who stood up with this
+// document, and which meeting they stood up at.
+//
+// Everything comes from the meeting Profile.json — `document_reports` for the
+// per-document sponsor/company (written by gen_stkhdr_doc_summaries.py), and
+// the profile's own header for the meeting name and time. One fetch, the same
+// file the content window reads.
+function MeetingDocProfileCard({ doc }) {
+  const committee = doc && doc.committee, date = doc && doc.date, file = doc && doc.file;
+  const [prof, setProf] = React.useState(null);
+  const [state, setState] = React.useState("loading");
+
+  React.useEffect(() => {
+    if (!committee || !date || !file) { setProf(null); setState("idle"); return; }
+    let live = true;
+    setProf(null); setState("loading");
+    const base = "/Power.Talks/Documents%20Database/ERCOT.STKHDR.MEETS";
+    const url = `${base}/${encodeURIComponent(committee)}/${encodeURIComponent(date)}`
+      + `/Quick%20runs/${encodeURIComponent(committee + "-" + date)}%20Profile.json`;
+    fetch(url, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => { if (!live) return; setProf(d || null); setState("ready"); })
+      .catch(e => { if (live) { setState(String(e).toLowerCase().includes("failed to fetch") ? "offline" : "error"); } });
+    return () => { live = false; };
+  }, [committee, date, file]);
+
+  const Field = ({ label, value }) => (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: "9.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.45, wordBreak: "break-word" }}>{value || "—"}</div>
+    </div>
+  );
+
+  if (!doc) return null;
+  if (state === "loading") return <p className="pt-runs-note">Loading document details…</p>;
+  if (state === "offline") {
+    return <p className="pt-runs-note">Not loaded — open via <span style={{ color: "var(--accent-2)" }}>http://localhost</span>, not file://.</p>;
+  }
+
+  const report = ((prof && prof.document_reports) || []).find(e => e && e.file === file) || null;
+  const title = (report && report.title)
+    || String(file || "").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
+  const meeting = (prof && prof.committee_full_name)
+    ? `${prof.committee_full_name} (${committee})`
+    : committee;
+  // "Meeting time" is the meeting's own slot. The daily calendar log only
+  // started in Nov 2026, so the clock time is known for recent meetings and
+  // absent for the archive — the long-form date carries the rest.
+  let when = date;
+  try {
+    const d = new Date(date + "T12:00:00");
+    if (!isNaN(d)) {
+      when = d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    }
+  } catch (e) { /* keep the ISO date */ }
+  if (prof && prof.meeting_time) when = `${when} · ${prof.meeting_time}`;
+  if (prof && prof.meeting_type) when = `${when} (${prof.meeting_type})`;
+
+  return (
+    <div>
+      <style>{NP_CARD_CSS}</style>
+      <div className="np-status-row">
+        <span className="np-num">{committee}</span>
+        <span className="np-badge" style={{ background: "var(--accent-soft)", color: "var(--accent-2)" }}>
+          {((report && report.doc_type) || "DOCUMENT").toUpperCase()}
+        </span>
+      </div>
+      <div className="np-title">{title}</div>
+
+      <Field label="Sponsor" value={report && report.sponsor} />
+      <Field label="Company" value={report && report.company} />
+      <Field label="Stakeholder Meeting" value={meeting} />
+      <Field label="Meeting Time" value={when} />
+
+      {!report && state === "ready" && (
+        <div className="pt-runs-note" style={{ marginTop: 4 }}>
+          No per-document report yet for this file. Run
+          <span style={{ color: "var(--accent-2)" }}> gen_stkhdr_doc_summaries.py {committee} {date} --ai</span>.
+        </div>
+      )}
+      {report && !report.sponsor && !report.company && (
+        <div className="pt-runs-note" style={{ marginTop: 4 }}>
+          Sponsor and company are read out of the document itself — this one
+          names neither, or has not been read yet.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
   const { SUGGESTED_RUNS, ARTIFACTS } = window.DATA;
   const [tab, setTab] = React.useState("runs"); // runs | artifacts | profile
@@ -880,8 +971,10 @@ function RightPanel({ open, onClose, onRunPrompt, onArtifactClick, context }) {
         {tab === "runs" && !isErcotHome && !onMeetingTree && !isStatsHome && !isGalleryLanding && (
           hasGalleryChart
             ? <GalleryChartCard chartId={ctx.galleryChart} />
+            : ctx.meetingDoc
+            ? <MeetingDocProfileCard doc={ctx.meetingDoc} />
             : isMeetingGroup
-            ? <MeetingProfileCard committee={ctx.meetingGroup || (ctx.meetingDoc && ctx.meetingDoc.committee)} date={ctx.meetingDate} />
+            ? <MeetingProfileCard committee={ctx.meetingGroup} date={ctx.meetingDate} />
             : ctx.ruleDoc
             ? <DocumentProfileCard doc={ctx.ruleDoc} />
             : hasNprr

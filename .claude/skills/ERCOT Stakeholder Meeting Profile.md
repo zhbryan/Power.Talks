@@ -131,6 +131,8 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
 | 12 | `action_items` | Array of action items from minutes |
 | 13 | `documents` | Array of filenames in the meeting folder, **excluding `.zip` archives** (case-insensitive), `.tmp` files, and the manifest |
 | 14 | `next_meeting_date` | ISO 8601 if mentioned in minutes or agenda; otherwise `null` |
+| 15 | `meeting_time` | Clock time of the meeting (e.g. `9:30 AM`), matched out of `ERCOT.STKHDR.MEETS/_calendar_log/<date>.json`. **Written by `gen_stkhdr_doc_summaries.py`, not by this skill.** The calendar log only began in November 2026, so `null` for the archive is correct, not a failure. |
+| 16 | `document_reports` | Array of per-document reports (title, executive summary, sponsor, company, download URL) — one per document in the folder. **Written by `gen_stkhdr_doc_summaries.py`, not by this skill**; see `Set-Meeting-Tracks-Document-Summary`. Distinct from `documents`, which is just the filename list. |
 
 ## JSON Template
 
@@ -160,9 +162,18 @@ Extract the following fields. Use `null` for any field not found; use `[]` for e
   "key_discussion_topics": [],
   "action_items": [],
   "documents": [],
-  "next_meeting_date": null
+  "next_meeting_date": null,
+  "meeting_time": null,
+  "document_reports": []
 }
 ```
+
+> **`meeting_time` and `document_reports` are owned by another generator.**
+> `gen_stkhdr_doc_summaries.py` writes them (they cost AI quota to earn), and
+> `gen_stkhdr_profiles.py` **carries both forward when it rewrites a profile
+> under `--overwrite`**. Do not regenerate a profile in a way that drops them —
+> the market-rules side silently lost its `source_documents` to exactly that
+> for weeks.
 
 ## ballot_results item template
 

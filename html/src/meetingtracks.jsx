@@ -1048,8 +1048,15 @@ function MeetingTracksGroupHome({ committee, groupName, onBack, onDocClick, onMe
 window.MeetingTracksGroupHome = MeetingTracksGroupHome;
 
 // ─── Meeting Tracks — Item (document) homepage ───────────────────────────────
-// Shown when a document is clicked in a group homepage. Displays the document's
-// metadata and a link to open the actual file served from WAMP.
+// Shown when a document is clicked in a group homepage. The Paper Trails
+// counterpart of this view is DocumentSummaryView: the content window carries
+// the document's own report — title, executive summary, and a link that
+// downloads the original — while the right panel carries who presented it.
+//
+// The report comes from the meeting Profile.json's `document_reports` array
+// (written by gen_stkhdr_doc_summaries.py), matched on the filename. The
+// download link never waits on that fetch: a document with no summary yet
+// still opens.
 function MeetingTracksItemHome({ committee, date, file, groupName, onBack }) {
   const url = `${STK_BASE}/${encodeURIComponent(committee)}/${encodeURIComponent(date)}/${encodeURIComponent(file)}`;
   const ext = docExt(file);
@@ -1058,6 +1065,34 @@ function MeetingTracksItemHome({ committee, date, file, groupName, onBack }) {
     xls: "Excel workbook", xlsx: "Excel workbook", ppt: "PowerPoint", pptx: "PowerPoint",
     zip: "Document bundle (ZIP)",
   };
+
+  const [report, setReport] = React.useState(null);
+  const [state, setState] = React.useState("loading");
+
+  React.useEffect(() => {
+    if (!committee || !date || !file) { setReport(null); setState("idle"); return; }
+    let live = true;
+    setReport(null); setState("loading");
+    const prof = `${STK_BASE}/${encodeURIComponent(committee)}/${encodeURIComponent(date)}`
+      + `/Quick%20runs/${encodeURIComponent(committee + "-" + date)}%20Profile.json`;
+    fetch(prof, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(d => {
+        if (!live) return;
+        const list = (d && d.document_reports) || [];
+        setReport(list.find(e => e && e.file === file) || null);
+        setState("ready");
+      })
+      .catch(() => { if (live) setState("error"); });
+    return () => { live = false; };
+  }, [committee, date, file]);
+
+  // Until the report arrives (or when none exists), the filename read as
+  // "[Title Name].[ext]" is the title — the same fallback Paper Trails uses.
+  const title = (report && report.title)
+    || file.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
+  const summary = report && report.executive_summary;
+
   return (
     <div className="mt-item">
       <style>{`
@@ -1065,20 +1100,58 @@ function MeetingTracksItemHome({ committee, date, file, groupName, onBack }) {
         .mt-item-back { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--accent-2); cursor: pointer; background: none; border: 0; padding: 4px 0; margin-bottom: 12px; }
         .mt-item-back:hover { color: var(--accent); }
         .mt-item-eye { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
-        .mt-item-name { font-family: var(--serif); font-size: 22px; line-height: 1.25; margin: 4px 0 14px; font-weight: 400; color: var(--ink); word-break: break-word; }
+        .mt-item-name { font-family: var(--serif); font-size: 22px; line-height: 1.25; margin: 4px 0 6px; font-weight: 400; color: var(--ink); word-break: break-word; }
+        .mt-item-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .mt-item-tag { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .06em; padding: 2px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--accent-2); }
+        .mt-item-sec { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+        .mt-item-exec { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; margin-bottom: 18px; }
+        .mt-item-exec.is-note { font-family: var(--mono); font-size: 11.5px; color: var(--muted); line-height: 1.6; }
         .mt-item-field { margin-bottom: 11px; }
         .mt-item-lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
         .mt-item-val { font-size: 13px; color: var(--ink-2); }
-        .mt-item-open { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; padding: 9px 16px; border-radius: 9px; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600; text-decoration: none; }
+        .mt-item-open { display: inline-flex; align-items: center; gap: 8px; margin: 2px 0 20px; padding: 9px 16px; border-radius: 9px; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600; text-decoration: none; }
         .mt-item-open:hover { background: var(--accent); }
+        .mt-item-file { font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-all; margin-top: 4px; }
+        .mt-item-div { border: 0; border-top: 1px dashed var(--rule-2); margin: 4px 0 14px; }
       `}</style>
       <button className="mt-item-back" onClick={onBack}>← {groupName || committee} meetings</button>
       <div className="mt-item-eye">{committee} · {date}</div>
-      <div className="mt-item-name">{file}</div>
-      <div className="mt-item-field"><div className="mt-item-lbl">Committee</div><div className="mt-item-val">{committee}</div></div>
+
+      {/* 1 — the document's title, not its filename. */}
+      <div className="mt-item-name">{title}</div>
+      <div className="mt-item-tags">
+        <span className="mt-item-tag">{(report && report.doc_type) || TYPE[ext] || "Document"}</span>
+        {report && report.agenda_item &&
+          <span className="mt-item-tag">Agenda item {report.agenda_item}</span>}
+        {ext && <span className="mt-item-tag">{ext.toUpperCase()}</span>}
+      </div>
+
+      {/* 2 — the executive summary. */}
+      <div className="mt-item-sec">Executive Summary</div>
+      {summary
+        ? <div className="mt-item-exec">{summary}</div>
+        : <div className="mt-item-exec is-note">
+            {state === "loading"
+              ? "Reading the meeting record…"
+              : state === "error"
+              ? <>No profile on file for {committee} {date} yet — run the <span style={{ color: "var(--accent-2)" }}>ERCOT Stakeholder Meeting Profile</span> skill.</>
+              : <>Not summarized yet. Run <span style={{ color: "var(--accent-2)" }}>gen_stkhdr_doc_summaries.py {committee} {date} --ai</span> to read this document.</>}
+          </div>}
+
+      {/* 3 — the full document, downloaded rather than opened in a viewer. */}
+      <div className="mt-item-sec">Full Document</div>
+      <a className="mt-item-open" href={(report && report.download_url) || url}
+         download={file} title={`Download ${file}`}>
+        <I.Globe size={15}/> Download full document
+      </a>
+      <div className="mt-item-file">{file}</div>
+
+      <hr className="mt-item-div" />
+      <div className="mt-item-field"><div className="mt-item-lbl">Committee</div><div className="mt-item-val">{groupName || committee}</div></div>
       <div className="mt-item-field"><div className="mt-item-lbl">Meeting date</div><div className="mt-item-val">{date}</div></div>
-      <div className="mt-item-field"><div className="mt-item-lbl">Document type</div><div className="mt-item-val">{TYPE[ext] || (ext ? ext.toUpperCase() + " file" : "Document")}</div></div>
-      <a className="mt-item-open" href={url} target="_blank" rel="noopener noreferrer"><I.Globe size={15}/> Open document</a>
+      <div className="mt-item-field"><div className="mt-item-lbl">Document type</div><div className="mt-item-val">{(report && report.kind) || TYPE[ext] || (ext ? ext.toUpperCase() + " file" : "Document")}</div></div>
+      {report && report.sponsor &&
+        <div className="mt-item-field"><div className="mt-item-lbl">Presented by</div><div className="mt-item-val">{report.sponsor}{report.company ? ` · ${report.company}` : ""}</div></div>}
     </div>
   );
 }
