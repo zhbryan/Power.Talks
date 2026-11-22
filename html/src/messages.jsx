@@ -2,7 +2,7 @@ function UserMsg({ text }) {
   return (
     <div className="pt-msg pt-msg--user">
       <style>{`
-        .pt-msg { max-width: 760px; margin: 0 auto 26px; }
+        .pt-msg { max-width: 1280px; margin: 0 auto 26px; }
         .pt-msg--user {
           display: flex; justify-content: flex-end;
         }
@@ -11,9 +11,9 @@ function UserMsg({ text }) {
           border: 1px solid var(--rule);
           border-radius: 14px 14px 4px 14px;
           padding: 12px 16px;
-          max-width: 82%;
+          max-width: min(82%, 820px);
           white-space: pre-wrap;
-          font-size: 14.5px;
+          font-size: 13.5px;
           line-height: 1.6;
           color: var(--ink);
           box-shadow: var(--shadow-1);
@@ -35,7 +35,7 @@ function AssistantAnalysis({ m }) {
           display: grid; place-items: center; flex: 0 0 auto;
           margin-top: 2px;
         }
-        .pt-ai-body { min-width: 0; color: var(--ink); font-size: 14.5px; line-height: 1.65; }
+        .pt-ai-body { min-width: 0; color: var(--ink); font-size: 13.5px; line-height: 1.65; }
         .pt-ai-body p { margin: 0 0 12px; }
         .pt-ai-points {
           display: flex; flex-direction: column; gap: 10px;
@@ -50,17 +50,17 @@ function AssistantAnalysis({ m }) {
           background: var(--panel);
         }
         .pt-ai-pt .num {
-          font-family: var(--mono); font-size: 11px;
+          font-family: var(--mono); font-size: 10px;
           color: var(--accent-2); letter-spacing: .05em;
         }
         .pt-ai-pt b { font-weight: 600; color: var(--ink); }
-        .pt-ai-pt .detail { color: var(--ink-2); margin-top: 2px; display: block; font-size: 13.5px; }
+        .pt-ai-pt .detail { color: var(--ink-2); margin-top: 2px; display: block; font-size: 12.5px; }
         .pt-ai-rewrite {
           margin-top: 14px;
           border-left: 3px solid var(--accent);
           padding: 4px 16px;
           font-family: var(--serif);
-          font-size: 19px; font-style: italic;
+          font-size: 18px; font-style: italic;
           color: var(--ink); line-height: 1.45;
         }
         .pt-ai-actions {
@@ -103,8 +103,8 @@ function MessageStream({ messages, illustration }) {
   return (
     <div className="pt-stream">
       <style>{`
-        .pt-stream { padding: 28px 28px 0; }
-        .pt-illus-wrap { max-width: 760px; margin: 0 auto 28px; }
+        .pt-stream { padding: 28px 22px 0; }
+        .pt-illus-wrap { max-width: 1280px; margin: 0 auto 28px; }
       `}</style>
       <div className="pt-illus-wrap">{illustration}</div>
       {messages.map((m, i) =>

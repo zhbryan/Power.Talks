@@ -804,14 +804,14 @@ function MeetingTracksOrgChart({ onGroupClick }) {
   const toggle = (id) => setExpanded(e => ({ ...e, [id]: !e[id] }));
 
   const FolderIcon = ({ open }) => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       {open
         ? <path d="M3 8h5l2-2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
         : <path d="M3 7a1 1 0 0 1 1-1h4l2 2h9a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>}
     </svg>
   );
   const FileIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>
     </svg>
   );
@@ -830,7 +830,7 @@ function MeetingTracksOrgChart({ onGroupClick }) {
           {hasKids ? (
             <button className="mt-chev" onClick={(e) => { e.stopPropagation(); toggle(node.id); }}
               aria-label={isOpen ? "Collapse" : "Expand"}>
-              <svg width="10" height="10" viewBox="0 0 24 24" style={{ transform: isOpen ? "rotate(90deg)" : "none", transition: "transform .15s" }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" style={{ transform: isOpen ? "rotate(90deg)" : "none", transition: "transform .15s" }}>
                 <path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
@@ -865,32 +865,32 @@ function MeetingTracksOrgChart({ onGroupClick }) {
             background-image: repeating-linear-gradient(90deg, rgba(27,26,23,.03) 0 1px, transparent 1px 28px);
             pointer-events: none;
           }
-          .mt-head-eye { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
-          .mt-head-title { font-family: var(--serif); font-size: 26px; line-height: 1.1; margin: 2px 0 6px; font-weight: 400; color: var(--ink); }
-          .mt-head-sub { color: var(--ink-2); font-size: 13px; margin-bottom: 14px; }
-          .mt-tree { position: relative; font-size: 13px; }
+          .mt-head-eye { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+          .mt-head-title { font-family: var(--serif); font-size: 32px; line-height: 1.1; margin: 2px 0 6px; font-weight: 400; color: var(--ink); }
+          .mt-head-sub { color: var(--ink-2); font-size: 14px; margin-bottom: 18px; }
+          .mt-tree { position: relative; font-size: 14px; }
           .mt-row-wrap { position: relative; }
-          .mt-children { position: relative; padding-left: 14px; margin-left: 12px; border-left: 1px dashed var(--rule-2); }
-          .mt-node { display: flex; align-items: center; gap: 8px; padding: 7px 10px; margin: 2px 0; border-radius: 8px; color: var(--ink-2); cursor: pointer; transition: background .12s, color .12s; }
+          .mt-children { position: relative; padding-left: 17px; margin-left: 14px; border-left: 1px dashed var(--rule-2); }
+          .mt-node { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 2px 0; border-radius: 9px; color: var(--ink-2); cursor: pointer; transition: background .12s, color .12s; }
           .mt-node:hover { background: var(--bg-2); color: var(--ink); }
           .mt-node.is-sel { background: var(--ink); color: var(--bg); }
           .mt-node.is-sel .mt-tag { background: color-mix(in oklab, var(--bg), transparent 80%); color: var(--bg); }
           .mt-node.depth-0 .mt-tag { background: var(--accent); color: #fff; }
           .mt-node.depth-1 .mt-tag { background: var(--accent-soft); color: var(--accent-2); }
-          .mt-chev { width: 18px; height: 18px; border-radius: 4px; display: grid; place-items: center; color: inherit; background: transparent; }
+          .mt-chev { width: 21px; height: 21px; border-radius: 4px; display: grid; place-items: center; color: inherit; background: transparent; }
           .mt-chev:hover { background: color-mix(in oklab, currentColor, transparent 85%); }
-          .mt-chev-spacer { width: 18px; height: 18px; display: inline-block; }
+          .mt-chev-spacer { width: 21px; height: 21px; display: inline-block; }
           .mt-ficon { display: grid; place-items: center; color: var(--accent-2); flex: 0 0 auto; }
           .mt-node.depth-0 .mt-ficon { color: var(--accent); }
-          .mt-tag { font-family: var(--mono); font-size: 10.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: var(--bg-2); color: var(--ink-2); letter-spacing: .02em; flex: 0 0 auto; }
-          .mt-name { flex: 1; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-          .mt-count { font-family: var(--mono); font-size: 10.5px; color: var(--muted); padding: 0 6px; border-radius: 999px; border: 1px solid var(--rule-2); }
+          .mt-tag { font-family: var(--mono); font-size: 11.5px; font-weight: 600; padding: 3px 7px; border-radius: 4px; background: var(--bg-2); color: var(--ink-2); letter-spacing: .02em; flex: 0 0 auto; }
+          .mt-name { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .mt-count { font-family: var(--mono); font-size: 11.5px; color: var(--muted); padding: 1px 8px; border-radius: 999px; border: 1px solid var(--rule-2); }
           .mt-node.is-sel .mt-count { color: var(--bg); border-color: color-mix(in oklab, var(--bg), transparent 70%); }
           .mt-detail { position: relative; border-left: 1px dashed var(--rule-2); padding-left: 22px; overflow-y: auto; max-height: 560px; scrollbar-width: thin; }
           @media (max-width: 820px) { .mt-detail { border-left: 0; padding-left: 0; border-top: 1px dashed var(--rule-2); padding-top: 16px; max-height: none; } }
-          .mt-detail-tag { display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-2); }
-          .mt-detail-name { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); margin: 8px 0 4px; line-height: 1.2; }
-          .mt-detail-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
+          .mt-detail-tag { display: inline-block; font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-2); }
+          .mt-detail-name { font-family: var(--serif); font-size: 25px; font-weight: 400; color: var(--ink); margin: 8px 0 4px; line-height: 1.2; }
+          .mt-detail-sub { font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
         `}</style>
 
         <div>
